@@ -40,7 +40,6 @@ profile
 *.sdf
 *.opensdf
 *.suo
-*.vcxproj.filters
 
 # vscode
 .vscode/

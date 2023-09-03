@@ -1,0 +1,462 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\jpeg">
+      <UniqueIdentifier>{c8541d04-12f9-4281-a97b-de506b1094f7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\glsl">
+      <UniqueIdentifier>{2bba5bf0-b5ad-4da3-8d9e-78315f4763e3}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\tr_animation.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tr_backend.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tr_bsp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tr_cmds.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tr_curve.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tr_dsa.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tr_extensions.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tr_extramath.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tr_fbo.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tr_flares.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tr_font.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tr_glsl.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tr_image.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tr_image_bmp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tr_image_dds.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tr_image_jpg.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tr_image_pcx.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tr_image_png.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tr_image_tga.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tr_init.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tr_light.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tr_main.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tr_marks.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tr_mesh.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tr_model.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tr_model_iqm.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tr_noise.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tr_postprocess.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tr_scene.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tr_shade.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tr_shade_calc.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tr_shader.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tr_shadows.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tr_sky.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tr_subs.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tr_surface.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tr_vbo.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tr_world.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jaricom.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jcapimin.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jcapistd.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jcarith.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jccoefct.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jccolor.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jcdctmgr.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jchuff.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jcinit.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jcmainct.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jcmarker.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jcmaster.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jcomapi.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jcparam.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jcprepct.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jcsample.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jctrans.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jdapimin.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jdapistd.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jdarith.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jdatadst.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jdatasrc.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jdcoefct.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jdcolor.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jddctmgr.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jdhuff.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jdinput.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jdmainct.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jdmarker.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jdmaster.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jdmerge.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jdpostct.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jdsample.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jdtrans.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jerror.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jfdctflt.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jfdctfst.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jfdctint.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jidctflt.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jidctfst.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jidctint.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jmemmgr.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jmemnobs.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jquant1.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jquant2.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\jpeg-8c\jutils.c">
+      <Filter>Source Files\jpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\sdl\sdl_gamma.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\sdl\sdl_glimp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\qcommon\puff.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\qcommon\q_math.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\qcommon\q_shared.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\glsl\bokeh_fp.c">
+      <Filter>Source Files\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\glsl\bokeh_vp.c">
+      <Filter>Source Files\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\glsl\calclevels4x_fp.c">
+      <Filter>Source Files\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\glsl\calclevels4x_vp.c">
+      <Filter>Source Files\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\glsl\depthblur_fp.c">
+      <Filter>Source Files\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\glsl\depthblur_vp.c">
+      <Filter>Source Files\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\glsl\dlight_fp.c">
+      <Filter>Source Files\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\glsl\dlight_vp.c">
+      <Filter>Source Files\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\glsl\down4x_fp.c">
+      <Filter>Source Files\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\glsl\down4x_vp.c">
+      <Filter>Source Files\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\glsl\fogpass_fp.c">
+      <Filter>Source Files\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\glsl\fogpass_vp.c">
+      <Filter>Source Files\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\glsl\generic_fp.c">
+      <Filter>Source Files\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\glsl\generic_vp.c">
+      <Filter>Source Files\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\glsl\lightall_fp.c">
+      <Filter>Source Files\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\glsl\lightall_vp.c">
+      <Filter>Source Files\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\glsl\pshadow_fp.c">
+      <Filter>Source Files\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\glsl\pshadow_vp.c">
+      <Filter>Source Files\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\glsl\shadowfill_fp.c">
+      <Filter>Source Files\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\glsl\shadowfill_vp.c">
+      <Filter>Source Files\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\glsl\shadowmask_fp.c">
+      <Filter>Source Files\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\glsl\shadowmask_vp.c">
+      <Filter>Source Files\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\glsl\ssao_fp.c">
+      <Filter>Source Files\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\glsl\ssao_vp.c">
+      <Filter>Source Files\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\glsl\texturecolor_fp.c">
+      <Filter>Source Files\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\glsl\texturecolor_vp.c">
+      <Filter>Source Files\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\glsl\tonemap_fp.c">
+      <Filter>Source Files\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\glsl\tonemap_vp.c">
+      <Filter>Source Files\glsl</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\glsl\bokeh_fp.glsl">
+      <Filter>Source Files\glsl</Filter>
+    </None>
+    <None Include="..\glsl\bokeh_vp.glsl">
+      <Filter>Source Files\glsl</Filter>
+    </None>
+    <None Include="..\glsl\calclevels4x_fp.glsl">
+      <Filter>Source Files\glsl</Filter>
+    </None>
+    <None Include="..\glsl\calclevels4x_vp.glsl">
+      <Filter>Source Files\glsl</Filter>
+    </None>
+    <None Include="..\glsl\depthblur_fp.glsl">
+      <Filter>Source Files\glsl</Filter>
+    </None>
+    <None Include="..\glsl\depthblur_vp.glsl">
+      <Filter>Source Files\glsl</Filter>
+    </None>
+    <None Include="..\glsl\dlight_fp.glsl">
+      <Filter>Source Files\glsl</Filter>
+    </None>
+    <None Include="..\glsl\dlight_vp.glsl">
+      <Filter>Source Files\glsl</Filter>
+    </None>
+    <None Include="..\glsl\down4x_fp.glsl">
+      <Filter>Source Files\glsl</Filter>
+    </None>
+    <None Include="..\glsl\down4x_vp.glsl">
+      <Filter>Source Files\glsl</Filter>
+    </None>
+    <None Include="..\glsl\fogpass_fp.glsl">
+      <Filter>Source Files\glsl</Filter>
+    </None>
+    <None Include="..\glsl\fogpass_vp.glsl">
+      <Filter>Source Files\glsl</Filter>
+    </None>
+    <None Include="..\glsl\generic_fp.glsl">
+      <Filter>Source Files\glsl</Filter>
+    </None>
+    <None Include="..\glsl\generic_vp.glsl">
+      <Filter>Source Files\glsl</Filter>
+    </None>
+    <None Include="..\glsl\lightall_fp.glsl">
+      <Filter>Source Files\glsl</Filter>
+    </None>
+    <None Include="..\glsl\lightall_vp.glsl">
+      <Filter>Source Files\glsl</Filter>
+    </None>
+    <None Include="..\glsl\pshadow_fp.glsl">
+      <Filter>Source Files\glsl</Filter>
+    </None>
+    <None Include="..\glsl\pshadow_vp.glsl">
+      <Filter>Source Files\glsl</Filter>
+    </None>
+    <None Include="..\glsl\shadowfill_fp.glsl">
+      <Filter>Source Files\glsl</Filter>
+    </None>
+    <None Include="..\glsl\shadowfill_vp.glsl">
+      <Filter>Source Files\glsl</Filter>
+    </None>
+    <None Include="..\glsl\shadowmask_fp.glsl">
+      <Filter>Source Files\glsl</Filter>
+    </None>
+    <None Include="..\glsl\shadowmask_vp.glsl">
+      <Filter>Source Files\glsl</Filter>
+    </None>
+    <None Include="..\glsl\ssao_fp.glsl">
+      <Filter>Source Files\glsl</Filter>
+    </None>
+    <None Include="..\glsl\ssao_vp.glsl">
+      <Filter>Source Files\glsl</Filter>
+    </None>
+    <None Include="..\glsl\texturecolor_fp.glsl">
+      <Filter>Source Files\glsl</Filter>
+    </None>
+    <None Include="..\glsl\texturecolor_vp.glsl">
+      <Filter>Source Files\glsl</Filter>
+    </None>
+    <None Include="..\glsl\tonemap_fp.glsl">
+      <Filter>Source Files\glsl</Filter>
+    </None>
+    <None Include="..\glsl\tonemap_vp.glsl">
+      <Filter>Source Files\glsl</Filter>
+    </None>
+  </ItemGroup>
+</Project>
