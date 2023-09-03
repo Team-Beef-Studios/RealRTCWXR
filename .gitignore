@@ -40,7 +40,18 @@ profile
 *.sdf
 *.opensdf
 *.suo
+*.vcxproj.filters
 
 # vscode
 .vscode/
-/.vs
+code/RealRTCWXR/.vs
+code/RealRTCWXR/x64/*
+code/RealRTCWXR/RealRTCWXR/x64/*
+code/cgame/x64/*
+code/cgame/cgame/x64/*
+code/game/game/x64/*
+code/rend2/glsl/*.c
+code/rend2/Renderer/x64/*
+code/tools/stringify/x64/*
+code/ui/ui/x64/*
+code/zlib-1.2.11/zlib-1.2.11/x64/*

@@ -33,7 +33,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "../renderer/tr_local.h"
 #include "../sys/sys_local.h"
+#ifdef USE_ICON
 #include "sdl_icon.h"
+#endif
 
 #ifdef USE_OPENGLES
 #ifdef USE_LOCAL_HEADERS

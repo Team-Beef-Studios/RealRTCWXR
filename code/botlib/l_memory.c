@@ -42,8 +42,8 @@ If you have questions concerning this license or the applicable additional terms
 #include "be_interface.h"
 
 #ifdef _DEBUG
-	#define MEMDEBUG
-	#define MEMORYMANEGER
+//	#define MEMDEBUG
+//	#define MEMORYMANEGER
 #endif
 
 #define MEM_ID      0x12345678l

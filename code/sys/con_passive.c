@@ -54,6 +54,9 @@ char *CON_Input( void )
 	return NULL;
 }
 
+//Just declare this here to use it
+void OutputDebugStringA(char* lpOutputString);
+
 /*
 ==================
 CON_Print
@@ -61,8 +64,7 @@ CON_Print
 */
 void CON_Print( const char *msg )
 {
-	if( com_ansiColor && com_ansiColor->integer )
-		Sys_AnsiColorPrint( msg );
-	else
-		fputs( msg, stderr );
+	char cmsg[MAXPRINTMSG] = { 0 };
+	Q_strncpyz(cmsg, msg, sizeof(cmsg));
+	OutputDebugStringA(cmsg);
 }
