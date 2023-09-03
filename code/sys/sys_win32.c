@@ -87,7 +87,7 @@ Set FPU control word to default value
 
 void Sys_SetFloatEnv(void)
 {
-	_controlfp(FPUCW, FPUCWMASK);
+	//_controlfp(FPUCW, FPUCWMASK);
 }
 
 /*

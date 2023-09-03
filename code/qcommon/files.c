@@ -3681,6 +3681,7 @@ static void FS_Startup( const char *gameName )
 
 
 	if ( fs_basepath->string[0] ) {
+		FS_AddGameDirectory( fs_basepath->string, "");
 		FS_AddGameDirectory( fs_basepath->string, gameName );
 	}
 

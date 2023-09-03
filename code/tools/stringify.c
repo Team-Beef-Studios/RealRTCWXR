@@ -1,7 +1,16 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
-#include <libgen.h>
+
+char* GetFileName(const char* path)
+{
+    char* filename = strrchr(path, '\\');
+    if (filename == NULL)
+        filename = path;
+    else
+        filename++;
+    return filename;
+}
 
 int main(int argc, char **argv)
 {
@@ -9,7 +18,7 @@ int main(int argc, char **argv)
     FILE *ofp;
     char buffer[1024];
 
-    if(argc < 3)
+    if(argc < 3) 
         return 1;
 
     char *inFile = argv[1];
@@ -24,7 +33,7 @@ int main(int argc, char **argv)
         return 3;
 
     // Strip extension
-    char *base = basename(inFile);
+    char *base = GetFileName(inFile);
     *strrchr(base, '.') = '\0';
 
     fprintf(ofp, "const char *fallbackShader_%s =\n", base);

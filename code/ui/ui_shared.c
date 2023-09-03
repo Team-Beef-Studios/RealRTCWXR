@@ -212,8 +212,7 @@ bonusString_t bonusStrings[] = {
 	{"bonus_end_alt"}             
 };
 
-translateTextString_t translateTextStrings[MAX_TRANSLATETEXTSTRINGS] = {
-};
+translateTextString_t translateTextStrings[MAX_TRANSLATETEXTSTRINGS] = { 0 };
 vmCvar_t ui_fixedAspect;
 vmCvar_t ui_fixedAspectFOV;
 

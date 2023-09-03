@@ -187,7 +187,14 @@ typedef int intptr_t;
 
   // vsnprintf is ISO/IEC 9899:1999
   // abstracting this to make it portable
+#ifdef __cplusplus
+  extern "C"
+  {
+#endif
   int Q_vsnprintf(char *str, size_t size, const char *format, va_list ap);
+#ifdef __cplusplus
+}
+#endif
 #else
   #include <stdint.h>
 

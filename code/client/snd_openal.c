@@ -1722,7 +1722,8 @@ static void S_AL_MainStartSound( vec3_t origin, int entnum, int entchannel, sfxH
   srcHandle_t src;
   src_t *curSource;
 
-  s_entityTalkAmplitude[entnum] = 0;
+  if (entnum >= 0 && entnum < MAX_CLIENTS)
+    s_entityTalkAmplitude[entnum] = 0;
 
   if(origin)
   {
