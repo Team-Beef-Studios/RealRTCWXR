@@ -1,0 +1,123 @@
+#if !defined(vr_client_info_h)
+#define vr_client_info_h
+
+#define NUM_WEAPON_SAMPLES      10
+
+#define ANGLES_DEFAULT          0
+#define ANGLES_ADJUSTED         1
+#define ANGLES_SABER            2
+#define ANGLES_COUNT            3
+
+#define USE_GESTURE_OFF_HAND      1
+#define USE_GESTURE_WEAPON_HAND   2
+#define USE_HAPTIC_FEEDBACK_DELAY 500
+
+typedef struct {
+    qboolean    loaded;
+    float   scale;
+    vec3_t  angles;
+    vec3_t  offset;
+} vr_weapon_adjustment_t;
+
+typedef struct {
+    qboolean cin_camera; // cinematic camera taken over
+
+    qboolean misc_camera; // looking through a misc camera view entity
+    qboolean remote_turret; // controlling a remote turret
+    qboolean emplaced_gun; // controlling an emplaced gun
+    qboolean remote_droid; // controlling a remote droid
+    qboolean remote_npc; // controlling a remote NPC (will also be true when controlling a droid)
+    qboolean in_vehicle; // controlling a vehicle
+    int vehicle_type;
+    vec3_t remote_angles; // The view angles of the remote thing we are controlling
+    float remote_snapTurn; // how much turn has been applied to the yaw by joystick for a remote controlled entity
+    int remote_cooldown;
+
+    int eye;
+    qboolean using_screen_layer;
+    qboolean third_person;
+    float fov_x;
+    float fov_y;
+    float off_center_fov_x;
+    float off_center_fov_y;
+
+    float tempWeaponVelocity;
+
+    qboolean immersive_cinematics;
+    qboolean weapon_stabilised;
+    qboolean right_handed;
+    qboolean menu_right_handed;
+    qboolean player_moving;
+    int move_speed; // 0 (default) = Comfortable (75%) , 1 = Full (100%), 2 = Walk (50%)
+    qboolean crouched;
+    qboolean dualsabers; // JKA only - is player dual sabers active
+    int cgzoommode;
+    int cgzoomdir;
+    int saberBlockDebounce; // Amount of time after player is blocked that the saber position is fixed
+    short saberBounceMove;
+
+    int forceid;
+
+    vec3_t hmdposition;
+    vec3_t hmdposition_last; // Don't use this, it is just for calculating delta!
+    vec3_t hmdposition_delta; // delta since last frame
+    vec3_t hmdposition_snap; // The position the HMD was in last time the menu was up (snapshot position)
+    vec3_t hmdposition_offset; // offset from the position the HMD was in last time the menu was up
+
+    qboolean   take_snap;
+
+    vec3_t hmdorientation;
+    vec3_t hmdorientation_last; // Don't use this, it is just for calculating delta!
+    vec3_t hmdorientation_delta;
+    vec3_t hmdorientation_snap;
+    vec3_t hmdorientation_first; // only updated when in first person
+
+    vec3_t clientviewangles; //orientation in the client - we use this in the cgame
+    float snapTurn; // how much turn has been applied to the yaw by joystick
+    float clientview_yaw_last; // Don't use this, it is just for calculating delta!
+    float clientview_yaw_delta;
+
+    vec3_t weaponangles[ANGLES_COUNT];
+    vec3_t weaponangles_last[ANGLES_COUNT]; // Don't use this, it is just for calculating delta!
+    vec3_t weaponangles_delta[ANGLES_COUNT];
+    vec3_t weaponangles_first[ANGLES_COUNT]; // only updated when in first person
+
+    vec3_t weaponposition;
+    vec3_t weaponoffset;
+    float weaponoffset_timestamp;
+    vec3_t weaponoffset_history[NUM_WEAPON_SAMPLES];
+    float weaponoffset_history_timestamp[NUM_WEAPON_SAMPLES];
+
+    vr_weapon_adjustment_t weaponadjustment[32];
+    char weaponadjustment_info[256]; // debug message for weapon alignment
+
+    int item_selector; // 1 - weapons/gadgets/saber stance, 2 - Force powers
+
+    qboolean velocitytriggered;
+    qboolean velocitytriggeractive;
+    float primaryswingvelocity;
+    qboolean primaryVelocityTriggeredAttack;
+    float secondaryswingvelocity;
+    qboolean secondaryVelocityTriggeredAttack;
+    vec3_t secondaryVelocityTriggerLocation;
+
+    vec3_t offhandangles[ANGLES_COUNT];
+    vec3_t offhandangles_last[ANGLES_COUNT]; // Don't use this, it is just for calculating delta!
+    vec3_t offhandangles_delta[ANGLES_COUNT];
+    vec3_t offhandangles_saber[ANGLES_COUNT];
+
+    vec3_t offhandposition[5]; // store last 5
+    vec3_t offhandoffset;
+
+    float   maxHeight;
+    float   curHeight;
+    int     useGestureState;
+    int     useHapticFeedbackTime[2];
+
+} vr_client_info_t;
+
+#ifndef RTCWXR_CLIENT
+extern vr_client_info_t *vr;
+#endif
+
+#endif //vr_client_info_h

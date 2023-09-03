@@ -124,6 +124,12 @@
     <ClCompile Include="..\..\zlib-1.2.11\ioapi.c" />
     <ClCompile Include="..\..\zlib-1.2.11\unzip.c" />
     <ClCompile Include="..\..\zlib-1.2.11\zutil.c" />
+    <ClCompile Include="OpenXrInput.c" />
+    <ClCompile Include="VrInputCommon.c" />
+    <ClCompile Include="VrInputDefault.c" />
+    <ClCompile Include="VrInputWeaponAlign.c" />
+    <ClCompile Include="windows\RTCWXR_SurfaceView.c" />
+    <ClCompile Include="windows\TBXR_Common.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\client\client.h" />
@@ -149,6 +155,11 @@
     <ClInclude Include="..\..\qcommon\vm_local.h" />
     <ClInclude Include="..\..\server\server.h" />
     <ClInclude Include="..\..\sys\resource.h" />
+    <ClInclude Include="VrClientInfo.h" />
+    <ClInclude Include="VrCommon.h" />
+    <ClInclude Include="VrCvars.h" />
+    <ClInclude Include="VrInput.h" />
+    <ClInclude Include="windows\TBXR_Common.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\sys\win_resource.rc" />
@@ -245,7 +256,7 @@
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>
       </SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;STEAM;ARCH_STRING="xr_64";USE_OPENAL=1;USE_LOCAL_HEADERS;USE_BLOOM;BOTLIB;USE_RENDERER_DLOPEN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;STEAM;ARCH_STRING="xr_64";USE_OPENAL=1;USE_LOCAL_HEADERS;USE_BLOOM;XR_NO_STDINT_H;XR_USE_PLATFORM_WIN32;XR_USE_GRAPHICS_API_OPENGL;BOTLIB;USE_RENDERER_DLOPEN;RTCWXR_CLIENT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>Default</ConformanceMode>
       <Optimization>Disabled</Optimization>
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
@@ -253,14 +264,14 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <AdditionalIncludeDirectories>..\..\..\code\SDL2\include;..\..\..\code\zlib-1.2.11;..\..\..\code\qcommon;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\code\SDL2\include;..\..\..\code\zlib-1.2.11;..\..\..\code\qcommon;..\..\..\code\openxr\include;..\..\..\code\external\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opengl32.lib;glu32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;Ws2_32.lib;Winmm.lib;C:\Dev\RealRTCW-master\code\libs\win64\libSDL264.dll.a;C:\Dev\RealRTCW-master\code\libs\win64\libSDL264main.a;C:\Dev\RealRTCW-master\code\libs\win64\OpenAL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;glu32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;Ws2_32.lib;Winmm.lib;..\..\..\code\libs\win64\libSDL264.dll.a;..\..\..\code\libs\win64\libSDL264main.a;..\..\..\code\libs\win64\OpenAL32.lib;..\..\..\code\openxr\lib\x64\openxr_loaderd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ProjectReference>
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
