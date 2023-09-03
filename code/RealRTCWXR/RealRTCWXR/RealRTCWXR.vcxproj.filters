@@ -46,6 +46,9 @@
     <Filter Include="Source Files\zlib">
       <UniqueIdentifier>{8158d3ed-bae1-4393-b948-193dc65f69a3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\RTCWXR">
+      <UniqueIdentifier>{1b6c17d1-cbb8-4a3f-b48c-71b70c581d1f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\client\cl_avi.c">
@@ -363,6 +366,24 @@
     <ClCompile Include="..\..\sys\con_passive.c">
       <Filter>Source Files\sys</Filter>
     </ClCompile>
+    <ClCompile Include="OpenXrInput.c">
+      <Filter>Source Files\RTCWXR</Filter>
+    </ClCompile>
+    <ClCompile Include="VrInputCommon.c">
+      <Filter>Source Files\RTCWXR</Filter>
+    </ClCompile>
+    <ClCompile Include="VrInputDefault.c">
+      <Filter>Source Files\RTCWXR</Filter>
+    </ClCompile>
+    <ClCompile Include="VrInputWeaponAlign.c">
+      <Filter>Source Files\RTCWXR</Filter>
+    </ClCompile>
+    <ClCompile Include="windows\RTCWXR_SurfaceView.c">
+      <Filter>Source Files\RTCWXR</Filter>
+    </ClCompile>
+    <ClCompile Include="windows\TBXR_Common.c">
+      <Filter>Source Files\RTCWXR</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\client\cl_curl.h">
@@ -433,6 +454,21 @@
     </ClInclude>
     <ClInclude Include="..\..\sys\resource.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="windows\TBXR_Common.h">
+      <Filter>Source Files\RTCWXR</Filter>
+    </ClInclude>
+    <ClInclude Include="VrClientInfo.h">
+      <Filter>Source Files\RTCWXR</Filter>
+    </ClInclude>
+    <ClInclude Include="VrCommon.h">
+      <Filter>Source Files\RTCWXR</Filter>
+    </ClInclude>
+    <ClInclude Include="VrCvars.h">
+      <Filter>Source Files\RTCWXR</Filter>
+    </ClInclude>
+    <ClInclude Include="VrInput.h">
+      <Filter>Source Files\RTCWXR</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
