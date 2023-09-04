@@ -979,19 +979,12 @@ void R_SetupProjection(viewParms_t *dest, float zProj, float zFar, qboolean comp
 	float	xmin, xmax, ymin, ymax;
 	float	width, height, stereoSep = r_stereoSeparation->value;
 
-	/*
-	 * offset the view origin of the viewer for stereo rendering 
-	 * by setting the projection matrix appropriately.
-	 */
-
-	if(stereoSep != 0)
+	if (ri.TBXR_GetVRProjection(zProj, zFar ? zFar : 2048, 1.0, 1.0, dest->projectionMatrix))
 	{
-		if(dest->stereoFrame == STEREO_LEFT)
-			stereoSep = zProj / stereoSep;
-		else if(dest->stereoFrame == STEREO_RIGHT)
-			stereoSep = zProj / -stereoSep;
-		else
-			stereoSep = 0;
+		if (computeFrustum)
+			R_SetupFrustum(dest, xmin, xmax, ymax, zProj, zFar, stereoSep);
+
+		return;
 	}
 
 	ymax = zProj * tan(dest->fovY * M_PI / 360.0f);

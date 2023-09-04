@@ -209,7 +209,7 @@ typedef struct {
 	void	(*TBXR_GetScreenRes)(int* width, int* height);
 	void	(*TBXR_submitFrame)();
 	qboolean (*TBXR_useScreenLayer);
-	qboolean (*TBXR_GetVRProjection)(int eye, float zNear, float zFar, float zZoomX, float zZoomY, float* projection);
+	qboolean (*TBXR_GetVRProjection)(float zNear, float zFar, float zZoomX, float zZoomY, float* projection);
 
 } refimport_t;
 
