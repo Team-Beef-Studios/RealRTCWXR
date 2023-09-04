@@ -29,9 +29,27 @@ If you have questions concerning this license or the applicable additional terms
 // cl.input.c  -- builds an intended movement command to send to the server
 
 #include "client.h"
+#include "../RealRTCWXR/RealRTCWXR/VrCommon.h"
 
 unsigned frame_msec;
 int old_com_frameTime;
+
+void VR_GetMove(float* forward, float* side, float* pos_forward, float* pos_side, float* up,
+	float* yaw, float* pitch, float* roll);
+
+typedef struct {
+	float forward;
+	float pos_forward;
+	float side;
+	float pos_side;
+	float up;
+	float yaw;
+	float pitch;
+	float roll;
+} vr_move;
+
+vr_move new_move;
+vr_move old_move;
 
 /*
 ===============================================================================
@@ -311,22 +329,20 @@ CL_AdjustAngles
 Moves the local angle positions
 ================
 */
-void CL_AdjustAngles( void ) {
-	float speed;
+void CL_AdjustAngles(void) {
+	cl.viewangles[YAW] -= old_move.yaw;
+	cl.viewangles[YAW] += new_move.yaw;
 
-	if ( kb[KB_SPEED].active ) {
-		speed = 0.001 * cls.frametime * cl_anglespeedkey->value;
-	} else {
-		speed = 0.001 * cls.frametime;
-	}
+	//Make angles good
+	while (cl.viewangles[YAW] > 180.0f)
+		cl.viewangles[YAW] -= 360.0f;
+	while (cl.viewangles[YAW] < -180.0f)
+		cl.viewangles[YAW] += 360.0f;
 
-	if ( !kb[KB_STRAFE].active ) {
-		cl.viewangles[YAW] -= speed * cl_yawspeed->value * CL_KeyState( &kb[KB_RIGHT] );
-		cl.viewangles[YAW] += speed * cl_yawspeed->value * CL_KeyState( &kb[KB_LEFT] );
-	}
+	cl.viewangles[PITCH] = new_move.pitch;
+	cl.viewangles[ROLL] = new_move.roll;
 
-	cl.viewangles[PITCH] -= speed * cl_pitchspeed->value * CL_KeyState( &kb[KB_LOOKUP] );
-	cl.viewangles[PITCH] += speed * cl_pitchspeed->value * CL_KeyState( &kb[KB_LOOKDOWN] );
+	VectorCopy(cl.viewangles, vr.clientviewangles);
 }
 
 /*
@@ -437,7 +453,7 @@ CL_JoystickMove
 =================
 */
 void CL_JoystickMove( usercmd_t *cmd ) {
-	float anglespeed;
+/*	float anglespeed;
 
 	float yaw     = j_yaw->value     * cl.joystickAxis[j_yaw_axis->integer];
 	float right   = j_side->value    * cl.joystickAxis[j_side_axis->integer];
@@ -471,6 +487,10 @@ void CL_JoystickMove( usercmd_t *cmd ) {
 	}
 
 	cmd->upmove = ClampChar( cmd->upmove + (int)up );
+	*/
+
+	cmd->forwardmove = ClampChar(cmd->forwardmove + (new_move.forward * 127) + (new_move.pos_forward * 127));
+	cmd->rightmove = ClampChar(cmd->rightmove + (new_move.side * 127) + (new_move.pos_side * 127));
 }
 
 /*
@@ -625,6 +645,9 @@ void CL_FinishMove( usercmd_t *cmd ) {
 	for ( i = 0 ; i < 3 ; i++ ) {
 		cmd->angles[i] = ANGLE2SHORT( cl.viewangles[i] );
 	}
+
+	//retain the move from this
+	old_move = new_move;
 }
 
 
@@ -639,6 +662,10 @@ usercmd_t CL_CreateCmd( void ) {
 	float recoilAdd;
 
 	VectorCopy( cl.viewangles, oldAngles );
+
+
+	VR_GetMove(&new_move.forward, &new_move.side, &new_move.pos_forward, &new_move.pos_side,
+		&new_move.up, &new_move.yaw, &new_move.pitch, &new_move.roll);
 
 	// keyboard angle adjustment
 	CL_AdjustAngles();

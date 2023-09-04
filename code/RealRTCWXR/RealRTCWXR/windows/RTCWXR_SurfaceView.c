@@ -17,9 +17,9 @@ bool VR_UseScreenLayer()
 	vr.using_screen_layer = 
 			(bool)((vr.cin_camera && !vr.immersive_cinematics) ||
 			vr.misc_camera ||
-//			(CL_IsRunningInGameCinematic() || CL_InGameCinematicOnStandBy()) ||
-//            (cls.state == CA_CINEMATIC) ||
-//            (cls.state == CA_LOADING) ||
+			clc.demoplaying ||
+            (clc.state == CA_CINEMATIC) ||
+            (clc.state == CA_LOADING) ||
             ( Key_GetCatcher( ) & KEYCATCH_UI ) ||
             ( Key_GetCatcher( ) & KEYCATCH_CONSOLE ));
 

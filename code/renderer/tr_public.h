@@ -99,6 +99,8 @@ typedef struct {
 	// if the pointers are not NULL, timing info will be returned
 	void ( *EndFrame )( int *frontEndMsec, int *backEndMsec );
 
+	void (*SubmitStereoFrame)();
+
 
 	int ( *MarkFragments )( int numPoints, const vec3_t *points, const vec3_t projection,
 							int maxPoints, vec3_t pointBuffer, int maxFragments, markFragment_t *fragmentBuffer );
@@ -115,6 +117,10 @@ typedef struct {
 	qboolean ( *GetEntityToken )( char *buffer, int size );
 
 	void (*TakeVideoFrame)( int h, int w, byte* captureBuffer, byte *encodeBuffer, qboolean motionJpeg );
+
+	qboolean (*GetModeInfo)(int* width, int* height, float* windowAspect, int mode);
+
+	void (*WIN_SwapWindow)();
 } refexport_t;
 
 //
@@ -195,6 +201,14 @@ typedef struct {
 	void	(*Sys_GLimpSafeInit)( void );
 	void	(*Sys_GLimpInit)( void );
 	qboolean (*Sys_LowPhysicalMemory)( void );
+
+	//RTCWXR stuff
+	void	(*VR_Init)();
+	void	(*TBXR_GetScreenRes)(int* width, int* height);
+	void	(*TBXR_submitFrame)();
+	qboolean (*TBXR_useScreenLayer);
+	qboolean (*TBXR_GetVRProjection)(int eye, float zNear, float zFar, float zZoomX, float zZoomY, float* projection);
+
 } refimport_t;
 
 

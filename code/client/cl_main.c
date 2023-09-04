@@ -3342,6 +3342,13 @@ int CL_ScaledMilliseconds( void ) {
 	return Sys_Milliseconds() * com_timescale->value;
 }
 
+
+void VR_Init();
+void TBXR_GetScreenRes(int* width, int* height);
+qboolean VR_UseScreenLayer();
+qboolean VR_GetVRProjection(int eye, float zNear, float zFar, float zZoomX, float zZoomY, float* projection);
+void TBXR_submitFrame();
+
 /*
 ============
 CL_InitRef
@@ -3437,6 +3444,13 @@ void CL_InitRef( void ) {
 	ri.Sys_GLimpSafeInit = Sys_GLimpSafeInit;
 	ri.Sys_GLimpInit = Sys_GLimpInit;
 	ri.Sys_LowPhysicalMemory = Sys_LowPhysicalMemory;
+
+	//RTCWXR stuff
+	ri.VR_Init = VR_Init;
+	ri.TBXR_GetScreenRes = TBXR_GetScreenRes;
+	ri.TBXR_useScreenLayer = VR_UseScreenLayer;
+	ri.TBXR_GetVRProjection = VR_GetVRProjection;
+	ri.TBXR_submitFrame = TBXR_submitFrame;
 
 	ret = GetRefAPI( REF_API_VERSION, &ri );
 
