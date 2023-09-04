@@ -3346,7 +3346,7 @@ int CL_ScaledMilliseconds( void ) {
 void VR_Init();
 void TBXR_GetScreenRes(int* width, int* height);
 qboolean VR_UseScreenLayer();
-qboolean VR_GetVRProjection(int eye, float zNear, float zFar, float zZoomX, float zZoomY, float* projection);
+qboolean VR_GetVRProjection(float zNear, float zFar, float zZoomX, float zZoomY, float* projection);
 void TBXR_submitFrame();
 
 /*
