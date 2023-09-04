@@ -1714,10 +1714,12 @@ const void  *RB_DrawBuffer( const void *data ) {
 	if(tess.numIndexes)
 		RB_EndSurface();
 
-	if (glRefConfig.framebufferObject)
-		FBO_Bind(NULL);
+	FBO_StoreCurrent();
 
-	qglDrawBuffer( cmd->buffer );
+//	if (glRefConfig.framebufferObject)
+//		FBO_Bind(NULL);
+
+	//qglDrawBuffer( cmd->buffer );
 
 	// clear screen for debugging
 	if ( r_clear->integer ) {
@@ -1859,6 +1861,32 @@ const void *RB_ClearDepth(const void *data)
 	return (const void *)(cmd + 1);
 }
 
+
+/*
+=============
+RB_Flush
+
+=============
+*/
+const void* RB_Flush(const void* data) {
+	const swapBuffersCommand_t* cmd;
+
+	// finish any 2D drawing if needed
+	if (tess.numIndexes) {
+		RB_EndSurface();
+	}
+
+	// texture swapping test
+	if (r_showImages->integer) {
+		RB_ShowImages();
+	}
+
+	cmd = (const swapBuffersCommand_t*)data;
+
+	backEnd.projection2D = qfalse;
+
+	return (const void*)(cmd + 1);
+}
 
 /*
 =============
@@ -2303,6 +2331,9 @@ void RB_ExecuteRenderCommands( const void *data ) {
 			break;
 		case RC_EXPORT_CUBEMAPS:
 			data = RB_ExportCubemaps(data);
+			break;
+		case RC_FLUSH:
+			data = RB_Flush(data);
 			break;
 		case RC_END_OF_LIST:
 		default:

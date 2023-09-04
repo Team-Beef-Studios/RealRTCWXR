@@ -209,7 +209,6 @@ void ovrFramebuffer_SetNone() {
 }
 
 PFNGLBLITNAMEDFRAMEBUFFERPROC glBlitNamedFramebuffer = NULL;
-extern cvar_t* r_mode;
 qboolean R_GetModeInfo(int* width, int* height, int mode);
 
 void ovrFramebuffer_Resolve(ovrFramebuffer* frameBuffer) {
@@ -222,8 +221,9 @@ void ovrFramebuffer_Resolve(ovrFramebuffer* frameBuffer) {
 
 	const GLuint colorTexture = frameBuffer->ColorSwapChainImage[frameBuffer->TextureSwapChainIndex].image;
 
-	int width, height;
-	R_GetModeInfo(&width, &height, r_mode->integer);
+	int width, height, aspect;
+	cvar_t* r_mode = Cvar_Get("r_mode", "3", CVAR_ARCHIVE | CVAR_LATCH);
+	re.GetModeInfo(&width, &height, &aspect, r_mode->integer);
 
 	glBlitNamedFramebuffer((GLuint)colorTexture,             // readFramebuffer
 		(GLuint)0,                       // backbuffer     // drawFramebuffer
@@ -1099,8 +1099,6 @@ void TBXR_prepareEyeBuffer(int eye )
 	vr.off_center_fov_y = -(gAppState.Views[eye].fov.angleUp + gAppState.Views[eye].fov.angleDown) / 2.0f;
 }
 
-void WIN_SwapWindow();
-
 void TBXR_finishEyeBuffer(int eye )
 {
 	ovrRenderer *renderer = &gAppState.Renderer;
@@ -1121,7 +1119,7 @@ void TBXR_finishEyeBuffer(int eye )
 	{
 		ovrFramebuffer_Resolve(frameBuffer);
 
-		WIN_SwapWindow();
+		re.WIN_SwapWindow();
 	}
 
 	ovrFramebuffer_Release(frameBuffer);
@@ -1235,13 +1233,13 @@ void TBXR_submitFrame()
 		memset(&quad_layer, 0, sizeof(XrCompositionLayerQuad));
 
 		// Build the quad layers
-		int32_t width = gAppState.Renderer.FrameBuffer[0].ColorSwapChain.Width;
-		int32_t height = gAppState.Renderer.FrameBuffer[0].ColorSwapChain.Height;
+		int32_t width = gAppState.Renderer.FrameBuffer[1].ColorSwapChain.Width;
+		int32_t height = gAppState.Renderer.FrameBuffer[1].ColorSwapChain.Height;
 		quad_layer.type = XR_TYPE_COMPOSITION_LAYER_QUAD;
 		quad_layer.layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT;
 		quad_layer.space = gAppState.StageSpace;
 		quad_layer.eyeVisibility =XR_EYE_VISIBILITY_BOTH;
-		quad_layer.subImage.swapchain = gAppState.Renderer.FrameBuffer[0].ColorSwapChain.Handle;
+		quad_layer.subImage.swapchain = gAppState.Renderer.FrameBuffer[1].ColorSwapChain.Handle;
 		quad_layer.subImage.imageRect.extent.width = width;
 		quad_layer.subImage.imageRect.extent.height = height;
 		const XrVector3f axis = { 0.0f, 1.0f, 0.0f };

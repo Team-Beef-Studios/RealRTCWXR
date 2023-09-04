@@ -29,6 +29,7 @@ If you have questions concerning this license or the applicable additional terms
 // cl_scrn.c -- master for refresh, status bar, console, chat, notify, etc
 
 #include "client.h"
+#include "../RealRTCWXR/RealRTCWXR/VrCommon.h"
 
 qboolean scr_initialized;           // ready to draw
 
@@ -577,15 +578,34 @@ void SCR_UpdateScreen( void ) {
 	// that case.
 	if( uivm || com_dedicated->integer )
 	{
-		// XXX
-		int in_anaglyphMode = Cvar_VariableIntegerValue("r_anaglyphMode");
-		// if running in stereo, we need to draw the frame twice
-		if ( cls.glconfig.stereoEnabled || in_anaglyphMode) {
-			SCR_DrawScreenField( STEREO_LEFT );
-			SCR_DrawScreenField( STEREO_RIGHT );
-		} else {
-			SCR_DrawScreenField( STEREO_CENTER );
+		//Try again here in case we've not done it yet
+		TBXR_FrameSetup();
+
+		for (int eye = 0; eye < 2; ++eye)
+		{
+			TBXR_prepareEyeBuffer(eye);
+
+			//Draw twice for Quest
+			SCR_DrawScreenField(eye == 0 ? STEREO_LEFT : STEREO_RIGHT);
+
+			//This won't perform the submit eye buffers
+			{
+				if (com_speeds->integer)
+				{
+					re.EndFrame(&time_frontend, &time_backend);
+				}
+				else
+				{
+					re.EndFrame(NULL, NULL);
+				}
+			}
+
+			TBXR_finishEyeBuffer(eye);
 		}
+
+		//And we're done
+		re.SubmitStereoFrame();
+
 
 		if ( com_speeds->integer ) {
 			re.EndFrame( &time_frontend, &time_backend );

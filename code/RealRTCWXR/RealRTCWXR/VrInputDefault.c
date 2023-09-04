@@ -21,9 +21,6 @@ Authors		:	Simon Brown
 #endif
 
 
-void Sys_QueEvent(int time, sysEventType_t type, int value, int value2, int ptrLength, void* ptr);
-
-
 void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew, ovrInputStateTrackedRemote *pDominantTrackedRemoteOld, ovrTrackedController* pDominantTracking,
                           ovrInputStateTrackedRemote *pOffTrackedRemoteNew, ovrInputStateTrackedRemote *pOffTrackedRemoteOld, ovrTrackedController* pOffTracking,
                           int domButton1, int domButton2, int offButton1, int offButton2 )
@@ -166,12 +163,12 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
 
         //Close the datapad
         if (secondaryButton2New && !secondaryButton2Old) {
-                Sys_QueEvent(0, SE_KEY, K_TAB, true, 0, NULL);
+            CL_KeyEvent(K_TAB, true, Sys_Milliseconds());
         }
 
         //Close the menu
         if (secondaryButton1New && !secondaryButton1Old) {
-                Sys_QueEvent(0, SE_KEY, K_ESCAPE, true, 0, NULL);
+            CL_KeyEvent(K_ESCAPE, true, Sys_Milliseconds());
         }
 
     }
@@ -778,12 +775,12 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
             if ((secondaryButtonsNew & secondaryButton1) &&
                 !(secondaryButtonsOld & secondaryButton1))
             {
-                Sys_QueEvent(0, SE_KEY, K_ESCAPE, true, 0, NULL);
+                CL_KeyEvent(K_ESCAPE, true, Sys_Milliseconds());
             }
 
             //Open the datapad
             if (secondaryButton2New && !secondaryButton2Old) {
-                Sys_QueEvent(0, SE_KEY, K_TAB, true, 0, NULL);
+                CL_KeyEvent(K_TAB, true, Sys_Milliseconds());
             }
 
             //Use Force - off hand trigger

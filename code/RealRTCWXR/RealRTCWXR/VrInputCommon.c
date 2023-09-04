@@ -65,12 +65,11 @@ extern ovrApp gAppState;
 
 
 //keys.h
-void Sys_QueEvent( int time, sysEventType_t type, int value, int value2, int ptrLength, void *ptr );
 void handleTrackedControllerButton(ovrInputStateTrackedRemote * trackedRemoteState, ovrInputStateTrackedRemote * prevTrackedRemoteState, uint32_t button, int key)
 {
     if ((trackedRemoteState->Buttons & button) != (prevTrackedRemoteState->Buttons & button))
     {
-        Sys_QueEvent( 0, SE_KEY, key, (trackedRemoteState->Buttons & button) != 0, 0, NULL );
+        CL_KeyEvent( key, (trackedRemoteState->Buttons & button) != 0, Sys_Milliseconds() );
     }
 }
 
@@ -137,11 +136,14 @@ void PortableMouseAbs(float x,float y);
 #else
 void PortableMouseAbs(float x, float y)
 {
+    static ox = 0, oy = 0;
     int absx = 0, absy = 0;
     absx = x * 640;
-    absy = y * 480;
+    absy = y * 480 * 2; // make vertical easier to manipulate
 
-    CL_MouseEvent(absx, absy, 0);
+    CL_MouseEvent(absx - ox, absy - oy, 0);
+    ox = absx;
+    oy = absy;
 }
 #endif
 

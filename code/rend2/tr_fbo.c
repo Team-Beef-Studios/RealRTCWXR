@@ -212,6 +212,11 @@ void FBO_AttachImage(FBO_t *fbo, image_t *image, GLenum attachment, GLuint cubem
 		fbo->colorImage[index] = image;
 }
 
+GLint drawFboId;
+void FBO_StoreCurrent()
+{
+	glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &drawFboId);
+}
 
 /*
 ============
@@ -235,7 +240,7 @@ void FBO_Bind(FBO_t * fbo)
 		GLimp_LogComment(va("--- FBO_Bind( %s ) ---\n", fbo ? fbo->name : "NULL"));
 	}
 
-	GL_BindFramebuffer(GL_FRAMEBUFFER, fbo ? fbo->frameBuffer : 0);
+	GL_BindFramebuffer(GL_FRAMEBUFFER, fbo ? fbo->frameBuffer : drawFboId);
 	glState.currentFBO = fbo;
 }
 
