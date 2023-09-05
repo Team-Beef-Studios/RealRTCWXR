@@ -32,6 +32,10 @@ If you have questions concerning this license or the applicable additional terms
 #include "g_local.h"
 #include "../steam/steam.h"
 
+#include <VrClientInfo.h>
+
+vr_client_info_t* vr;
+
 level_locals_t level;
 
 typedef struct {
@@ -322,8 +326,10 @@ This must be the very first function compiled into the .q3vm file
 */
 Q_EXPORT intptr_t vmMain( intptr_t command, intptr_t arg0, intptr_t arg1, intptr_t arg2, intptr_t arg3, intptr_t arg4, intptr_t arg5, intptr_t arg6, intptr_t arg7, intptr_t arg8, intptr_t arg9, intptr_t arg10, intptr_t arg11  ) {
 	switch ( command ) {
-	case GAME_INIT:
-		G_InitGame( arg0, arg1, arg2 );
+	case GAME_INIT: {
+			vr = (vr_client_info_t*)(arg3);
+			G_InitGame(arg0, arg1, arg2);
+		}
 		return 0;
 	case GAME_SHUTDOWN:
 		G_ShutdownGame( arg0 );

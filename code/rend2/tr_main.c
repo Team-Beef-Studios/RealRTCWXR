@@ -979,14 +979,6 @@ void R_SetupProjection(viewParms_t *dest, float zProj, float zFar, qboolean comp
 	float	xmin, xmax, ymin, ymax;
 	float	width, height, stereoSep = r_stereoSeparation->value;
 
-	if (ri.TBXR_GetVRProjection(zProj, zFar ? zFar : 2048, 1.0, 1.0, dest->projectionMatrix))
-	{
-		if (computeFrustum)
-			R_SetupFrustum(dest, xmin, xmax, ymax, zProj, zFar, stereoSep);
-
-		return;
-	}
-
 	ymax = zProj * tan(dest->fovY * M_PI / 360.0f);
 	ymin = -ymax;
 
@@ -995,6 +987,16 @@ void R_SetupProjection(viewParms_t *dest, float zProj, float zFar, qboolean comp
 
 	width = xmax - xmin;
 	height = ymax - ymin;
+
+	R_SetFarClip();
+
+	if (ri.TBXR_GetVRProjection(zProj, tr.viewParms.zFar, 1.0, 1.0, dest->projectionMatrix))
+	{
+		if (computeFrustum)
+			R_SetupFrustum(dest, xmin, xmax, ymax, zProj, zFar, stereoSep);
+
+		return;
+	}
 
 	dest->projectionMatrix[0] = 2 * zProj / width;
 	dest->projectionMatrix[4] = 0;
