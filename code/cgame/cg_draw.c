@@ -32,6 +32,8 @@ If you have questions concerning this license or the applicable additional terms
 #include "cg_local.h"
 #include "../ui/ui_shared.h"
 
+#include <VrClientInfo.h>
+
 //----(SA) added to make it easier to raise/lower our statsubar by only changing one thing
 #define STATUSBARHEIGHT 452
 //----(SA) end
@@ -3606,6 +3608,32 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 		return;
 	}
 
+	vec3_t baseOrg;
+	VectorCopy(cg.refdef.vieworg, baseOrg);
+
+	float separation = stereoView == 1 ?
+		cg_worldScale.value * (-cg_ipd.value / 2) : //left
+		cg_worldScale.value * (cg_ipd.value / 2); // right
+
+
+	{
+		VectorCopy(vr->hmdorientation, cg.refdef.viewangles);
+		cg.refdef.viewangles[YAW] = vr->clientviewangles[YAW] +
+			SHORT2ANGLE(cg.snap->ps.delta_angles[YAW]);
+		AnglesToAxis(cg.refdef.viewangles, cg.refdef.viewaxis);
+	}
+
+
+	cg.refdef.worldscale = cg_worldScale.value;
+
+	VectorMA(cg.refdef.vieworg, -separation, cg.refdef.viewaxis[1], cg.refdef.vieworg);
+
+	//Vertical Positional Movement
+	if (!cg.cameraMode) {
+		cg.refdef.vieworg[2] -= 64;
+		cg.refdef.vieworg[2] += (vr->hmdposition[1] + cg_heightAdjust.value) * cg_worldScale.value;
+	}
+
 	if(stereoView != STEREO_CENTER)
 		CG_DrawCrosshair3D();
 
@@ -3617,6 +3645,11 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 	}
 
 	trap_R_RenderScene( &cg.refdef );
+
+	// restore original viewpoint if running stereo
+	if (separation != 0) {
+		VectorCopy(baseOrg, cg.refdef.vieworg);
+	}
 
 	// clear around the rendered view if sized down
 	CG_TileClear();     //----(SA)	moved to 2d section to avoid 2d/3d fog-state problems

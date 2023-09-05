@@ -32,6 +32,8 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "../botlib/botlib.h"
 
+#include <VrCommon.h>
+
 botlib_export_t *botlib_export;
 
 // these functions must be used instead of pointer arithmetic, because
@@ -932,7 +934,7 @@ static void SV_InitGameVM( qboolean restart ) {
 
 	// use the current msec count for a random seed
 	// init for this gamestate
-	VM_Call (gvm, GAME_INIT, sv.time, Com_Milliseconds(), restart);
+	VM_Call (gvm, GAME_INIT, sv.time, Com_Milliseconds(), restart, (intptr_t)&vr);
 }
 
 

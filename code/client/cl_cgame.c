@@ -32,6 +32,8 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "../botlib/botlib.h"
 
+#include <VrCommon.h>
+
 #ifdef USE_MUMBLE
 #include "libmumblelink.h"
 #endif
@@ -989,7 +991,7 @@ void CL_InitCGame( void ) {
 	// init for this gamestate
 	// use the lastExecutedServerCommand instead of the serverCommandSequence
 	// otherwise server commands sent just before a gamestate are dropped
-	VM_Call( cgvm, CG_INIT, clc.serverMessageSequence, clc.lastExecutedServerCommand, clc.clientNum );
+	VM_Call( cgvm, CG_INIT, clc.serverMessageSequence, clc.lastExecutedServerCommand, clc.clientNum, (intptr_t)&vr);
 
 	// reset any CVAR_CHEAT cvars registered by cgame
 	if ( !clc.demoplaying && !cl_connectedToCheatServer )

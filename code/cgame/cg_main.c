@@ -37,6 +37,11 @@ If you have questions concerning this license or the applicable additional terms
 #include "cg_local.h"
 #include "../ui/ui_shared.h"
 
+#include <VrClientInfo.h>
+
+vr_client_info_t* vr;
+
+
 displayContextDef_t cgDC;
 
 int forceModelModificationCount = -1;
@@ -63,8 +68,10 @@ Q_EXPORT intptr_t vmMain( intptr_t command, intptr_t arg0, intptr_t arg1, intptr
 	case CG_EVENT_HANDLING:
 		CG_EventHandling( arg0 );
 		return 0;
-	case CG_INIT:
-		CG_Init( arg0, arg1 );
+	case CG_INIT: {
+			vr = (vr_client_info_t*)(arg3);
+			CG_Init(arg0, arg1);
+		}
 		return 0;
 	case CG_SHUTDOWN:
 		CG_Shutdown();
@@ -190,6 +197,9 @@ vmCvar_t cg_reticleBrightness;      //----(SA)	added
 vmCvar_t cg_thirdPerson;
 vmCvar_t cg_thirdPersonRange;
 vmCvar_t cg_thirdPersonAngle;
+vmCvar_t cg_ipd;
+vmCvar_t cg_worldScale;
+vmCvar_t cg_heightAdjust;
 vmCvar_t cg_lagometer;
 vmCvar_t cg_drawAttacker;
 vmCvar_t cg_synchronousClients;
@@ -339,6 +349,9 @@ cvarTable_t cvarTable[] = {
 	{ &cg_journalStyle, "cg_journalStyle", "1", CVAR_ARCHIVE },
 	{ &cg_viewsize, "cg_viewsize", "100", CVAR_ARCHIVE },
 	{ &cg_letterbox, "cg_letterbox", "0", CVAR_TEMP },    //----(SA)	added
+	{ &cg_ipd, "cg_ipd", "0.065", CVAR_ARCHIVE  },
+	{ &cg_worldScale, "cg_worldScale", "37.5", CVAR_ARCHIVE  },
+	{ &cg_heightAdjust, "cg_heightAdjust", "0.0", CVAR_ARCHIVE  },
 	{ &cg_shadows, "cg_shadows", "1", CVAR_ARCHIVE  },
 	{ &cg_gibs, "cg_gibs", "1", CVAR_ARCHIVE  },
 	{ &cg_draw2D, "cg_draw2D", "1", CVAR_ARCHIVE  },

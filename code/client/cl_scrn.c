@@ -29,7 +29,7 @@ If you have questions concerning this license or the applicable additional terms
 // cl_scrn.c -- master for refresh, status bar, console, chat, notify, etc
 
 #include "client.h"
-#include "../RealRTCWXR/RealRTCWXR/VrCommon.h"
+#include <VrCommon.h>
 
 qboolean scr_initialized;           // ready to draw
 

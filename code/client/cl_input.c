@@ -29,7 +29,7 @@ If you have questions concerning this license or the applicable additional terms
 // cl.input.c  -- builds an intended movement command to send to the server
 
 #include "client.h"
-#include "../RealRTCWXR/RealRTCWXR/VrCommon.h"
+#include <VrCommon.h>
 
 unsigned frame_msec;
 int old_com_frameTime;
