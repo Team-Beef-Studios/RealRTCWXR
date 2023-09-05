@@ -70,7 +70,6 @@ qboolean AICast_ScriptAction_ClearAnim( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_SetAmmo( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_SetClip( cast_state_t *cs, char *params );			//----(SA)	added
 qboolean AICast_ScriptAction_SelectWeapon( cast_state_t *cs, char *params );
-qboolean AICast_ScriptAction_SetMoveSpeed( cast_state_t *cs, char *params );		
 qboolean AICast_ScriptAction_GiveArmor( cast_state_t *cs, char *params );		//----(SA)	added
 qboolean AICast_ScriptAction_SetArmor( cast_state_t *cs, char *params );		//----(SA)	added
 qboolean AICast_ScriptAction_GiveAmmo( cast_state_t *cs, char *params );		//----(SA)	added
@@ -263,7 +262,6 @@ qboolean AICast_ScriptAction_MusicQueue( cast_state_t *cs, char *params );		//--
 
 qboolean AICast_ScriptAction_ExplicitRouting( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_LockPlayer( cast_state_t *cs, char *params );
-qboolean AICast_ScriptAction_ScreenFade( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_AnimCondition( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_PushAway( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_CatchFire( cast_state_t *cs, char *params );
@@ -303,7 +301,6 @@ cast_script_stack_action_t scriptActions[] =
 	{"noattack",     AICast_ScriptAction_NoAttack},
 	{"suggestweapon",    AICast_ScriptAction_SuggestWeapon},		//----(SA)	added
 	{"attack",           AICast_ScriptAction_Attack},
-	{"setmovespeed",     AICast_ScriptAction_SetMoveSpeed},					
 	{"givearmor",        AICast_ScriptAction_GiveArmor},			//----(SA)	added
 	{"setarmor",     AICast_ScriptAction_SetArmor},					//----(SA)	added
 	{"giveammo",        AICast_ScriptAction_GiveAmmo},			
@@ -488,7 +485,6 @@ cast_script_stack_action_t scriptActions[] =
 
 	{"explicit_routing", AICast_ScriptAction_ExplicitRouting},
 	{"lockplayer",       AICast_ScriptAction_LockPlayer},
-	{"screenfade",       AICast_ScriptAction_ScreenFade},
 	{"anim_condition",   AICast_ScriptAction_AnimCondition},
 	{"pushaway",     AICast_ScriptAction_PushAway},
 	{"catchfire",        AICast_ScriptAction_CatchFire},

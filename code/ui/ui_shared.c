@@ -107,12 +107,9 @@ translateString_t translateStrings[] = {
 	{"secretarea"},              //	"You found a secret area"
 	{"objectivesnotcomplete"},   //	"Objectives not complete"
 	{"drankwine"},               //	"You drank the wine"
-	{"usedbandages"},            //	"You used the bandages"
-	{"usedadrenaline"},          //	"You used the adrenaline"
-	{"usedeg_syringe"},           // "You used the EG Syringe"	
-	{"usedbg_syringe"},           // "You used the BG Syringe"	
-	{"usedlp_syringe"},           // "You used the LP Syringe"
-	{"noquickgrenammo"},         //	"No grenades left"
+	{"usedbandages"},            //	
+	{"usedadrenaline"},          //	
+	{"noquickgrenammo"},         //	
 	{"noitem"},                  //	"No item to use"
 	{"gamesaved"},               //	"Game Saved"
 	{"ironchallengesave"},       // no save 4 u

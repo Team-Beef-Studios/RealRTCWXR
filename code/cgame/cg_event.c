@@ -132,15 +132,6 @@ static void CG_UseItem( centity_t *cent ) {
 				case HI_ADRENALINE:
 					CG_CenterPrint( "usedadrenaline", SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.25 ), SMALLCHAR_WIDTH );
 					break;
-				case HI_EG_SYRINGE:
-					CG_CenterPrint( "usedeg_syringe", SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.25 ), SMALLCHAR_WIDTH );
-					break;
-				case HI_BG_SYRINGE:
-					CG_CenterPrint( "usedbg_syringe", SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.25 ), SMALLCHAR_WIDTH );
-					break;
-			    case HI_LP_SYRINGE:
-					CG_CenterPrint( "usedlp_syringe", SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.25 ), SMALLCHAR_WIDTH );
-					break;
 				case HI_BANDAGES:
 					CG_CenterPrint( "usedbandages", SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.25 ), SMALLCHAR_WIDTH );
 					break;
@@ -172,9 +163,6 @@ static void CG_UseItem( centity_t *cent ) {
 		break;
 
 	case HI_ADRENALINE:
-	case HI_EG_SYRINGE:
-	case HI_BG_SYRINGE:
-	case HI_LP_SYRINGE:
 		trap_S_StartSound( NULL, es->number, CHAN_BODY, cgs.media.adrenalineSound );
 		break;
 	case HI_BANDAGES:
@@ -1746,13 +1734,6 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		}
 		break;
 
-	case EV_FILL_CLIP_FULL:
-		DEBUGNAME( "EV_FILL_CLIP_FULL" );
-		if ( cg_weapons[es->weapon].reloadFullSound ) {
-			trap_S_StartSound( NULL, es->number, CHAN_WEAPON, cg_weapons[es->weapon].reloadFullSound ); // JPW NERVE following sherman's SP fix, should allow killing reload sound when player dies
-		}
-		break;
-
 	case EV_M97_PUMP:
 		DEBUGNAME("EV_M97_PUMP");
 		// Jaymod
@@ -2091,13 +2072,17 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		DEBUGNAME( "EV_GENERAL_SOUND" );
 		// Ridah, check for a sound script
 		s = CG_ConfigString( CS_SOUNDS + es->eventParm );
+		//trap_SendServerCommand( -1, va( "cpst %s", s ) );
+//		CG_SubtitlePrint( s, SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.33 ), 6 );
 		if ( !strstr( s, ".wav" ) ) {
 			if ( CG_SoundPlaySoundScript( s, NULL, es->number ) ) {
 				break;
 			}
-
-			break;  
-
+			// try with .wav
+			break;  // RF, all sounds should have extension
+			//Q_strncpyz( tempStr, s, sizeof( tempStr ) );
+			//Q_strcat( tempStr, sizeof( tempStr ), ".wav" );
+			//s = tempStr;
 		}
 		// done.
 		if ( cgs.gameSounds[ es->eventParm ] ) {
@@ -2537,17 +2522,6 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 
 	case EV_SPAWN_SPIRIT:
 		CG_SpawnSpirit( cent );
-		break;
-
-	case EV_ALERT_SPEAKER:
-		DEBUGNAME( "EV_ALERT_SPEAKER" );
-		switch ( cent->currentState.otherEntityNum2 )
-		{
-		case 1:     CG_UnsetActiveOnScriptSpeaker( cent->currentState.otherEntityNum ); break;
-		case 2:     CG_SetActiveOnScriptSpeaker( cent->currentState.otherEntityNum );   break;
-		case 0:
-		default:    CG_ToggleActiveOnScriptSpeaker( cent->currentState.otherEntityNum );    break;
-		}
 		break;
 
 	default:

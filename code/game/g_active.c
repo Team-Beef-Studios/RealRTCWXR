@@ -469,7 +469,7 @@ void ClientTimerActions( gentity_t *ent, int msec ) {
 		client->timeResidual -= 1000;
 
     if ( g_gametype.integer == GT_GOTHIC ) {
-	    if ((g_gameskill.integer == GSKILL_HARD) && (!ent->aiCharacter))  // vampirism (health decay)
+	    if (g_gameskill.integer == GSKILL_HARD)  // vampirism (health decay)
         {
 	        if (ent->health > 25)
 	        {
@@ -501,35 +501,11 @@ void ClientTimerActions( gentity_t *ent, int msec ) {
 				}
 			}
 
-		// regenerate health only if cvar is turned on
-		if (g_regen.integer == 1) {
-		    if (ent->health < client->ps.stats[STAT_MAX_HEALTH])
-		    {
-				if (!ent->aiCharacter){
-				if (ent->health > client->ps.stats[STAT_MAX_HEALTH] / 2)
-				{
-					ent->health += 2;
-
-					if (ent->health > client->ps.stats[STAT_MAX_HEALTH])
-					{
-						ent->health = client->ps.stats[STAT_MAX_HEALTH];
-					}
-				}
-				else
-				{
-					ent->health += 3;
-				}
-				}
-		    }
-		}
-
-
 		// count down armor when over max // RealRTCW if more than 100
 		if ( client->ps.stats[STAT_ARMOR] > 100 ) {
 			client->ps.stats[STAT_ARMOR]--;
 		}
 	}
-
 }
 
 /*
@@ -609,41 +585,17 @@ void ClientEvents( gentity_t *ent, int oldEventSequence ) {
 			if ( event == EV_FALL_NDIE ) {
 				damage = 9999;
 			} else if ( event == EV_FALL_DMG_50 ) {
-			if ( client->ps.powerups[PW_FLIGHT] ) 
-			    {
-				damage = 25;
-				stunTime = 500;
-			    } else {
 				damage = 50;
 				stunTime = 1000;
-				}
 			} else if ( event == EV_FALL_DMG_25 ) {
-			if ( client->ps.powerups[PW_FLIGHT] ) 
-			    {
-				damage = 12;
-				stunTime = 125;
-			    } else {
 				damage = 25;
 				stunTime = 250;
-				}
 			} else if ( event == EV_FALL_DMG_15 ) {
-			if ( client->ps.powerups[PW_FLIGHT] ) 
-			    {
-				damage = 7;
-				stunTime = 500;
-			    } else {
 				damage = 15;
 				stunTime = 1000;
-				}
 			} else if ( event == EV_FALL_DMG_10 ) {
-			if ( client->ps.powerups[PW_FLIGHT] ) 
-			    {
-				damage = 5;
-				stunTime = 500;
-			    } else {
 				damage = 10;
 				stunTime = 1000;
-				}
 			} else {
 				damage = 5; // never used
 			}
@@ -1013,7 +965,7 @@ void ClientThink_real( gentity_t *ent ) {
 	client->ps.speed = g_speed.value;
 
 	if ( client->ps.powerups[PW_HASTE] ) {
-		client->ps.speed *= 1.4;
+		client->ps.speed *= 1.6;
 	}
 
 	// set up for pmove

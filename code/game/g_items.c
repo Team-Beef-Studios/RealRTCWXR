@@ -195,39 +195,6 @@ void UseHoldableItem( gentity_t *ent, int item ) {
 		}
 		}
 		break;
-	case HI_EG_SYRINGE:       
-        ent->client->ps.powerups[PW_HASTE] = level.time - ( level.time % 1000 );
-		ent->client->ps.powerups[PW_HASTE] += 30 * 1000;
-		ent->client->ps.powerups[PW_NOFATIGUE] = 30000;
-		
-		/*if ( !g_cheats.integer ) 
-		{
-		steamSetAchievement("ACH_ADRENALINE");
-		}
-		*/
-		break;
-	case HI_BG_SYRINGE:       
-        ent->client->ps.powerups[PW_BATTLESUIT] = level.time - ( level.time % 1000 );
-		ent->client->ps.powerups[PW_BATTLESUIT] += 30 * 1000;
-		
-		/*if ( !g_cheats.integer ) 
-		{
-		steamSetAchievement("ACH_ADRENALINE");
-		}
-		*/
-		break;
-
-	case HI_LP_SYRINGE:       
-        ent->client->ps.powerups[PW_FLIGHT] = level.time - ( level.time % 1000 );
-		ent->client->ps.powerups[PW_FLIGHT] += 30 * 1000;
-		ent->client->ps.powerups[PW_NOFATIGUE] = 30000;
-		
-		/*if ( !g_cheats.integer ) 
-		{
-		steamSetAchievement("ACH_ADRENALINE");
-		}
-		*/
-		break;
 
 	case HI_BANDAGES:       
 		ent->health += 20;
@@ -418,20 +385,6 @@ int Pickup_Ammo( gentity_t *ent, gentity_t *other ) {
 		}
 
 	return RESPAWN_AMMO;
-}
-
-
-// xkan, 9/18/2002 - Extracted AddMagicAmmo from Pickup_Weapon()
-/*
-=================================================================
-AddMagicAmmo - added the specified number of clips of magic ammo
-for any two-handed weapon
-
-- returns whether any ammo was actually added
-=================================================================
-*/
-qboolean AddMagicAmmo( gentity_t *receiver, int numOfClips ) {
-	return BG_AddMagicAmmo( &receiver->client->ps, numOfClips );
 }
 
 //======================================================================

@@ -231,11 +231,7 @@ typedef enum {
 	WEAPON_FIRING,
 	WEAPON_FIRINGALT,
 	WEAPON_WAITING,     // player allowed to switch/reload, but not fire
-	WEAPON_RELOADING,
-	WEAPON_HOLSTER_IN,
-	WEAPON_HOLSTER_OUT,
-	WEAPON_SPRINT_IN,
-	WEAPON_SPRINT_OUT   
+	WEAPON_RELOADING    
 } weaponstate_t;
 
 // pmove->pm_flags	(sent as max 16 bits in msg.c)
@@ -254,7 +250,6 @@ typedef enum {
 #define PMF_SCOREBOARD      8192    // spectate as a scoreboard
 #define PMF_LIMBO           16384   // JPW NERVE limbo state, pm_time is time until reinforce
 #define PMF_TIME_LOAD       32768   // hold for this time after a load game, and prevent large thinks
-#define PMF_SPRINTING       65536 
 
 #define PMF_ALL_TIMES   ( PMF_TIME_WATERJUMP | PMF_TIME_LAND | PMF_TIME_KNOCKBACK | PMF_TIME_LOAD )
 
@@ -439,9 +434,9 @@ typedef enum {
 	HI_BOOK1,   
 	HI_BOOK2,   
 	HI_BOOK3,   
-	HI_EG_SYRINGE,
-	HI_BG_SYRINGE,
-	HI_LP_SYRINGE,
+	HI_11,
+	HI_12,
+	HI_13,
 	HI_14,
 	HI_M97,
 	HI_NUM_HOLDABLE
@@ -542,19 +537,13 @@ typedef enum {
 } weapon_t;
 
 
-extern int reloadableWeapons[];
 
-
-typedef struct ammoTable_s {
+typedef struct ammotable_s {
 	int weaponindex;
-	int weaponClass;
-	weapon_t weapAlts;
-	int weaponTeam;
 	int maxammo;            
 	int uses;               
 	int maxclip;            
-	int reloadTime;
-	int reloadTimeFull;         
+	int reloadTime;         
 	int fireDelayTime;      
 	int nextShotTime;
 	int nextShotTime2;        
@@ -574,9 +563,9 @@ typedef struct ammoTable_s {
 	float moveSpeed; 
 	int twoHand;
 	int upAngle;
-	float falloffDistance[2];
 	int mod;   
-} ammoTable_t;
+} ammotable_t;
+    
 
 // Skill-based ammo parameters
 typedef struct ammoskill_s {
@@ -584,11 +573,11 @@ typedef struct ammoskill_s {
 	int maxclip;
 } ammoskill_t;
 
-//extern int weapAlts[]; 
+extern int weapAlts[]; 
 
-extern ammoTable_t ammoTable[WP_NUM_WEAPONS];
+extern ammotable_t ammoTable[WP_NUM_WEAPONS];
 extern ammoskill_t ammoSkill[GSKILL_NUM_SKILLS][WP_NUM_WEAPONS];
-#define GetWeaponTableData(weaponIndex) ((ammoTable_t *)(&ammoTable[weaponIndex]))
+#define GetWeaponTableData(weaponIndex) ((ammotable_t *)(&ammoTable[weaponIndex]))
 
 
 #define IS_AUTORELOAD_WEAPON( weapon ) \
@@ -690,7 +679,6 @@ typedef enum {
 	EV_WEAPONSWITCHED, // autoreload
 	EV_EMPTYCLIP,
 	EV_FILL_CLIP,
-	EV_FILL_CLIP_FULL,
 	EV_WEAP_OVERHEAT,
 	EV_CHANGE_WEAPON,
 	EV_FIRE_WEAPON,
@@ -800,7 +788,6 @@ typedef enum {
 	EV_M97_PUMP, // RealRTCW
 	EV_COUGH,
 	EV_QUICKGRENS,
-	EV_ALERT_SPEAKER,
 	EV_MAX_EVENTS   // just added as an 'endcap'
 } entity_event_t;
 
@@ -983,8 +970,6 @@ typedef enum {
 	WEAP_ALTSWITCHFROM, // switch from alt fire mode weap (scoped/silencer/etc)
 	WEAP_ALTSWITCHTO,   // switch to alt fire mode weap
 	WEAP_DROP2,
-	WEAP_SPRINTIN,
-	WEAP_SPRINTOUT,
 	MAX_WP_ANIMATIONS
 } weapAnimNumber_t;
 
@@ -1152,36 +1137,6 @@ typedef enum {
 
 } meansOfDeath_t;
 
-typedef enum
-{
-	WEAPON_CLASS_NONE,
-	WEAPON_CLASS_MELEE,
-	WEAPON_CLASS_PISTOL,
-	WEAPON_CLASS_SMG,
-	WEAPON_CLASS_RIFLE,
-	WEAPON_CLASS_AUTO_RIFLE,
-	WEAPON_CLASS_ASSAULT_RIFLE,
-	WEAPON_CLASS_SHOTGUN,
-	WEAPON_CLASS_GRENADE,
-	WEAPON_CLASS_RIFLENADE,
-	WEAPON_CLASS_MG,
-	WEAPON_CLASS_LAUNCHER,
-	WEAPON_CLASS_BEAM,
-	WEAPON_CLASS_SCOPED,
-	WEAPON_CLASS_SCOPABLE
-
-} weaponClass_t;
-
-typedef enum
-{
-	WEAPON_TEAM_NONE,
-	WEAPON_TEAM_ALLIES,
-	WEAPON_TEAM_AXIS,
-	WEAPON_TEAM_SOVIET,
-	WEAPON_TEAM_COMMON
-
-} weaponTeam_t;
-
 
 //---------------------------------------------------------
 
@@ -1204,7 +1159,7 @@ typedef enum {
 } itemType_t;
 
 #define MAX_ITEM_MODELS 3
-#define MAX_ITEM_ICONS 16
+#define MAX_ITEM_ICONS 4
 
 typedef struct gitem_s {
 	char        *classname; // spawning name
@@ -1235,7 +1190,6 @@ extern gitem_t bg_itemlist[];
 extern int bg_numItems;
 
 gitem_t *BG_FindItem( const char *pickupName );
-gitem_t *BG_FindItemForClassName( const char *className );
 gitem_t *BG_FindItem2( const char *name );  
 gitem_t *BG_FindItemForWeapon( weapon_t weapon );
 gitem_t *BG_FindItemForPowerup( powerup_t pw );
@@ -1302,10 +1256,6 @@ typedef enum {
 	ET_FP_PARTS,
 	ET_FIRE_COLUMN,
 	ET_FIRE_COLUMN_SMOKE,
-	ET_CABINET_H,
-	ET_CABINET_A,
-	ET_HEALER,
-	ET_SUPPLIER,
 	ET_RAMJET,
 	ET_EXPLO_PART,
 	ET_CROWBAR,
@@ -1387,7 +1337,6 @@ void    BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t
 
 qboolean    BG_PlayerTouchesItem( playerState_t *ps, entityState_t *item, int atTime );
 qboolean    BG_PlayerSeesItem( playerState_t *ps, entityState_t *item, int atTime );
-qboolean    BG_AddMagicAmmo( playerState_t *ps, int numOfClips );
 
 void PM_ClipVelocity( vec3_t in, vec3_t normal, vec3_t out, float overbounce );
 
@@ -1722,18 +1671,12 @@ float BG_AnimGetFootstepGap( playerState_t *ps, float xyspeed );
 int PM_IdleAnimForWeapon( int weapon );
 int PM_RaiseAnimForWeapon( int weapon );
 
-int PM_SprintInAnimForWeapon( int weapon );
-int PM_SprintOutAnimForWeapon( int weapon );
-
 int PM_AltSwitchFromForWeapon( int weapon );
 int PM_AltSwitchToForWeapon( int weapon );
 
 
 extern animStringItem_t animStateStr[];
 extern animStringItem_t animBodyPartsStr[];
-
-long BG_StringHashValue(const char *fname);
-long BG_StringHashValue_Lwr(const char *fname);
 
 int trap_PC_LoadSource( const char *filename );
 int trap_PC_ReadToken( int handle, pc_token_t *pc_token );
@@ -1798,45 +1741,6 @@ struct splinePath_s {
 
 extern int numSplinePaths;
 extern splinePath_t splinePaths[MAX_SPLINE_PATHS];
-
-typedef enum
-{
-	S_LT_NOT_LOOPED = 0,
-	S_LT_LOOPED_ON,
-	S_LT_LOOPED_OFF
-} speakerLoopType_t;
-
-typedef enum
-{
-	S_BT_LOCAL = 0,
-	S_BT_GLOBAL,
-	S_BT_NOPVS
-} speakerBroadcastType_t;
-
-typedef struct bg_speaker_s
-{
-	char filename[MAX_QPATH];
-	qhandle_t noise;
-	vec3_t origin;
-	char targetname[32];
-	long targetnamehash;
-
-	speakerLoopType_t loop;
-	speakerBroadcastType_t broadcast;
-	int wait;
-	int random;
-	int volume;
-	int range;
-
-	qboolean activated;
-	int nextActivateTime;
-	int soundTime;
-} bg_speaker_t;
-
-void BG_ClearScriptSpeakerPool(void);
-qboolean BG_LoadSpeakerScript(const char *filename);
-int BG_NumScriptSpeakers(void);
-bg_speaker_t *BG_GetScriptSpeaker(int index);
 
 pathCorner_t *BG_Find_PathCorner( const char *match );
 splinePath_t* BG_GetSplineData( int number, qboolean* backwards );

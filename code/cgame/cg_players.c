@@ -2789,11 +2789,9 @@ static void CG_PlayerPowerups( centity_t *cent ) {
 	}
 
 	// haste leaves smoke trails
-	/*
 	if ( powerups & ( 1 << PW_HASTE ) ) {
 		CG_HasteTrail( cent );
 	}
-	*/
 }
 
 
@@ -4382,10 +4380,10 @@ void CG_AddRefEntityWithPowerups( refEntity_t *ent, int powerups, int team, enti
 				trap_R_AddRefEntityToScene( ent );
 			}
 		}
-		/*if ( powerups & ( 1 << PW_BATTLESUIT ) ) {
+		if ( powerups & ( 1 << PW_BATTLESUIT ) ) {
 			ent->customShader = cgs.media.battleSuitShader;
 			trap_R_AddRefEntityToScene( ent );
-		}*/
+		}
 	}
 
 	if ( !onFire && CG_EntOnFire( &cg_entities[es->number] ) ) {

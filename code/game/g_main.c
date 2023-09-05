@@ -160,8 +160,6 @@ vmCvar_t g_reinforce;
 vmCvar_t g_fullarsenal;
 vmCvar_t g_endmapbonus;
 vmCvar_t g_randomweapons;
-vmCvar_t g_realism;
-vmCvar_t g_regen;
 
 vmCvar_t g_mapname;
 
@@ -190,8 +188,6 @@ cvarTable_t gameCvarTable[] = {
 	{ &g_fullarsenal, "g_fullarsenal", "1", CVAR_ARCHIVE | CVAR_LATCH, 0, qfalse },
 	{ &g_endmapbonus, "g_endmapbonus", "1", CVAR_ARCHIVE | CVAR_LATCH, 0, qfalse },
 	{ &g_randomweapons, "g_randomweapons", "0", CVAR_ARCHIVE | CVAR_LATCH, 0, qfalse },
-	{ &g_realism, "g_realism", "0", CVAR_ARCHIVE | CVAR_LATCH, 0, qfalse },
-	{ &g_regen, "g_regen", "0", CVAR_ARCHIVE | CVAR_LATCH, 0, qfalse },
 
 	{ &g_reloading, "g_reloading", "0", CVAR_ROM },   //----(SA)	added
 
@@ -854,16 +850,6 @@ void G_CheckForCursorHints( gentity_t *ent ) {
 }
 
 
-void G_SetTargetName( gentity_t* ent, char* targetname ) {
-	if ( targetname && *targetname ) {
-		ent->targetname = targetname;
-		ent->targetnamehash = BG_StringHashValue( targetname );
-	} else {
-		ent->targetnamehash = -1;
-	}
-}
-
-
 /*
 ================
 G_FindTeams
@@ -1205,7 +1191,6 @@ extern void trap_Cvar_Reset( const char *var_name );
 
 void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	int i;
-	char   cs[MAX_INFO_STRING];
 
 	steamInit();
 
@@ -1240,10 +1225,6 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	level.animScriptData.playSound = G_AnimScriptSound;
 
 	G_InitWorldSession();
-
-	trap_GetServerinfo(cs, sizeof(cs));
-	Q_strncpyz(level.mapname, Info_ValueForKey(cs, "mapname"), sizeof(level.mapname));
-	G_LogPrintf("map: %s\n", level.mapname);
 
 	// initialize all entities for this game
 	memset( g_entities, 0, MAX_GENTITIES * sizeof( g_entities[0] ) );
@@ -1300,8 +1281,6 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 
 	ClearRegisteredItems();
 
-	G_ResetRemappedShaders();
-
 	// parse the key/value pairs and spawn gentities
 	G_SpawnEntitiesFromString();
 
@@ -1313,9 +1292,6 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 
 	SaveRegisteredItems();
 
-	BG_ClearScriptSpeakerPool();
-
-	BG_LoadSpeakerScript(va("sound/maps/%s.sps", level.mapname));
 
 	G_ModelIndex( SP_PODIUM_MODEL );
 
@@ -2257,107 +2233,6 @@ void G_RunThink( gentity_t *ent ) {
 	ent->think( ent );
 }
 
-void G_RunEntity( gentity_t* ent, int msec );
-
-void G_RunEntity( gentity_t* ent, int msec ) {
-
-	if ( ent->runthisframe ) {
-		return;
-	}
-
-	ent->runthisframe = qtrue;
-
-	if ( !ent->inuse ) {
-		return;
-	}
-
-	// check EF_NODRAW status for non-clients
-	if ( ent - g_entities > level.maxclients ) {
-		if ( ent->flags & FL_NODRAW ) {
-			ent->s.eFlags |= EF_NODRAW;
-		} else {
-			ent->s.eFlags &= ~EF_NODRAW;
-		}
-	}
-
-
-	// clear events that are too old
-	if ( level.time - ent->eventTime > EVENT_VALID_MSEC ) {
-		if ( ent->s.event ) {
-			ent->s.event = 0;
-		}
-		if ( ent->freeAfterEvent ) {
-			// tempEntities or dropped items completely go away after their event
-			G_FreeEntity( ent );
-			return;
-		} else if ( ent->unlinkAfterEvent ) {
-			// items that will respawn will hide themselves after their pickup event
-			ent->unlinkAfterEvent = qfalse;
-			trap_UnlinkEntity( ent );
-		}
-	}
-
-	// temporary entities don't think
-	if ( ent->freeAfterEvent ) {
-		return;
-	}
-
-	if ( !ent->r.linked && ent->neverFree ) {
-		return;
-	}
-
-	if ( ent->s.eType == ET_MISSILE
-		 || ent->s.eType == ET_FLAMEBARREL
-		 || ent->s.eType == ET_FP_PARTS
-		 || ent->s.eType == ET_FIRE_COLUMN
-		 || ent->s.eType == ET_FIRE_COLUMN_SMOKE
-		 || ent->s.eType == ET_EXPLO_PART
-		 || ent->s.eType == ET_RAMJET ) {
-		return;
-	}
-
-		if ( ent->s.eType == ET_ITEM || ent->physicsObject ) {
-		G_RunItem( ent );
-
-		// ydnar: hack for instantaneous velocity
-		VectorSubtract( ent->r.currentOrigin, ent->oldOrigin, ent->instantVelocity );
-		VectorScale( ent->instantVelocity, 1000.0f / msec, ent->instantVelocity );
-
-		return;
-	}
-
-	if ( ent->s.eType == ET_MOVER || ent->s.eType == ET_PROP ) {
-		G_RunMover( ent );
-
-		// ydnar: hack for instantaneous velocity
-		VectorSubtract( ent->r.currentOrigin, ent->oldOrigin, ent->instantVelocity );
-		VectorScale( ent->instantVelocity, 1000.0f / msec, ent->instantVelocity );
-
-		return;
-	}
-
-	if ( ent - g_entities < MAX_CLIENTS ) {
-		G_RunClient( ent );
-
-		// ydnar: hack for instantaneous velocity
-		VectorSubtract( ent->r.currentOrigin, ent->oldOrigin, ent->instantVelocity );
-		VectorScale( ent->instantVelocity, 1000.0f / msec, ent->instantVelocity );
-
-		return;
-	}
-
-	if ( ( ent->s.eType == ET_HEALER || ent->s.eType == ET_SUPPLIER ) && ent->target_ent ) {
-		ent->target_ent->s.onFireStart =    ent->health;
-		ent->target_ent->s.onFireEnd =      ent->count;
-	}
-
-	G_RunThink( ent );
-
-	// ydnar: hack for instantaneous velocity
-	VectorSubtract( ent->r.currentOrigin, ent->oldOrigin, ent->instantVelocity );
-	VectorScale( ent->instantVelocity, 1000.0f / msec, ent->instantVelocity );
-}
-
 /*
 ================
 G_RunFrame
@@ -2366,7 +2241,7 @@ Advances the non-player objects in the world
 ================
 */
 void G_RunFrame( int levelTime ) {
-	int i, msec;
+	int i;
 	gentity_t   *ent;
 
 	if (steamAlive())
@@ -2383,8 +2258,6 @@ void G_RunFrame( int levelTime ) {
 	level.previousTime = level.time;
 	level.time = levelTime;
 
-	msec = level.time - level.previousTime;
-
 	// Ridah, check for loading a save game
 		extern void AICast_CheckLoadGame( void );
 		AICast_CheckLoadGame();
@@ -2393,16 +2266,11 @@ void G_RunFrame( int levelTime ) {
 	// get any cvar changes
 	G_UpdateCvars();
 
-	for ( i = 0; i < level.num_entities; i++ ) {
-		g_entities[i].runthisframe = qfalse;
-	}
-
 	//
 	// go through all allocated objects
 	//
 	ent = &g_entities[0];
 	for ( i = 0 ; i < level.num_entities ; i++, ent++ ) {
-		G_RunEntity( &g_entities[ i ], msec );
 		if ( !ent->inuse ) {
 			continue;
 		}

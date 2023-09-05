@@ -193,8 +193,6 @@ struct gentity_s {
 
 	qboolean inuse;
 
-	vec3_t instantVelocity;         // ydnar: per entity instantaneous velocity, set per frame
-
 	char        *classname;         // set in QuakeEd
 	int spawnflags;                 // set in QuakeEd
 
@@ -254,7 +252,6 @@ struct gentity_s {
 	char        *target;
 	char        *targetdeath;   // fire this on death exclusively //----(SA)	added
 	char        *targetname;
-	int         targetnamehash;         // Gordon: adding a hash for this for faster lookups
 	char        *team;
 	char        *targetShaderName;
 	char        *targetShaderNewName;
@@ -368,10 +365,6 @@ struct gentity_s {
 	// Rafael
 	qboolean is_dead;
 	// done
-
-	vec3_t oldOrigin;
-
-	qboolean runthisframe;
 
 	int start_size;
 	int end_size;
@@ -594,7 +587,6 @@ struct gclient_s {
 	// RF, may be shared by multiple clients/characters
 	animModelInfo_t *modelInfo;
 
-
 	// -------------------------------------------------------------------------------------------
 	// if working on a post release patch, new variables should ONLY be inserted after this point
 
@@ -635,8 +627,6 @@ typedef struct {
 	int warmupTime;                 // restart match at this time
 
 	fileHandle_t logFile;
-
-	char mapname[MAX_QPATH];
 
 	// store latched cvars here that we want to get at often
 	int maxclients;
@@ -796,7 +786,6 @@ int ArmorIndex( gentity_t *ent );
 void Fill_Clip( playerState_t *ps, int weapon );
 void    Add_Ammo( gentity_t *ent, int weapon, int count, qboolean fillClip );
 void Touch_Item( gentity_t *ent, gentity_t *other, trace_t *trace );
-qboolean AddMagicAmmo( gentity_t *receiver, int numOfClips );
 
 // Touch_Item_Auto is bound by the rules of autoactivation (if cg_autoactivate is 0, only touch on "activate")
 void Touch_Item_Auto( gentity_t *ent, gentity_t *other, trace_t *trace );
@@ -818,8 +807,6 @@ int     G_SoundIndex( const char *name );
 void    G_TeamCommand( team_t team, char *cmd );
 void    G_KillBox( gentity_t *ent );
 gentity_t *G_Find( gentity_t *from, int fieldofs, const char *match );
-gentity_t* G_FindByTargetname( gentity_t *from, const char* match );
-gentity_t* G_FindByTargetnameFast( gentity_t *from, const char* match, int hash );
 gentity_t *G_PickTarget( char *targetname );
 void    G_UseTargets( gentity_t *ent, gentity_t *activator );
 void    G_SetMovedir( vec3_t angles, vec3_t movedir );
@@ -841,7 +828,6 @@ void G_AddPredictableEvent( gentity_t *ent, int event, int eventParm );
 void G_AddEvent( gentity_t *ent, int event, int eventParm );
 void G_SetOrigin( gentity_t *ent, vec3_t origin );
 void AddRemap( const char *oldShader, const char *newShader, float timeOffset );
-void G_ResetRemappedShaders(void);
 const char *BuildShaderStateConfig( void );
 void G_SetAngle( gentity_t *ent, vec3_t angle );
 
@@ -924,8 +910,6 @@ void Reached_Tramcar( gentity_t *ent );
 void TeleportPlayer( gentity_t *player, vec3_t origin, vec3_t angles );
 
 
-int G_GetEnemyPosition(gentity_t *ent, gentity_t *targ);
-
 //
 // g_weapon.c
 //
@@ -935,8 +919,13 @@ void SnapVectorTowards( vec3_t v, vec3_t to );
 trace_t *CheckMeleeAttack( gentity_t *ent, float dist, qboolean isTest );
 gentity_t *weapon_grenadelauncher_fire( gentity_t *ent, int grenadeWPID );
 gentity_t *quickgren_fire( gentity_t *ent, int grenadeWPID );
+// Rafael
 gentity_t *weapon_crowbar_throw( gentity_t *ent );
+
 void CalcMuzzlePoints( gentity_t *ent, int weapon );
+//----(SA) commented out as we have no hook
+//void Weapon_HookFree (gentity_t *ent);
+//void Weapon_HookThink (gentity_t *ent);
 
 // Rafael - for activate
 void CalcMuzzlePointForActivate( gentity_t *ent, vec3_t forward, vec3_t right, vec3_t up, vec3_t muzzlePoint );
@@ -1205,8 +1194,6 @@ extern vmCvar_t g_spawndogs;
 extern vmCvar_t g_spawnpriests;
 extern vmCvar_t g_spawnxshepherds;
 extern vmCvar_t g_aicanheadshot;
-extern vmCvar_t g_realism;
-extern vmCvar_t g_regen;
 
 void	trap_Print( const char *text );
 void	trap_Error( const char *text ) __attribute__((noreturn));
@@ -1429,8 +1416,6 @@ void	*trap_Alloc( int size );
 
 gentity_t* G_FindSmokeBomb( gentity_t* start );
 void G_PoisonGasExplode  ( gentity_t* );
-
-void G_SetTargetName( gentity_t* ent, char* targetname );
 
 typedef enum
 {

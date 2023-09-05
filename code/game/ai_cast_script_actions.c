@@ -1225,46 +1225,6 @@ qboolean AICast_ScriptAction_SelectWeapon( cast_state_t *cs, char *params ) {
 }
 
 
-/*
-==============
-AICast_ScriptAction_SetMoveSpeed
-	syntax: setmovespeed <value>
-==============
-*/
-qboolean AICast_ScriptAction_SetMoveSpeed( cast_state_t *cs, char *params ) {
-    gentity_t *ent;
-
-	ent = &g_entities[cs->entityNum];
-
-	if ( !params || !params[0] ) {
-		G_Error( "AI Scripting: setmovespeed requires a movespeed value" );
-	}
-
-	if ( !Q_stricmp( params, "veryfast" ) ) {
-		ent->client->ps.runSpeedScale *= 1.5;
-		ent->client->ps.sprintSpeedScale *= 1.5;
-		ent->client->ps.crouchSpeedScale *= 1.5;
-	} else if ( !Q_stricmp ( params, "fast" )) {
-		ent->client->ps.runSpeedScale *= 1.3;
-		ent->client->ps.sprintSpeedScale *= 1.3;
-		ent->client->ps.crouchSpeedScale *= 1.3;
-	} else if ( !Q_stricmp ( params, "default" )) {
-		ent->client->ps.runSpeedScale *= 1.0;
-		ent->client->ps.sprintSpeedScale *= 1.0;
-		ent->client->ps.crouchSpeedScale *= 1.0;
-	} else if ( !Q_stricmp ( params, "slow" )) {
-		ent->client->ps.runSpeedScale *= 0.7;
-		ent->client->ps.sprintSpeedScale *= 0.7;
-		ent->client->ps.crouchSpeedScale *= 0.7;
-	} else if ( !Q_stricmp ( params, "veryslow" )) {
-		ent->client->ps.runSpeedScale *= 0.5;
-		ent->client->ps.sprintSpeedScale *= 0.5;
-		ent->client->ps.crouchSpeedScale *= 0.5;
-	}
-
-	return qtrue;
-}
-
 
 //----(SA)	added
 /*
@@ -5168,47 +5128,6 @@ qboolean AICast_ScriptAction_LockPlayer( cast_state_t *cs, char *params ) {
 
 	return qtrue;
 }
-
-/*
-=================
-AICast_ScriptAction_ScreenFade
-
-  syntax: screenfade <fadetime> <in/out>
-=================
-*/
-qboolean AICast_ScriptAction_ScreenFade( cast_state_t *cs, char *params ) {
-	char    *pString, *token;
-	int fadetime;
-
-	pString = params;
-
-	if (!params || !params[0]) {
-		G_Error("AI Scripting:screenfade without parameters\n");
-	}
-    
-	// Specify fadetime
-	token = COM_ParseExt( &pString, qfalse );
-	if ( !token[0] ) {
-		G_Error( "AI_Scripting: syntax: screenfade <fadetime> <in/out>" );
-	}
-	fadetime = atof ( token );
-
-	// Specify in/out
-    token = COM_ParseExt( &pString, qfalse );
-    	
-	if ( !token[0] ) {
-		G_Error( "AI_Scripting: syntax: screenfade <fadetime> <in/out>" );
-	}
-
-	if (!Q_stricmp (token, "in")) {
-		trap_SetConfigstring( CS_SCREENFADE, va( "1 %i %i", level.time + 10, fadetime ) ); // fading in
-	} else if (!Q_stricmp (token, "out")) {
-	    trap_SetConfigstring( CS_SCREENFADE, va( "0 %i %i", level.time + 10, fadetime ) ); // fading out
-	}
-
-	return qtrue;
-
-	}
 
 /*
 ==================

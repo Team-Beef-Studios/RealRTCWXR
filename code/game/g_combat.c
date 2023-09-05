@@ -1076,11 +1076,10 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 	// and protects 50% against all damage
 	if ( client && client->ps.powerups[PW_BATTLESUIT] ) {
 		G_AddEvent( targ, EV_POWERUP_BATTLESUIT, 0 );
-		/*if ( dflags & DAMAGE_RADIUS ) {
+		if ( dflags & DAMAGE_RADIUS ) {
 			return;
-		}*/
-
-		damage *= 0.15;
+		}
+		damage *= 0.1;
 	}
 
 	// always give half damage if hurting self
@@ -1148,7 +1147,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 			// and go to 20% at 2500 units (and after)
 
 			// 1500 to 2500 -> 0.0 to 1.0
-			scale = ( dist - ammoTable [attacker->s.weapon].falloffDistance[0] ) / ( ammoTable [attacker->s.weapon].falloffDistance[1] - ammoTable [attacker->s.weapon].falloffDistance[0] );
+			scale = ( dist - 1500.f ) / ( 2500.f - 1500.f );
 			// 0.0 to 1.0 -> 0.0 to 0.8
 			scale *= 0.8f;
 			// 0.0 to 0.8 -> 1.0 to 0.2

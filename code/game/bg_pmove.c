@@ -43,12 +43,10 @@ int bg_pmove_gameskill_integer;
 #ifdef CGAMEDLL
 extern vmCvar_t cg_gameType;
 extern vmCvar_t cg_jumptime;
-extern vmCvar_t cg_realism;
 #endif
 #ifdef GAMEDLL
 extern vmCvar_t g_gametype;
 extern vmCvar_t g_jumptime;
-extern vmCvar_t g_realism;
 #endif
 
 // jpw
@@ -58,6 +56,7 @@ pml_t pml;
 
 // movement parameters
 float pm_stopspeed = 100;
+//float	pm_duckScale = 0.25;
 
 //----(SA)	modified
 float pm_waterSwimScale   = 0.50;
@@ -78,8 +77,6 @@ float pm_slagfriction     = 1;
 float pm_flightfriction   = 3;
 float pm_ladderfriction   = 14;
 float pm_spectatorfriction = 5.0f;
-
-float pm_realismSlowScale = 0.80;
 
 //----(SA)	end
 
@@ -169,20 +166,6 @@ int PM_DropAnimForWeapon( int weapon ) {
 		return WEAP_DROP2;
 	default:
 		return WEAP_DROP;
-	}
-}
-
-int PM_SprintInAnimForWeapon( int weapon ) {
-	switch ( weapon ) {
-	default:
-		return WEAP_SPRINTIN;
-	}
-}
-
-int PM_SprintOutAnimForWeapon( int weapon ) {
-	switch ( weapon ) {
-	default:
-		return WEAP_SPRINTOUT;
 	}
 }
 
@@ -365,9 +348,9 @@ static void PM_Friction( void ) {
 	}
 
 	// apply flying friction
-	/*if ( pm->ps->powerups[PW_FLIGHT] ) {
+	if ( pm->ps->powerups[PW_FLIGHT] ) {
 		drop += speed * pm_flightfriction * pml.frametime;
-	}*/
+	}
 
 	if ( pm->ps->pm_type == PM_SPECTATOR ) {
 		drop += speed * pm_spectatorfriction * pml.frametime;
@@ -488,29 +471,36 @@ static float PM_CmdScale( usercmd_t *cmd ) {
 				  + cmd->rightmove * cmd->rightmove + cmd->upmove * cmd->upmove );
 	scale = (float)pm->ps->speed * max / ( 127.0 * total );
 
-	switch ( pm->ps->aiChar ) {
-		case AICHAR_ZOMBIE:
-		case AICHAR_WARZOMBIE:
-			 scale *= 1.1;
-			 break;
-		case AICHAR_ELITEGUARD:
-		     scale *= 1.1;
-			 break;
-		case AICHAR_XSHEPHERD:
-		     scale *= 1.4;
-			 break;
-		case AICHAR_HEINRICH:
-		     scale *= 1.3;
-			 break;
-		case AICHAR_SUPERSOLDIER:
-		     scale *= 1.3;
-			 break;
-		case AICHAR_HELGA:
-		     scale *= 1.3;
-			 break;
-		default:
-		    scale *= 1.0;
-		}
+if ( pm->ps->aiChar == AICHAR_ZOMBIE || pm->ps->aiChar == AICHAR_WARZOMBIE ) { // RealRTCW
+		scale *= 1.1;
+	}
+
+	if ( pm->ps->aiChar == AICHAR_ELITEGUARD ) {
+		scale *= 1.1;
+	}
+
+	if ( pm->ps->aiChar == AICHAR_XSHEPHERD ) {
+		scale *= 1.4;
+	}
+
+		if ( pm->ps->aiChar == AICHAR_HEINRICH ) {
+		scale *= 1.3;
+	}
+
+			if ( pm->ps->aiChar == AICHAR_SUPERSOLDIER ) {
+		scale *= 1.3;
+	}
+
+		if ( pm->ps->aiChar == AICHAR_HELGA ) {
+		scale *= 1.3;
+	}
+
+
+
+
+
+	
+	
 
 	if ( pm->cmd.buttons & BUTTON_SPRINT && pm->ps->sprintTime > 50 ) {
 		scale *= pm->ps->sprintSpeedScale;
@@ -530,28 +520,12 @@ static float PM_CmdScale( usercmd_t *cmd ) {
 //
 // added #ifdef for game/cgame to project so we can get correct g_gametype variable and only do this in
 // multiplayer if necessary
-
-	#ifdef GAMEDLL
-	if ( ! (pm->ps->aiChar)) {
-		if (g_realism.value) {
-			scale *= (pm_realismSlowScale * GetWeaponTableData(pm->ps->weapon)->moveSpeed);
-		} else {
-			scale *= GetWeaponTableData(pm->ps->weapon)->moveSpeed;
-		}
+if ( ! (pm->ps->aiChar)) 
+	{ 
+	scale *= GetWeaponTableData(pm->ps->weapon)->moveSpeed;
 	}
-	#endif
-	#ifdef CGAMEDLL
-	if ( ! (pm->ps->aiChar)) {
-		if (cg_realism.value) {
-			scale *= (pm_realismSlowScale * GetWeaponTableData(pm->ps->weapon)->moveSpeed);
-		} else {
-		    scale *= GetWeaponTableData(pm->ps->weapon)->moveSpeed;
-		}
-	}
-	#endif
 
 	return scale;
-
 }
 
 
@@ -667,10 +641,6 @@ static qboolean PM_CheckJump( void ) {
 		}
 	#endif
 
-		// don't allow if player tired
-		//if (pm->ps->sprintTime < 2500) // JPW pulled this per id request; made airborne jumpers wildly inaccurate with gunfire to compensate
-		//	return qfalse;
-
 
 	if ( pm->ps->pm_flags & PMF_RESPAWNED ) {
 		return qfalse;      // don't allow jump until all buttons are up
@@ -693,45 +663,7 @@ static qboolean PM_CheckJump( void ) {
 	pm->ps->pm_flags |= PMF_JUMP_HELD;
 
 	pm->ps->groundEntityNum = ENTITYNUM_NONE;
-
-    // Below is a JUMP_VELOCITY definition cases. Define was removed completely.
-	#ifdef GAMEDLL
-	// Total stamina count is 20000
-		if (g_realism.value) {
-		   if ((pm->ps->sprintTime < 15000) && (pm->ps->sprintTime > 10000)) {
-		                pm->ps->velocity[2] = 220;
-		   } else if ((pm->ps->sprintTime < 10000) && (pm->ps->sprintTime > 5000)) {
-		                pm->ps->velocity[2] = 200;
-		   } else if ((pm->ps->sprintTime < 5000) && (pm->ps->sprintTime >= 0)) {
-					    pm->ps->velocity[2] = 180;
-		   } else { 
-		                pm->ps->velocity[2] = 240; // basically first jump
-		   }
-		} else {
-			            pm->ps->velocity[2] = 270; // no realism
-		}
-	#endif
-	#ifdef CGAMEDLL
-		if (cg_realism.value) {
-		   if ((pm->ps->sprintTime < 15000) && (pm->ps->sprintTime > 10000)) {
-		                pm->ps->velocity[2] = 220;
-		   } else if ((pm->ps->sprintTime < 10000) && (pm->ps->sprintTime > 5000)) {
-		                pm->ps->velocity[2] = 200;
-		   } else if ((pm->ps->sprintTime < 5000) && (pm->ps->sprintTime >= 0)) {
-					    pm->ps->velocity[2] = 180;
-		   } else { 
-		                pm->ps->velocity[2] = 240; // basically first jump
-		   }
-		} else {
-			            pm->ps->velocity[2] = 270; // no realism
-		}
-	#endif
-
-	if ( pm->ps->powerups[PW_FLIGHT] ) 
-	{
-		pm->ps->velocity[2] = 400;
-	}
-
+	pm->ps->velocity[2] = JUMP_VELOCITY;
 	PM_AddEvent( EV_JUMP );
 
 	if ( pm->cmd.forwardmove >= 0 ) {
@@ -1096,22 +1028,11 @@ static void PM_WalkMove( void ) {
 			PM_AirMove();
 
 				pm->ps->jumpTime = pm->cmd.serverTime;
-	
-	#ifdef GAMEDLL
-		if (g_realism.value) {
-			stamtake = 3000;
-		} else {
-			stamtake = 1000;
-		}
-	#endif
-	#ifdef CGAMEDLL
-		if (cg_realism.value) {
-			stamtake = 3000;
-		} else {
-			stamtake = 1000;
-		}
-	#endif
+
+
+					stamtake = 1000;
 				
+
 				// take time from powerup before taking it from sprintTime
 				if ( pm->ps->powerups[PW_NOFATIGUE] ) {
 					if ( pm->ps->powerups[PW_NOFATIGUE] > stamtake ) {
@@ -1173,6 +1094,11 @@ static void PM_WalkMove( void ) {
 
 	// clamp the speed lower if ducking
 	if ( pm->ps->pm_flags & PMF_DUCKED ) {
+		/*
+		if ( wishspeed > pm->ps->speed * pm_duckScale ) {
+			wishspeed = pm->ps->speed * pm_duckScale;
+		}
+		*/
 		if ( wishspeed > pm->ps->speed * pm->ps->crouchSpeedScale ) {
 			wishspeed = pm->ps->speed * pm->ps->crouchSpeedScale;
 		}
@@ -2012,23 +1938,7 @@ static void PM_Footsteps( void ) {
 		pm->ps->bobCycle = (int)( pm->ps->bobCycle + bobmove * pml.msec ) & 255;
 
 		// now footsteps
-	#ifdef GAMEDLL
-		if (g_realism.value) {
-			pm->ps->footstepCount += pm_realismSlowScale * (GetWeaponTableData(pm->ps->weapon)->moveSpeed * (pm->xyspeed * pml.frametime));
-		} else {
-			pm->ps->footstepCount += (GetWeaponTableData(pm->ps->weapon)->moveSpeed * (pm->xyspeed * pml.frametime));
-		}
-	
-	#endif
-	#ifdef CGAMEDLL
-		if (cg_realism.value) {
-			pm->ps->footstepCount += pm_realismSlowScale * (GetWeaponTableData(pm->ps->weapon)->moveSpeed * (pm->xyspeed * pml.frametime));
-		} else {
-		    pm->ps->footstepCount += (GetWeaponTableData(pm->ps->weapon)->moveSpeed * (pm->xyspeed * pml.frametime));
-		}
-	#endif
-
-
+		pm->ps->footstepCount += pm->xyspeed * pml.frametime;
 
 		if ( pm->ps->footstepCount > animGap ) {
 
@@ -2221,35 +2131,20 @@ static void PM_BeginWeaponReload( int weapon ) {
 		break;
 	}
 
-    if ( !pm->ps->aiChar) { 
-	if ( pm->ps->ammoclip[BG_FindClipForWeapon(weapon)] == 0 ) {
-		  PM_ContinueWeaponAnim( WEAP_RELOAD2 );
-	      if ( pm->ps->weaponstate == WEAPON_READY ) {
-		      pm->ps->weaponTime += ammoTable[weapon].reloadTimeFull;
-	      } else if ( pm->ps->weaponTime < ammoTable[weapon].reloadTimeFull ) {
-		      pm->ps->weaponTime += ( ammoTable[weapon].reloadTimeFull - pm->ps->weaponTime );
-	      }
-		  PM_AddEvent( EV_FILL_CLIP_FULL );
-	} else {
-	      PM_ContinueWeaponAnim( WEAP_RELOAD1 );
-	      if ( pm->ps->weaponstate == WEAPON_READY ) {
-		      pm->ps->weaponTime += ammoTable[weapon].reloadTime;
-	      } else if ( pm->ps->weaponTime < ammoTable[weapon].reloadTime ) {
-		      pm->ps->weaponTime += ( ammoTable[weapon].reloadTime - pm->ps->weaponTime );
-	      }
-		  PM_AddEvent( EV_FILL_CLIP );
-	}
-	} else {
-	  PM_ContinueWeaponAnim( WEAP_RELOAD1 );
-	  	if ( pm->ps->weaponstate == WEAPON_READY ) {
-		    pm->ps->weaponTime += ammoTable[weapon].reloadTime;
-	    } else if ( pm->ps->weaponTime < ammoTable[weapon].reloadTime ) {
-		    pm->ps->weaponTime += ( ammoTable[weapon].reloadTime - pm->ps->weaponTime );
-	      }
-		 PM_AddEvent( EV_FILL_CLIP );
+
+	PM_ContinueWeaponAnim( WEAP_RELOAD1 );
+
+
+	// okay to reload while overheating without tacking the reload time onto the end of the
+	// current weaponTime (the reload time is partially absorbed into the overheat time)
+	if ( pm->ps->weaponstate == WEAPON_READY ) {                  // set wait to the reload duration
+		pm->ps->weaponTime += ammoTable[weapon].reloadTime;
+	} else if ( pm->ps->weaponTime < ammoTable[weapon].reloadTime ) {
+		pm->ps->weaponTime += ( ammoTable[weapon].reloadTime - pm->ps->weaponTime );
 	}
 
 	pm->ps->weaponstate = WEAPON_RELOADING;
+	PM_AddEvent( EV_FILL_CLIP );    // play reload sound
 }
 
 static void PM_ReloadClip( int weapon );
@@ -2277,8 +2172,7 @@ void PM_BeginWeaponChange( int oldweapon, int newweapon, qboolean reload ) { //-
 		return;
 	}
 
-	if ( pm->ps->weaponstate == WEAPON_DROPPING || pm->ps->weaponstate == WEAPON_DROPPING_TORELOAD 
-	     || pm->ps->weaponstate == WEAPON_HOLSTER_IN || pm->ps->weaponstate == WEAPON_SPRINT_IN ) {   //----(SA)	added
+	if ( pm->ps->weaponstate == WEAPON_DROPPING || pm->ps->weaponstate == WEAPON_DROPPING_TORELOAD ) {   //----(SA)	added
 		return;
 	}
 
@@ -2294,7 +2188,7 @@ void PM_BeginWeaponChange( int oldweapon, int newweapon, qboolean reload ) { //-
 		return;
 	}
 
-	altswitch = (qboolean)( newweapon == ammoTable[oldweapon].weapAlts );
+	altswitch = (qboolean)( newweapon == weapAlts[oldweapon] );
 
 	showdrop = qtrue;
 
@@ -2347,7 +2241,7 @@ void PM_BeginWeaponChange( int oldweapon, int newweapon, qboolean reload ) { //-
 	}
 
 	// it's an alt mode, play different anim
-	if ( newweapon == ammoTable[oldweapon].weapAlts ) {
+	if ( newweapon == weapAlts[oldweapon] ) {
 		PM_StartWeaponAnim( PM_AltSwitchFromForWeapon( oldweapon ) );
 	} else {
 		PM_StartWeaponAnim( PM_DropAnimForWeapon( oldweapon ) );
@@ -2357,7 +2251,7 @@ void PM_BeginWeaponChange( int oldweapon, int newweapon, qboolean reload ) { //-
 	// sometimes different switch times for alt weapons
 	switch ( oldweapon ) {
 	case WP_M1GARAND:
-		if ( newweapon == ammoTable[oldweapon].weapAlts ) {
+		if ( newweapon == weapAlts[oldweapon] ) {
 			switchtime = 0;
 			if ( !pm->ps->ammoclip[newweapon] && pm->ps->ammo[newweapon] ) {
 				PM_ReloadClip( newweapon );
@@ -2365,7 +2259,7 @@ void PM_BeginWeaponChange( int oldweapon, int newweapon, qboolean reload ) { //-
 		}
 		break;
 	case WP_M7:
-		if ( newweapon == ammoTable[oldweapon].weapAlts ) {
+		if ( newweapon == weapAlts[oldweapon] ) {
 			switchtime = 0;
 		}
 		break;
@@ -2456,25 +2350,25 @@ static void PM_FinishWeaponChange( void ) {
 	// sometimes different switch times for alt weapons
 	switch ( newweapon ) {
 	case WP_LUGER:
-		if ( newweapon == ammoTable[oldweapon].weapAlts ) {
+		if ( newweapon == weapAlts[oldweapon] ) {
 			switchtime = 50;
 	        altSwitchAnim = qtrue;
 		}
 		break;
 	case WP_SILENCER:
-		if ( newweapon == ammoTable[oldweapon].weapAlts ) {
+		if ( newweapon == weapAlts[oldweapon] ) {
 			switchtime = 1190;
 			altSwitchAnim = qtrue;
 		}
 		break;
 	case WP_FG42:
 	case WP_FG42SCOPE:
-		if ( newweapon == ammoTable[oldweapon].weapAlts ) {
+		if ( newweapon == weapAlts[oldweapon] ) {
 			switchtime = 50;        // fast
 		}
 		break;
 	case WP_M1GARAND:
-		if ( newweapon == ammoTable[oldweapon].weapAlts ) {
+		if ( newweapon == weapAlts[oldweapon] ) {
 			if ( pm->ps->ammoclip[ BG_FindAmmoForWeapon( oldweapon ) ] ) {
 				switchtime = 1347;
 			} else {
@@ -2485,7 +2379,7 @@ static void PM_FinishWeaponChange( void ) {
 		}
 		break;
 	case WP_M7:
-		if ( newweapon == ammoTable[oldweapon].weapAlts ) {
+		if ( newweapon == weapAlts[oldweapon] ) {
 			switchtime = 2350;
 			altSwitchAnim = qtrue ;
 		}
@@ -2506,7 +2400,7 @@ static void PM_FinishWeaponChange( void ) {
 		}
 
 		// alt weapon switch was played when switching away, just go into idle
-		if ( ammoTable[oldweapon].weapAlts == newweapon ) {
+		if ( weapAlts[oldweapon] == newweapon ) {
 			PM_StartWeaponAnim( PM_AltSwitchToForWeapon( newweapon ) );
 		} else {
 			PM_StartWeaponAnim( PM_RaiseAnimForWeapon( newweapon ) );
@@ -2624,7 +2518,7 @@ void PM_CheckForReload( int weapon ) {
 		case WP_DELISLESCOPE:
             if ( reloadRequested && pm->ps->ammo[ammoWeap] ) {
 			if ( pm->ps->ammoclip[clipWeap] < ammoTable[weapon].maxclip ) {
-			PM_BeginWeaponChange( weapon, ammoTable[weapon].weapAlts, !( pm->ps->ammo[ammoWeap] ) ? qfalse : qtrue );
+			PM_BeginWeaponChange( weapon, weapAlts[weapon], !( pm->ps->ammo[ammoWeap] ) ? qfalse : qtrue );
 			}
 			}
 			return;
@@ -3270,116 +3164,6 @@ static void PM_Weapon( void ) {
 		return;
 	}
 
-	// unable to use weapon	on the ladder
-	#ifdef GAMEDLL
-	if ( !delayedFire && g_realism.value ) {
-			if ( ( pm->ps->pm_flags & PMF_LADDER )  ){
-			if ( pm->ps->weaponstate != WEAPON_HOLSTER_IN ) {
-				pm->ps->weaponstate = WEAPON_HOLSTER_IN;
-				PM_StartWeaponAnim(PM_DropAnimForWeapon(pm->ps->weapon));
-				pm->ps->weaponTime += 300;
-			}
-			else {
-				pm->ps->weaponTime += 50;
-			}
-			return;
-		}
-		else if (pm->ps->weaponstate == WEAPON_HOLSTER_IN ){
-			pm->ps->weaponstate = WEAPON_HOLSTER_OUT;
-			PM_StartWeaponAnim(PM_RaiseAnimForWeapon(pm->ps->weapon));
-            pm->ps->weaponTime += 300;
-			return;
-		}
-		else if (pm->ps->weaponstate == WEAPON_HOLSTER_OUT ) {
-			pm->ps->weaponstate = WEAPON_READY;
-			PM_StartWeaponAnim(PM_IdleAnimForWeapon(pm->ps->weapon));
-			return;
-		}
-	}
-	#endif
-	#ifdef CGAMEDLL
-	if ( !delayedFire && cg_realism.value ) {
-
-		if ( ( pm->ps->pm_flags & PMF_LADDER ) ){
-			if ( pm->ps->weaponstate != WEAPON_HOLSTER_IN ) {
-				pm->ps->weaponstate = WEAPON_HOLSTER_IN;
-				PM_StartWeaponAnim(PM_DropAnimForWeapon(pm->ps->weapon));
-				pm->ps->weaponTime += 300;
-			}
-			else {
-				pm->ps->weaponTime += 50;
-			}
-			return;
-		}
-		else if (pm->ps->weaponstate == WEAPON_HOLSTER_IN ){
-			pm->ps->weaponstate = WEAPON_HOLSTER_OUT;
-			PM_StartWeaponAnim(PM_RaiseAnimForWeapon(pm->ps->weapon));
-            pm->ps->weaponTime += 300;
-			return;
-		}
-		else if (pm->ps->weaponstate == WEAPON_HOLSTER_OUT ) {
-			pm->ps->weaponstate = WEAPON_READY;
-			PM_StartWeaponAnim(PM_IdleAnimForWeapon(pm->ps->weapon));
-			return;
-		}
-	}
-	#endif
-
-	// unable to use weapon while sprinting
-	#ifdef GAMEDLL
-	if (!delayedFire && g_realism.value ) {
-			if ( ( pm->ps->pm_flags & PMF_SPRINTING ) ){
-			if ( pm->ps->weaponstate != WEAPON_SPRINT_IN ) {
-				pm->ps->weaponstate = WEAPON_SPRINT_IN;
-				PM_StartWeaponAnim(PM_SprintInAnimForWeapon(pm->ps->weapon));
-				pm->ps->weaponTime += 300;
-			}
-			else {
-				pm->ps->weaponTime += 50;
-			}
-			return;
-		}
-		else if (pm->ps->weaponstate == WEAPON_SPRINT_IN ){
-			pm->ps->weaponstate = WEAPON_SPRINT_OUT;
-			PM_StartWeaponAnim(PM_SprintOutAnimForWeapon(pm->ps->weapon));
-            pm->ps->weaponTime += 300;
-			return;
-		}
-		else if (pm->ps->weaponstate == WEAPON_SPRINT_OUT ) {
-			pm->ps->weaponstate = WEAPON_READY;
-			PM_StartWeaponAnim(PM_IdleAnimForWeapon(pm->ps->weapon));
-			return;
-		}
-	}
-	#endif
-	#ifdef CGAMEDLL
-	if ( !delayedFire && cg_realism.value ) {
-
-		if ( ( pm->ps->pm_flags & PMF_SPRINTING ) ){
-			if ( pm->ps->weaponstate != WEAPON_SPRINT_IN ) {
-				pm->ps->weaponstate = WEAPON_SPRINT_IN;
-				PM_StartWeaponAnim(PM_SprintInAnimForWeapon(pm->ps->weapon));
-				pm->ps->weaponTime += 300;
-			}
-			else {
-				pm->ps->weaponTime += 50;
-			}
-			return;
-		}
-		else if (pm->ps->weaponstate == WEAPON_SPRINT_IN ){
-			pm->ps->weaponstate = WEAPON_SPRINT_OUT;
-			PM_StartWeaponAnim(PM_SprintOutAnimForWeapon(pm->ps->weapon));
-            pm->ps->weaponTime += 300;
-			return;
-		}
-		else if (pm->ps->weaponstate == WEAPON_SPRINT_OUT ) {
-			pm->ps->weaponstate = WEAPON_READY;
-			PM_StartWeaponAnim(PM_IdleAnimForWeapon(pm->ps->weapon));
-			return;
-		}
-	}
-	#endif
-
 	if ( pm->ps->weapon == WP_NONE ) {  // this is possible since the player starts with nothing
 		return;
 	}
@@ -3766,11 +3550,16 @@ static void PM_Weapon( void ) {
 	pm->pmext->weapRecoilYaw       = GetWeaponTableData(pm->ps->weapon)->weapRecoilYaw[0] * crandom() * GetWeaponTableData(pm->ps->weapon)->weapRecoilYaw[1];
 	pm->pmext->weapRecoilPitch     = GetWeaponTableData(pm->ps->weapon)->weapRecoilPitch[0] * random() * GetWeaponTableData(pm->ps->weapon)->weapRecoilPitch[1];
 
+	
+	// add randomness spread for SMGs
 
-	if ( ammoTable[pm->ps->weapon].weaponClass == WEAPON_CLASS_SMG)
+	if ((pm->ps->weapon == WP_PPSH ) || (pm->ps->weapon == WP_MP40 ) || (pm->ps->weapon == WP_MP34 ) || (pm->ps->weapon == WP_THOMPSON ) || (pm->ps->weapon == WP_STEN ))
 	{
-		aimSpreadScaleAdd += rand() % 5;
+	aimSpreadScaleAdd += rand() % 5;
 	}
+
+
+
 
     if ( ( pm->ps->eFlags & EF_CROUCHING ) && ( pm->ps->groundEntityNum != ENTITYNUM_NONE ) ) { 
 		pm->pmext->weapRecoilDuration *= 0.5;
@@ -3792,11 +3581,9 @@ static void PM_Weapon( void ) {
 		}
 	}
 
-    /*
 	if ( pm->ps->powerups[PW_HASTE] ) {
 		addTime /= 1.6;
 	}
-	*/
 
 	// add the recoil amount to the aimSpreadScale
 //	pm->ps->aimSpreadScale += 3.0*aimSpreadScaleAdd;
@@ -4374,9 +4161,6 @@ void PM_Sprint( void ) {
 		if ( !pm->ps->sprintExertTime ) {
 			pm->ps->sprintExertTime = 1;
 		}
-
-		pm->ps->pm_flags |= PMF_SPRINTING; // LET US KNOW THAT WE ARE SPRINTING
-
 	} else
 	{
 		// JPW NERVE adjusted for framerate independence
@@ -4399,8 +4183,6 @@ void PM_Sprint( void ) {
 		}
 
 		pm->ps->sprintExertTime = 0;
-
-		pm->ps->pm_flags &= ~PMF_SPRINTING; // LET US KNOW THAT WE ARE NO LONGER SPRINTING
 	}
 }
 
@@ -4603,13 +4385,18 @@ void PmoveSingle( pmove_t *pmove ) {
 		PM_DropTimers();
 	}
 
-	/*if ( pm->ps->powerups[PW_FLIGHT] ) {
+	if ( pm->ps->powerups[PW_FLIGHT] ) {
 		// flight powerup doesn't allow jump and has different friction
 		PM_FlyMove();
 // RF, removed grapple flag since it's not used
+#if 0
+	} else if ( pm->ps->pm_flags & PMF_GRAPPLE_PULL ) {
+		PM_GrappleMove();
+		// We can wiggle a bit
+		PM_AirMove();
+#endif
 		// Ridah, ladders
-		*/
-	if ( pml.ladder ) {
+	} else if ( pml.ladder ) {
 		PM_LadderMove();
 		// done.
 	} else if ( pm->ps->pm_flags & PMF_TIME_WATERJUMP ) {

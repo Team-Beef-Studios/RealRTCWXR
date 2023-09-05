@@ -706,8 +706,7 @@ typedef struct weaponInfo_s {
 	sfxHandle_t firingSound;
 	sfxHandle_t overheatSound;
 	sfxHandle_t reloadSound;
-	sfxHandle_t reloadFastSound;
-	sfxHandle_t	reloadFullSound;
+	sfxHandle_t	reloadFastSound;
 
 	sfxHandle_t spinupSound;        //----(SA)	added // sound started when fire button goes down, and stepped on when the first fire event happens
 	sfxHandle_t spindownSound;      //----(SA)	added // sound called if the above is running but player doesn't follow through and fire
@@ -2044,7 +2043,6 @@ void CG_CheckEvents( centity_t *cent );
 const char  *CG_PlaceString( int rank );
 void CG_EntityEvent( centity_t *cent, vec3_t position );
 void CG_PainEvent( centity_t *cent, int health, qboolean crouching );
-void CG_SetupCabinets( void );
 
 
 //
@@ -2055,8 +2053,8 @@ void CG_AddPacketEntities( void );
 void CG_Beam( centity_t *cent );
 void CG_AdjustPositionForMover( const vec3_t in, int moverNum, int fromTime, int toTime, vec3_t out, vec3_t angles_in, vec3_t angles_out, vec3_t outDeltaAngles );
 
-void CG_PositionEntityOnTag( refEntity_t *entity, const refEntity_t *parent, char *tagName, int startIndex, vec3_t *offset );
-void CG_PositionEntityOnTagAlt( refEntity_t *entity, const refEntity_t *parent, const char *tagName, int startIndex, vec3_t *offset );
+void CG_PositionEntityOnTag( refEntity_t *entity, const refEntity_t *parent,
+							 char *tagName, int startIndex, vec3_t *offset );
 void CG_PositionRotatedEntityOnTag( refEntity_t *entity, const refEntity_t *parent, char *tagName );
 
 
@@ -2201,11 +2199,6 @@ qboolean CG_SoundPlaySoundScript( const char *name, vec3_t org, int entnum );
 void CG_SoundPlayIndexedScript( int index, vec3_t org, int entnum );
 void CG_SoundInit( void );
 // done.
-
-void CG_ToggleActiveOnScriptSpeaker( int index );
-void CG_UnsetActiveOnScriptSpeaker( int index );
-void CG_SetActiveOnScriptSpeaker( int index );
-void CG_AddScriptSpeakers( void );
 
 // Ridah, flamethrower
 void CG_FireFlameChunks( centity_t *cent, vec3_t origin, vec3_t angles, float speedScale, qboolean firing, int flags ); //----(SA)	added 'flags'
@@ -2409,7 +2402,6 @@ int         trap_CM_MarkFragments( int numPoints, const vec3_t *points,
 // normal sounds will have their volume dynamically changed as their entity
 // moves and the listener moves
 void        trap_S_StartSound( vec3_t origin, int entityNum, int entchannel, sfxHandle_t sfx );
-void        trap_S_StartSoundVControl( vec3_t origin, int entityNum, int entchannel, sfxHandle_t sfx, int volume );
 void        trap_S_StartSoundEx( vec3_t origin, int entityNum, int entchannel, sfxHandle_t sfx, int flags );
 void        trap_S_StopLoopingSound( int entnum );
 void        trap_S_StopStreamingSound( int entnum );  // usually AI.  character is talking and needs to be shut up /now/

@@ -1388,12 +1388,6 @@ static qboolean CG_RW_ParseClient( int handle, weaponInfo_t *weaponInfo, int wea
 			} else {
 				weaponInfo->reloadSound = trap_S_RegisterSound( filename );
 			}
-		} else if ( !Q_stricmp( token.string, "reloadFullSound" ) ) {
-			if ( !PC_String_ParseNoAlloc( handle, filename, sizeof( filename ) ) ) {
-				return CG_RW_ParseError( handle, "expected reloadFullSound filename" );
-			} else {
-				weaponInfo->reloadFullSound = trap_S_RegisterSound( filename );
-			}
 		} else if ( !Q_stricmp( token.string, "reloadFastSound" ) ) {
 			if ( !PC_String_ParseNoAlloc( handle, filename, sizeof( filename ) ) ) {
 				return CG_RW_ParseError( handle, "expected reloadFastSound filename" );
@@ -2207,10 +2201,10 @@ static void CG_AddWeaponWithPowerups( refEntity_t *gun, int powerups, playerStat
 	} else {
 		trap_R_AddRefEntityToScene( gun );
 
-		/*if ( powerups & ( 1 << PW_BATTLESUIT ) ) {
+		if ( powerups & ( 1 << PW_BATTLESUIT ) ) {
 			gun->customShader = cgs.media.battleWeaponShader;
 			trap_R_AddRefEntityToScene( gun );
-		}*/
+		}
 		if ( powerups & ( 1 << PW_QUAD ) ) {
 			gun->customShader = cgs.media.quadWeaponShader;
 			trap_R_AddRefEntityToScene( gun );
@@ -3964,8 +3958,8 @@ getAltWeapon
 */
 static int getAltWeapon( int weapnum ) {
 	
-	if ( ammoTable[weapnum].weapAlts ) {
-		return ammoTable[weapnum].weapAlts;
+	if ( weapAlts[weapnum] ) {
+		return weapAlts[weapnum];
 	}
 
 	return weapnum;
@@ -4129,12 +4123,6 @@ void CG_PlaySwitchSound( int lastweap, int newweap ) {
 		}
 	}
 
-	switch ( newweap ) {
-		case WP_KNIFE:
-		     switchsound = cg_weapons[newweap].switchSound[0];
-			 break;
-	}
-
 	trap_S_StartSound( NULL, cg.snap->ps.clientNum, CHAN_WEAPON, switchsound );
 }
 
@@ -4196,7 +4184,6 @@ CG_AltfireWeapon_f
 */
 void CG_AltWeapon_f( void ) {
 	int original, num;
-	float spd = VectorLength( cg.snap->ps.velocity );
 
 	if ( !cg.snap ) {
 		return;
@@ -4231,7 +4218,6 @@ void CG_AltWeapon_f( void ) {
 		// TODO: will need to make sure the table gets initialized properly on restart/death/whatever.
 		//		 I still think I'm going to make the weapon banks stored in the config, so this will
 		//		just be a matter of resetting the banks to what's in the config.
-		
 		switch ( original ) {
 		case WP_LUGER:
 			if ( cg.snap->ps.eFlags & EF_MELEE_ACTIVE ) {   // if you're holding a chair, you can't screw on the silencer
@@ -4252,17 +4238,9 @@ void CG_AltWeapon_f( void ) {
 		case WP_COLT:
 			weapBanks[2][1] = WP_AKIMBO;
 			break;
-		case WP_MAUSER:
-		case WP_GARAND:
-		case WP_FG42:
-		case WP_DELISLE:
-		    if ( spd > 180.0f ) 
-			{
-				return;
-			}
-			break;
 		}
 
+//----(SA)	end
 		CG_FinishWeaponChange( original, num );
 	}
 

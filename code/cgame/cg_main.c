@@ -237,7 +237,6 @@ vmCvar_t cg_reloading;      //----(SA)	added
 vmCvar_t cg_medicChargeTime;
 vmCvar_t cg_engineerChargeTime;
 vmCvar_t cg_jumptime;
-vmCvar_t cg_realism;
 
 vmCvar_t cg_LTChargeTime;
 vmCvar_t cg_soldierChargeTime;
@@ -537,8 +536,6 @@ cvarTable_t cvarTable[] = {
 	{ &cg_bodysink, "g_bodysink", "0", CVAR_ARCHIVE },
 	
 	{ &cg_gunPosLock, "cg_gunposlock", "1", CVAR_ARCHIVE},
-
-	{ &cg_realism, "g_realism", "0", CVAR_ARCHIVE},
 };
 int cvarTableSize = ARRAY_LEN( cvarTable );
 void CG_setClientFlags( void );
@@ -1042,7 +1039,7 @@ static void CG_LoadIgnoredTranslationTextStrings() {
 		if ( !token[0] ) {
 			break;
 		}
-		//CG_Printf("ignored text: %s\n", token);
+		CG_Printf("ignored text: %s\n", token);
 		Com_sprintf( cgs.ignoredSubtitles[i], MAX_QPATH, "%s", token );
 	}
 }
@@ -1104,19 +1101,10 @@ static void CG_RegisterSounds( void ) {
 	char items[MAX_ITEMS + 1];
 	char name[MAX_QPATH];
 	const char  *soundName;
-	bg_speaker_t *speaker;
 
+	// Ridah, init sound scripts
 	CG_SoundInit();
-
-	BG_ClearScriptSpeakerPool();
-
-	BG_LoadSpeakerScript(va("sound/maps/%s.sps", cgs.mapname));
-
-	for (i = 0; i < BG_NumScriptSpeakers(); i++)
-	{
-		speaker        = BG_GetScriptSpeaker(i);
-		speaker->noise = trap_S_RegisterSound(speaker->filename);
-	}
+	// done.
 
 	cgs.media.n_health = trap_S_RegisterSound( "sound/items/n_health.wav" );
 	cgs.media.noFireUnderwater = trap_S_RegisterSound( "sound/weapons/underwaterfire.wav" ); 
@@ -1472,7 +1460,7 @@ static void CG_RegisterGraphics( void ) {
 	// powerup shaders
 	cgs.media.quadShader = trap_R_RegisterShader("powerups/quad" );
 	cgs.media.quadWeaponShader = trap_R_RegisterShader("powerups/quadWeapon" );
-	cgs.media.battleSuitShader = trap_R_RegisterShader("powerups/enviro" );
+	cgs.media.battleSuitShader = trap_R_RegisterShader("powerups/battleSuit" );
 	cgs.media.battleWeaponShader = trap_R_RegisterShader("powerups/battleWeapon" );
 	cgs.media.invisShader = trap_R_RegisterShader("powerups/invisibility" );
 //	cgs.media.regenShader = trap_R_RegisterShader("powerups/regen" );
@@ -2813,8 +2801,6 @@ void CG_Init( int serverMessageNum, int serverCommandSequence ) {
 	CG_SetConfigValues();
 
 	CG_StartMusic();
-
-	CG_SetupCabinets();
 
 	cg.lightstylesInited = qfalse;
 
