@@ -163,7 +163,6 @@
     <ClCompile Include="..\bg_misc.c" />
     <ClCompile Include="..\bg_pmove.c" />
     <ClCompile Include="..\bg_slidemove.c" />
-    <ClCompile Include="..\bg_sscript.c" />
     <ClCompile Include="..\g_active.c" />
     <ClCompile Include="..\g_alarm.c" />
     <ClCompile Include="..\g_bot.c" />

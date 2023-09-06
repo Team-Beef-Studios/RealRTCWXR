@@ -114,9 +114,6 @@
     <ClCompile Include="..\..\game\bg_slidemove.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\game\bg_sscript.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\ui\ui_shared.c">
       <Filter>Source Files</Filter>
     </ClCompile>
