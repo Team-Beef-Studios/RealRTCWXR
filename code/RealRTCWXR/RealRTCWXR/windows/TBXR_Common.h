@@ -236,7 +236,7 @@ void * AppThreadFunction(void * parm );
 void VR_FrameSetup();
 bool VR_UseScreenLayer();
 float VR_GetScreenLayerDistance();
-bool VR_GetVRProjection(float zNear, float zFar, float zZoomX, float zZoomY, float* projection);
+qboolean VR_GetVRProjection(float zNear, float zFar, float zZoomX, float zZoomY, float* projection);
 void VR_HandleControllerInput();
 void VR_SetHMDOrientation(float pitch, float yaw, float roll );
 void VR_SetHMDPosition(float x, float y, float z );

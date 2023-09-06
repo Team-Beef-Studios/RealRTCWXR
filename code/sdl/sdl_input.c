@@ -1208,8 +1208,8 @@ void IN_Frame( void )
 		// Window not got focus
 		IN_DeactivateMouse( cls.glconfig.isFullscreen );
 	}
-	else
-		IN_ActivateMouse( cls.glconfig.isFullscreen );
+//	else
+//		IN_ActivateMouse( cls.glconfig.isFullscreen );
 
 	IN_ProcessEvents( );
 

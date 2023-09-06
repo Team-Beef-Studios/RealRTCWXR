@@ -250,18 +250,18 @@ void VR_FrameSetup()
 	vr.immersive_cinematics = (vr_immersive_cinematics->value != 0.0f);
 }
 
-bool VR_GetVRProjection(float zNear, float zFar, float zZoomX, float zZoomY, float* projection)
+qboolean VR_GetVRProjection(float zNear, float zFar, float zZoomX, float zZoomY, float* projection)
 {
 	//Don't use our projection if playing a cinematic and we are not immersive
 	if (vr.cin_camera && !vr.immersive_cinematics)
 	{
-		return false;
+		return qfalse;
 	}
 
 	//Just use game-calculated FOV when showing the quad screen
 	if (vr.using_screen_layer)
 	{
-		return false;
+		return qfalse;
 	}
 
 	XrFovf fov = gAppState.Views[vr.eye].fov;
@@ -275,7 +275,7 @@ bool VR_GetVRProjection(float zNear, float zFar, float zZoomX, float zZoomY, flo
 		(XrMatrix4x4f*)projection, GRAPHICS_OPENGL,
 		fov, zNear, zFar);
 
-	return true;
+	return qtrue;
 }
 
 void VR_ExternalHapticEvent(const char* event, int position, int flags, int intensity, float angle, float yHeight )

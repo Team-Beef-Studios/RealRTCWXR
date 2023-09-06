@@ -30,6 +30,8 @@ If you have questions concerning this license or the applicable additional terms
 // for a 3D rendering
 #include "cg_local.h"
 
+#include <VrClientInfo.h>
+
 //========================
 extern int notebookModel;
 //========================
@@ -836,6 +838,7 @@ static int CG_CalcFov( void ) {
 			}
 		}
 
+		fov_x = vr ? vr->fov_x : 90.0f;
 		cg.fov = fov_x;
 
 		// account for zooms

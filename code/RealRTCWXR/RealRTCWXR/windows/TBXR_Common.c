@@ -859,9 +859,9 @@ void TBXR_InitialiseOpenXR()
 	// Create the OpenXR instance.
 	XrApplicationInfo appInfo;
 	memset(&appInfo, 0, sizeof(appInfo));
-	strcpy(appInfo.applicationName, "JKXR");
+	strcpy(appInfo.applicationName, "RealRTCW XR");
 	appInfo.applicationVersion = 0;
-	strcpy(appInfo.engineName, "JKXR");
+	strcpy(appInfo.engineName, "RealRTCW XR");
 	appInfo.engineVersion = 0;
 	appInfo.apiVersion = XR_CURRENT_API_VERSION;
 

@@ -37,6 +37,8 @@ If you have questions concerning this license or the applicable additional terms
 #include "cg_local.h"
 #include "../ui/ui_shared.h"
 
+#include <VrClientInfo.h>
+
 
 
 void CG_TargetCommand_f( void ) {
@@ -312,6 +314,8 @@ void CG_StartCamera( const char *name, qboolean startBlack ) {
 		trap_Cvar_Set( "cg_letterbox", "0" );
 		CG_Printf( "Unable to load camera %s\n",lname );
 	}
+
+	vr->cin_camera = cg.cameraMode;
 }
 
 /*
