@@ -411,6 +411,7 @@ void RE_BeginScene(const refdef_t *fd)
 	tr.refdef.y = fd->y;
 	tr.refdef.width = fd->width;
 	tr.refdef.height = fd->height;
+	tr.refdef.override_fov = fd->override_fov;
 	tr.refdef.fov_x = fd->fov_x;
 	tr.refdef.fov_y = fd->fov_y;
 

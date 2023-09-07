@@ -5,7 +5,7 @@
 
 #define ANGLES_DEFAULT          0
 #define ANGLES_ADJUSTED         1
-#define ANGLES_SABER            2
+#define ANGLES_KNIFE            2
 #define ANGLES_COUNT            3
 
 #define USE_GESTURE_OFF_HAND      1
@@ -50,7 +50,6 @@ typedef struct {
     qboolean player_moving;
     int move_speed; // 0 (default) = Comfortable (75%) , 1 = Full (100%), 2 = Walk (50%)
     qboolean crouched;
-    qboolean dualsabers; // JKA only - is player dual sabers active
     int cgzoommode;
     int cgzoomdir;
     int saberBlockDebounce; // Amount of time after player is blocked that the saber position is fixed
@@ -113,6 +112,16 @@ typedef struct {
     float   curHeight;
     int     useGestureState;
     int     useHapticFeedbackTime[2];
+
+
+    //////////////////////////////////////
+    //    Test stuff for weapon alignment
+    //////////////////////////////////////
+
+    char    test_name[256];
+    float   test_scale;
+    vec3_t  test_angles;
+    vec3_t  test_offset;
 
 } vr_client_info_t;
 

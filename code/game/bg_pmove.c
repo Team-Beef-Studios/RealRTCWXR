@@ -65,7 +65,7 @@ float pm_waterWadeScale   = 0.70;
 float pm_slagSwimScale    = 0.30;
 float pm_slagWadeScale    = 0.70;
 
-float pm_accelerate       = 10;
+float pm_accelerate = 10000; // Boosted for VR
 float pm_airaccelerate    = 1;
 float pm_wateraccelerate  = 4;
 float pm_slagaccelerate   = 2;

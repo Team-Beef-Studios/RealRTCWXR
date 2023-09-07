@@ -42,9 +42,6 @@ void VR_SetHMDOrientation(float pitch, float yaw, float roll)
 	VectorCopy(vr.hmdorientation, vr.hmdorientation_last);
 
 	if (!vr.third_person && !vr.remote_npc && !vr.remote_turret
-#ifndef JK2_MODE
-		&& !vr.in_vehicle
-#endif
 	)
 	{
 		VectorCopy(vr.hmdorientation, vr.hmdorientation_first);

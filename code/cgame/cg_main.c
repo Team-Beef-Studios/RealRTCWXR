@@ -337,8 +337,8 @@ cvarTable_t cvarTable[] = {
 	{ &cg_zoomStepSnooper, "cg_zoomStepSnooper", "5", CVAR_ARCHIVE },
 	{ &cg_zoomStepFG, "cg_zoomStepFG", "10", CVAR_ARCHIVE },          //----(SA)	added
 	{ &cg_fov, "cg_fov", "90", CVAR_ARCHIVE },	// NOTE: there is already a dmflag (DF_FIXED_FOV) to allow server control of this cheat
-	{ &cg_fixedAspect, "cg_fixedAspect", "2", CVAR_ARCHIVE | CVAR_LATCH }, // Essentially the same as setting DF_FIXED_FOV for widescreen aspects
-	{ &cg_fixedAspectFOV, "cg_fixedAspectFOV", "1", CVAR_ARCHIVE },
+	{ &cg_fixedAspect, "cg_fixedAspect", "0", CVAR_ARCHIVE | CVAR_LATCH }, // Essentially the same as setting DF_FIXED_FOV for widescreen aspects
+	{ &cg_fixedAspectFOV, "cg_fixedAspectFOV", "0", CVAR_ARCHIVE },
 	{ &cg_oldWolfUI, "cg_oldWolfUI", "0", CVAR_ARCHIVE },
 	{ &cg_drawStatusHead, "cg_drawStatusHead", "0", CVAR_ARCHIVE },
 	{ &cg_hudWeapIcon, "cg_hudWeapIcon", "1", CVAR_ARCHIVE },

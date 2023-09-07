@@ -40,6 +40,10 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "ui_local.h"
 
+#include <VrClientInfo.h>
+
+vr_client_info_t* vr;
+
 uiInfo_t uiInfo;
 
 static const char *MonthAbbrev[] = {
@@ -178,8 +182,10 @@ Q_EXPORT intptr_t vmMain( intptr_t command, intptr_t arg0, intptr_t arg1, intptr
 	case UI_GETAPIVERSION:
 		return UI_API_VERSION;
 
-	case UI_INIT:
-		_UI_Init( arg0 );
+	case UI_INIT: {
+			vr = (vr_client_info_t*)(arg1);
+			_UI_Init(arg0);
+		}
 		return 0;
 
 	case UI_SHUTDOWN:

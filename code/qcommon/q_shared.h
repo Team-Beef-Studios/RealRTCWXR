@@ -428,6 +428,8 @@ typedef vec_t vec3_t[3];
 typedef vec_t vec4_t[4];
 typedef vec_t vec5_t[5];
 
+typedef vec_t matrix4x4[4][4];
+
 typedef vec_t quat_t[4];
 
 typedef int fixed4_t;
@@ -1807,6 +1809,8 @@ typedef enum _flag_status {
 	FLAG_DROPPED
 } flagStatus_t;
 
+
+#define DEFAULT_PLAYER_HEIGHT 64
 
 
 #define MAX_GLOBAL_SERVERS          2048

@@ -31,6 +31,7 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "cg_local.h"
 #include "../ui/ui_shared.h"
+#include "../game/bg_local.h"
 
 #include <VrClientInfo.h>
 
@@ -3639,12 +3640,12 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 
 	//Vertical Positional Movement
 	if (!cg.cameraMode) {
-		cg.refdef.vieworg[2] -= 64;
+		cg.refdef.vieworg[2] -= DEFAULT_PLAYER_HEIGHT;
 		cg.refdef.vieworg[2] += (vr->hmdposition[1] + cg_heightAdjust.value) * cg_worldScale.value;
 	}
 
-	if(stereoView != STEREO_CENTER)
-		CG_DrawCrosshair3D();
+//	if(stereoView != STEREO_CENTER)
+//		CG_DrawCrosshair3D();
 
 	cg.refdef.glfog.registered = 0; // make sure it doesn't use fog from another scene
 

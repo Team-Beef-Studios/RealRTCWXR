@@ -35,6 +35,9 @@ If you have questions concerning this license or the applicable additional terms
 
 
 #include "g_local.h"
+#include "bg_local.h"
+
+#include <VrClientInfo.h>
 
 static float s_quadFactor;
 static vec3_t forward, right, up;
@@ -1781,8 +1784,26 @@ set muzzle location relative to pivoting eye
 ===============
 */
 void CalcMuzzlePoint( gentity_t *ent, int weapon, vec3_t forward, vec3_t right, vec3_t up, vec3_t muzzlePoint ) {
-	VectorCopy( ent->r.currentOrigin, muzzlePoint );
-	muzzlePoint[2] += ent->client->ps.viewheight;
+
+	if ((ent->r.svFlags & SVF_CASTAI))
+	{
+		VectorCopy(ent->r.currentOrigin, muzzlePoint);
+		muzzlePoint[2] += ent->client->ps.viewheight;
+	}
+	else if (vr != NULL)
+	{
+		float worldscale = trap_Cvar_VariableIntegerValue("cg_worldScale");
+		float heightAdjust = 0;
+		char buffer[256];
+		trap_Cvar_VariableStringBuffer("cg_heightAdjust", buffer, 256);
+		heightAdjust = (float)atof(buffer);
+
+		BG_ConvertFromVR(ent->client->ps.viewangles[YAW], worldscale, vr->weaponoffset, ent->r.currentOrigin, muzzlePoint);
+		muzzlePoint[2] += (ent->client->ps.viewheight - DEFAULT_PLAYER_HEIGHT);
+		muzzlePoint[2] += (vr->hmdposition[1] + heightAdjust) * worldscale;
+		return;
+	}
+
 	// Ridah, this puts the start point outside the bounding box, isn't necessary
 //	VectorMA( muzzlePoint, 14, forward, muzzlePoint );
 	// done.
@@ -1860,6 +1881,10 @@ void CalcMuzzlePoints( gentity_t *ent, int weapon ) {
 			viewang[YAW] += ZOOM_YAW_AMPLITUDE * sin( phase ) * ( spreadfrac + ZOOM_YAW_MIN_AMPLITUDE );
 		}
 	}
+
+	VectorCopy(vr->weaponangles[ANGLES_ADJUSTED], viewang);
+	viewang[YAW] = ent->client->ps.viewangles[YAW] + (vr->weaponangles[ANGLES_ADJUSTED][YAW] - vr->hmdorientation[YAW]);
+
 
 
 	// set aiming directions

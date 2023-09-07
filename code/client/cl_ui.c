@@ -31,6 +31,8 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "../botlib/botlib.h"
 
+#include <VrCommon.h>
+
 extern botlib_export_t *botlib_export;
 
 vm_t *uivm;
@@ -1174,7 +1176,7 @@ void CL_InitUI( void ) {
 	}
 
 	// init for this gamestate
-	VM_Call( uivm, UI_INIT, ( clc.state >= CA_AUTHORIZING && clc.state < CA_ACTIVE ) );
+	VM_Call( uivm, UI_INIT, ( clc.state >= CA_AUTHORIZING && clc.state < CA_ACTIVE ), (intptr_t)&vr);
 }
 
 

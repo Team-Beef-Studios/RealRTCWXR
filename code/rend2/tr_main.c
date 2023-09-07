@@ -895,13 +895,13 @@ static void R_SetFarClip( void ) {
 
 /*
 =================
-R_SetupFrustum
+R_SetupFrustumPriginal
 
 Set up the culling frustum planes for the current view using the results we got from computing the first two rows of
 the projection matrix.
 =================
 */
-void R_SetupFrustum (viewParms_t *dest, float xmin, float xmax, float ymax, float zProj, float zFar, float stereoSep)
+void R_SetupFrustumPriginal (viewParms_t *dest, float xmin, float xmax, float ymax, float zProj, float zFar, float stereoSep)
 {
 	vec3_t ofsorigin;
 	float oppleg, adjleg, length;
@@ -969,6 +969,38 @@ void R_SetupFrustum (viewParms_t *dest, float xmin, float xmax, float ymax, floa
 	}
 }
 
+void R_SetupFrustum(viewParms_t* dest) {
+	int i;
+	float xs, xc;
+	float ang;
+
+	ang = tr.viewParms.fovX / 180 * M_PI * 0.5f;
+	xs = sin( ang );
+	xc = cos( ang );
+
+	VectorScale( dest->or.axis[0], xs, dest->frustum[0].normal );
+	VectorMA( dest->frustum[0].normal, xc, dest->or.axis[1], dest->frustum[0].normal );
+
+	VectorScale( dest->or.axis[0], xs, dest->frustum[1].normal );
+	VectorMA( dest->frustum[1].normal, -xc, dest->or.axis[1], dest->frustum[1].normal );
+
+	ang = tr.viewParms.fovY / 180 * M_PI * 0.5f;
+	xs = sin( ang );
+	xc = cos( ang );
+
+	VectorScale( dest->or.axis[0], xs, dest->frustum[2].normal );
+	VectorMA( dest->frustum[2].normal, xc, dest->or.axis[2], dest->frustum[2].normal );
+
+	VectorScale( dest->or.axis[0], xs, dest->frustum[3].normal );
+	VectorMA( dest->frustum[3].normal, -xc, dest->or.axis[2], dest->frustum[3].normal );
+
+	for ( i = 0 ; i < 4 ; i++ ) {
+		dest->frustum[i].type = PLANE_NON_AXIAL;
+		dest->frustum[i].dist = DotProduct( tr.viewParms.or.origin, dest->frustum[i].normal );
+		SetPlaneSignbits( &dest->frustum[i] );
+	}
+}
+
 /*
 ===============
 R_SetupProjection
@@ -991,7 +1023,7 @@ void R_SetupProjection(viewParms_t *dest, float zProj, float zFar, qboolean comp
 	if (ri.TBXR_GetVRProjection(zProj, tr.viewParms.zFar, 1.0, 1.0, dest->projectionMatrix))
 	{
 		if (computeFrustum)
-			R_SetupFrustum(dest, xmin, xmax, ymax, zProj, zFar, 0);
+			R_SetupFrustum(dest);// , xmin, xmax, ymax, zProj, zFar, 0);
 
 		return;
 	}
@@ -1013,7 +1045,7 @@ void R_SetupProjection(viewParms_t *dest, float zProj, float zFar, qboolean comp
 	
 	// Now that we have all the data for the projection matrix we can also setup the view frustum.
 	if(computeFrustum)
-		R_SetupFrustum(dest, xmin, xmax, ymax, zProj, zFar, stereoSep);
+		R_SetupFrustumPriginal(dest, xmin, xmax, ymax, zProj, zFar, stereoSep);
 }
 
 /*

@@ -36,6 +36,7 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "../qcommon/q_shared.h"
 #include "bg_public.h"
+#include <VrClientInfo.h>
 
 #ifdef CGAMEDLL
 extern vmCvar_t cg_gameType;
@@ -5736,3 +5737,98 @@ void BG_SetWeaponForSkill( weapon_t weaponNum, gameskill_t skill )
 }
 
 // New ET vehicle path system
+
+
+void rotateAboutOrigin(float x, float y, float rotation, vec2_t out)
+{
+	out[0] = cosf(DEG2RAD(-rotation)) * x + sinf(DEG2RAD(-rotation)) * y;
+	out[1] = cosf(DEG2RAD(-rotation)) * y - sinf(DEG2RAD(-rotation)) * x;
+}
+
+float getHMDYawForCalc()
+{
+	if (vr->in_vehicle || vr->third_person)
+	{
+		return vr->hmdorientation_first[YAW];
+	}
+
+	if (vr->cgzoommode != 2 && vr->cgzoommode != 4) {
+		return vr->hmdorientation[YAW];
+	}
+
+	return 0.0f;
+}
+
+void BG_ConvertFromVR(float refdefViewAnglesYaw, float worldScale, vec3_t in, vec3_t offset, vec3_t out)
+{
+	vec3_t vrSpace;
+	VectorSet(vrSpace, in[2], in[0], in[1]);
+
+	vec2_t r;
+	rotateAboutOrigin(vrSpace[0], vrSpace[1],
+		refdefViewAnglesYaw - getHMDYawForCalc(), r);
+
+	vrSpace[0] = -r[0];
+	vrSpace[1] = -r[1];
+
+	vec3_t temp;
+	VectorScale(vrSpace, worldScale, temp);
+
+	if (offset) {
+		VectorAdd(temp, offset, out);
+	}
+	else {
+		VectorCopy(temp, out);
+	}
+}
+
+void BG_CalculateVRPositionInWorld(float refdefViewAnglesYaw, const vec3_t refdefViewOrigin, float heightAdjust, float worldScale, const vec3_t in_position, vec3_t in_offset, vec3_t in_orientation, vec3_t origin, vec3_t angles)
+{
+	vec3_t offset;
+	VectorCopy(in_offset, offset);
+	offset[1] = 0; // up/down is index 1 in this case
+	BG_ConvertFromVR(refdefViewAnglesYaw, worldScale, offset, refdefViewOrigin, origin);
+	origin[2] -= DEFAULT_PLAYER_HEIGHT;
+	origin[2] += (in_position[1] + heightAdjust) * worldScale;
+
+	VectorCopy(in_orientation, angles);
+	angles[YAW] += (refdefViewAnglesYaw - getHMDYawForCalc());
+}
+
+void BG_CalculateVRDefaultPosition(float refdefViewAnglesYaw, const vec3_t refdefViewOrigin, float heightAdjust, float worldScale, int hand, vec3_t origin, vec3_t angles)
+{
+	if (hand == 0)
+	{
+		BG_CalculateVRPositionInWorld(refdefViewAnglesYaw, refdefViewOrigin, heightAdjust, worldScale,
+			vr->weaponposition, vr->weaponoffset, vr->weaponangles[ANGLES_DEFAULT], origin, angles);
+	}
+	else
+	{
+		BG_CalculateVRPositionInWorld(refdefViewAnglesYaw, refdefViewOrigin, heightAdjust, worldScale,
+			vr->offhandposition[0], vr->offhandoffset, vr->offhandangles[ANGLES_DEFAULT], origin, angles);
+	}
+}
+
+void BG_CalculateVROffHandPosition(float refdefViewAnglesYaw, const vec3_t refdefViewOrigin, float heightAdjust, float worldScale, vec3_t origin, vec3_t angles)
+{
+	BG_CalculateVRPositionInWorld(refdefViewAnglesYaw, refdefViewOrigin, heightAdjust, worldScale,
+		vr->offhandposition[0], vr->offhandoffset, vr->offhandangles[ANGLES_ADJUSTED], origin, angles);
+}
+
+void BG_CalculateVRWeaponPosition(float refdefViewAnglesYaw, const vec3_t refdefViewOrigin, float heightAdjust, float worldScale, vec3_t origin, vec3_t angles)
+{
+	BG_CalculateVRPositionInWorld(refdefViewAnglesYaw, refdefViewOrigin, heightAdjust, worldScale,
+		vr->weaponposition, vr->weaponoffset, vr->weaponangles[ANGLES_ADJUSTED], origin, angles);
+}
+
+void BG_CalculateVRKnifePosition(float refdefViewAnglesYaw, const vec3_t refdefViewOrigin, float heightAdjust, float worldScale, vec3_t origin, vec3_t angles)
+{
+	BG_CalculateVRPositionInWorld(refdefViewAnglesYaw, refdefViewOrigin, heightAdjust, worldScale,
+		vr->weaponposition, vr->weaponoffset, vr->weaponangles[ANGLES_KNIFE], origin, angles);
+
+	//Move position down a bit
+	vec3_t axis[3];
+	AnglesToAxis(angles, axis);
+	//The "forward" axis will be adjusted
+	VectorMA(origin, -3.0f, axis[0], origin);
+}

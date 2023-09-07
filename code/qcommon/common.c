@@ -2691,6 +2691,8 @@ int Com_TimeVal(int minMsec)
 	return timeVal;
 }
 
+int TBXR_FrameSetup();
+
 /*
 =================
 Com_Frame
@@ -2708,8 +2710,7 @@ void Com_Frame( void ) {
 	int timeBeforeClient;
 	int timeAfter;
 
-
-
+	TBXR_FrameSetup();
 
 
 	if ( setjmp( abortframe ) ) {

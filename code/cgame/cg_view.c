@@ -825,12 +825,15 @@ static int CG_CalcFov( void ) {
 		// if in intermission, use a fixed value
 		cg.fov = fov_x = 90;
 	} else {
+#if 0
 		// user selectable
         if ( ( cgs.dmflags & DF_FIXED_FOV ) || ( cg_fixedAspect.integer && cg_fixedAspectFOV.integer ) ) {
 			// dmflag to prevent wide fov for all clients
 			fov_x = 90;
-		} else {
-			fov_x = cg_fov.value;
+		} else 
+#endif
+		{
+			fov_x = vr ? vr->fov_x : cg_fov.value;
 			if ( fov_x < 1 ) {
 				fov_x = 1;
 			} else if ( fov_x > 160 ) {
@@ -838,7 +841,6 @@ static int CG_CalcFov( void ) {
 			}
 		}
 
-		fov_x = vr ? vr->fov_x : 90.0f;
 		cg.fov = fov_x;
 
 		// account for zooms
@@ -863,14 +865,17 @@ static int CG_CalcFov( void ) {
 				fov_x = fov_x + f * ( zoomFov - fov_x );
 			}
 			lastfov = fov_x;
+			cg.refdef.override_fov = qtrue;
 		} else if ( cg.zoomval ) {    // zoomed by sniper/snooper
 			fov_x = cg.zoomval;
 			lastfov = fov_x;
+			cg.refdef.override_fov = qtrue;
 		} else {                    // binoc zooming out
 			f = ( cg.time - cg.zoomTime ) / (float)ZOOM_TIME;
 			if ( f <= 1.0 ) {
 				fov_x = zoomFov + f * ( fov_x - zoomFov );
 			}
+			cg.refdef.override_fov = qtrue;
 		}
 	}
 
@@ -884,6 +889,7 @@ static int CG_CalcFov( void ) {
 		fov_x = 55;
 	}
 
+#if 0
 	if ( cg_fixedAspect.integer ) {
 		// Based on LordHavoc's code for Darkplaces
 		// http://www.quakeworld.nu/forum/topic/53/what-does-your-qw-look-like/page/30
@@ -893,6 +899,8 @@ static int CG_CalcFov( void ) {
 
 		fov_x = atan2( tan( desiredFov*M_PI / 360.0f ) * baseAspect*aspect, 1 )*360.0f / M_PI;
 	}
+#endif
+
 
 	x = cg.refdef.width / tan( fov_x / 360 * M_PI );
 	fov_y = atan2( cg.refdef.height, x );
@@ -1072,7 +1080,7 @@ static int CG_CalcViewValues( void ) {
 
 	if ( cg.cameraMode ) {
 		vec3_t origin, angles;
-		float fov = 90;
+		float fov = vr ? vr->fov_x : 90;
 		float x;
 
 		if ( trap_getCameraInfo( CAM_PRIMARY, cg.time, &origin, &angles, &fov ) ) {
@@ -1082,14 +1090,21 @@ static int CG_CalcViewValues( void ) {
 			VectorCopy( angles, cg.refdefViewAngles );
 			AnglesToAxis( cg.refdefViewAngles, cg.refdef.viewaxis );
 
-			if ( cg_fixedAspect.integer ) {
-				// Based on LordHavoc's code for Darkplaces
-				// http://www.quakeworld.nu/forum/topic/53/what-does-your-qw-look-like/page/30
-				const float baseAspect = 0.75f; // 3/4
-				const float aspect = (float)cg.refdef.width/(float)cg.refdef.height;
-				const float desiredFov = fov;
-		
-				fov = atan2( tan( desiredFov*M_PI / 360.0f ) * baseAspect*aspect, 1 )*360.0f / M_PI;
+			if (!vr->immersive_cinematics)
+			{
+				if (cg_fixedAspect.integer) {
+					// Based on LordHavoc's code for Darkplaces
+					// http://www.quakeworld.nu/forum/topic/53/what-does-your-qw-look-like/page/30
+					const float baseAspect = 0.75f; // 3/4
+					const float aspect = (float)cg.refdef.width / (float)cg.refdef.height;
+					const float desiredFov = fov;
+
+					fov = atan2(tan(desiredFov * M_PI / 360.0f) * baseAspect * aspect, 1) * 360.0f / M_PI;
+				}
+			}
+			else
+			{
+				fov = vr ? vr->fov_x : 90;
 			}
 
 			x = cg.refdef.width / tan( fov / 360 * M_PI );
@@ -1110,6 +1125,8 @@ static int CG_CalcViewValues( void ) {
 			CG_Fade( 0, 0, 0, 0, cg.time + 200, 1500 );   // then fadeup
 		}
 	}
+
+	vr->cin_camera = cg.cameraMode;
 
 	// intermission view
 	if ( ps->pm_type == PM_INTERMISSION ) {
@@ -1561,6 +1578,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 
 	// build cg.refdef
 	inwater = CG_CalcViewValues();
+	cg.refdef.override_fov |= inwater;
 
 	CG_CalcShakeCamera();
 	CG_ApplyShakeCamera();

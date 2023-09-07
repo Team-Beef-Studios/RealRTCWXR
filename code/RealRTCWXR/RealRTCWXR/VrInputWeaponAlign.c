@@ -46,15 +46,15 @@ void HandleInput_WeaponAlign( ovrInputStateTrackedRemote *pDominantTrackedRemote
         //if we are in saber block debounce, don't update the saber angles
         if (vr.saberBlockDebounce < cl.serverTime) {
             rotation[PITCH] = vr_saber_pitchadjust->value;
-            QuatToYawPitchRoll(pDominantTracking->GripPose.orientation, rotation, vr.weaponangles[ANGLES_SABER]);
-            QuatToYawPitchRoll(pOffTracking->GripPose.orientation, rotation, vr.offhandangles[ANGLES_SABER]);
+            QuatToYawPitchRoll(pDominantTracking->GripPose.orientation, rotation, vr.weaponangles[ANGLES_KNIFE]);
+            QuatToYawPitchRoll(pOffTracking->GripPose.orientation, rotation, vr.offhandangles[ANGLES_KNIFE]);
         }
 
         rotation[PITCH] = vr_weapon_pitchadjust->value;
         QuatToYawPitchRoll(pDominantTracking->Pose.orientation, rotation, vr.weaponangles[ANGLES_ADJUSTED]);
         QuatToYawPitchRoll(pOffTracking->Pose.orientation, rotation, vr.offhandangles[ANGLES_ADJUSTED]);
 
-        for (int anglesIndex = 0; anglesIndex <= ANGLES_SABER; ++anglesIndex)
+        for (int anglesIndex = 0; anglesIndex <= ANGLES_KNIFE; ++anglesIndex)
         {
             VectorSubtract(vr.weaponangles_last[anglesIndex], vr.weaponangles[anglesIndex], vr.weaponangles_delta[anglesIndex]);
             VectorCopy(vr.weaponangles[anglesIndex], vr.weaponangles_last[anglesIndex]);
