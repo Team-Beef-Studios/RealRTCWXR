@@ -1008,6 +1008,7 @@ typedef struct {
 	// Duffy
 	qboolean cameraMode;        // if rendering from a camera
 	// Duffy end
+	float camereModeYaw;
 
 	unsigned int cld;
 	qboolean limboMenu;

@@ -302,7 +302,10 @@ void CG_StartCamera( const char *name, qboolean startBlack ) {
 		if ( startBlack ) {
 			CG_Fade( 0, 0, 0, 255, cg.time, 0 );		// go black
 		}
-		trap_Cvar_Set( "cg_letterbox", "1" ); // go letterbox
+		if (!vr->immersive_cinematics)
+		{
+			trap_Cvar_Set("cg_letterbox", "1"); // go letterbox
+		}
 		trap_SendClientCommand( "startCamera" );	// camera on in game
 		trap_startCamera( CAM_PRIMARY, cg.time );	// camera on in client
 	} else {

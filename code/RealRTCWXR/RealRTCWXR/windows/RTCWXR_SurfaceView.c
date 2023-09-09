@@ -107,7 +107,18 @@ void VR_SetHMDPosition(float x, float y, float z )
 void VR_GetMove(float *forward, float *side, float *pos_forward, float *pos_side, float *up,
 				float *yaw, float *pitch, float *roll)
 {
-	if (vr.remote_turret) {
+	if (vr.cin_camera) {
+		*forward = 0.0f;
+		*pos_forward = 0.0f;
+		*up = 0.0f;
+		*side = 0.0f;
+		*pos_side = 0.0f;
+		*yaw = vr.hmdorientation_first[YAW] - vr.hmdorientation_snap[YAW];
+		*pitch = 0.0f;
+		*roll = 0.0f;
+	}
+	else if (vr.remote_turret) 
+	{
 		*forward = 0.0f;
 		*pos_forward = 0.0f;
 		*up = 0.0f;

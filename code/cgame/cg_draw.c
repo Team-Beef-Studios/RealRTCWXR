@@ -3625,11 +3625,17 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 		cg_worldScale.value * (-cg_ipd.value / 2) : //left
 		cg_worldScale.value * (cg_ipd.value / 2); // right
 
-
+	if (!cg.cameraMode)
 	{
 		VectorCopy(vr->hmdorientation, cg.refdef.viewangles);
 		cg.refdef.viewangles[YAW] = vr->clientviewangles[YAW] +
 			SHORT2ANGLE(cg.snap->ps.delta_angles[YAW]);
+		AnglesToAxis(cg.refdef.viewangles, cg.refdef.viewaxis);
+	}
+	else
+	{
+		VectorCopy(vr->hmdorientation, cg.refdef.viewangles);
+		cg.refdef.viewangles[YAW] = cg.camereModeYaw + vr->clientviewangles[YAW];
 		AnglesToAxis(cg.refdef.viewangles, cg.refdef.viewaxis);
 	}
 
@@ -3639,10 +3645,12 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 	VectorMA(cg.refdef.vieworg, -separation, cg.refdef.viewaxis[1], cg.refdef.vieworg);
 
 	//Vertical Positional Movement
-	if (!cg.cameraMode) {
+	if (!vr->using_screen_layer)
+	{
 		cg.refdef.vieworg[2] -= DEFAULT_PLAYER_HEIGHT;
 		cg.refdef.vieworg[2] += (vr->hmdposition[1] + cg_heightAdjust.value) * cg_worldScale.value;
 	}
+
 
 //	if(stereoView != STEREO_CENTER)
 //		CG_DrawCrosshair3D();

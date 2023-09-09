@@ -1090,6 +1090,11 @@ static int CG_CalcViewValues( void ) {
 			VectorCopy( angles, cg.refdefViewAngles );
 			AnglesToAxis( cg.refdefViewAngles, cg.refdef.viewaxis );
 
+			if (fabsf(cg.camereModeYaw - angles[YAW]) >= 30.0f)
+			{
+				cg.camereModeYaw = angles[YAW];
+			}
+
 			if (!vr->immersive_cinematics)
 			{
 				if (cg_fixedAspect.integer) {
@@ -1438,6 +1443,13 @@ void CG_DrawSkyBoxPortal( void ) {
 
 
 	cg.refdef.time = cg.time;
+
+	{
+		VectorCopy(vr->hmdorientation, cg.refdef.viewangles);
+		cg.refdef.viewangles[YAW] = vr->clientviewangles[YAW] +
+			SHORT2ANGLE(cg.snap->ps.delta_angles[YAW]);
+		AnglesToAxis(cg.refdef.viewangles, cg.refdef.viewaxis);
+	}
 
 	// draw the skybox
 	trap_R_RenderScene( &cg.refdef );
