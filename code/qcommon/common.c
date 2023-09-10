@@ -1953,6 +1953,10 @@ void Com_ExecuteCfg(void)
 		Cbuf_Execute();
 		Cbuf_ExecuteText(EXEC_NOW, "exec autoexec.cfg\n");
 		Cbuf_Execute();
+
+		//Execute to overwrite weapon locations with our desired adjustments
+		Cbuf_ExecuteText(EXEC_NOW, "exec weapons_vr.cfg\n");
+		Cbuf_Execute();
 	}
 }
 
