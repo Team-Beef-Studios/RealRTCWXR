@@ -3431,6 +3431,9 @@ static void PM_Weapon( void ) {
 	}
 
 	switch ( pm->ps->weapon ) {
+	case WP_KNIFE:
+	case WP_DAGGER:
+		break; //Play no animation for the knife (as it is physical stabby stabby)
 	case WP_MAUSER:
 	case WP_DELISLE:
 	case WP_MOSIN:
