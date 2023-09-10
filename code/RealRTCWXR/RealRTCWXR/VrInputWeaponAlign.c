@@ -12,23 +12,20 @@ Authors		:	Simon Brown
 
 #include "../client/client.h"
 
-cvar_t	*sv_cheats;
 
-void CG_CenterPrint( const char *str, int y, int charWidth, int delayOverride );
-
-void HandleInput_WeaponAlign( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew, ovrInputStateTrackedRemote *pDominantTrackedRemoteOld, ovrTrackedController* pDominantTracking,
-                          ovrInputStateTrackedRemote *pOffTrackedRemoteNew, ovrInputStateTrackedRemote *pOffTrackedRemoteOld, ovrTrackedController* pOffTracking,
-                          int domButton1, int domButton2, int offButton1, int offButton2 )
+void HandleInput_WeaponAlign(ovrInputStateTrackedRemote* pDominantTrackedRemoteNew, ovrInputStateTrackedRemote* pDominantTrackedRemoteOld, ovrTrackedController* pDominantTracking,
+    ovrInputStateTrackedRemote* pOffTrackedRemoteNew, ovrInputStateTrackedRemote* pOffTrackedRemoteOld, ovrTrackedController* pOffTracking,
+    int domButton1, int domButton2, int offButton1, int offButton2)
 
 {
-	//always right handed for this
-	vr.right_handed = true;
+    //always right handed for this
+    vr.right_handed = true;
 
-    static bool dominantGripPushed = false;
+    static qboolean dominantGripPushed = false;
 
-	/*
+    /*
     char cvar_name[64];
-    Com_sprintf(cvar_name, sizeof(cvar_name), "vr_weapon_adjustment_%i", cl.frame.ps.weapon);
+    Com_sprintf(cvar_name, sizeof(cvar_name), "vr_weapon_adjustment_%i", vr.weaponid);
     char weapon_adjustment[256];
     Cvar_VariableStringBuffer(cvar_name, weapon_adjustment, 256);
     sscanf(weapon_adjustment, "%f,%f,%f,%f,%f,%f,%f", &vr.test_scale,
@@ -37,18 +34,24 @@ void HandleInput_WeaponAlign( ovrInputStateTrackedRemote *pDominantTrackedRemote
     VectorScale(vr.test_offset, vr.test_scale, vr.test_offset);
     */
 
+    //Allow weapon alignment mode toggle on x
+    if (vr_align_weapons->value)
+    {
+        bool offhandX = (pOffTrackedRemoteNew->Buttons & xrButton_X);
+        if ((offhandX != ((pOffTrackedRemoteOld->Buttons & xrButton_X) != 0)) && offhandX)
+        {
+            Cvar_Set("vr_control_scheme", "0");
+        }
+    }
+
     //Set controller angles - We need to calculate all those we might need (including adjustments) for the client to then take its pick
     {
-        vec3_t rotation = {0};
+        vec3_t rotation = { 0 };
         QuatToYawPitchRoll(pDominantTracking->Pose.orientation, rotation, vr.weaponangles[ANGLES_DEFAULT]);
         QuatToYawPitchRoll(pOffTracking->Pose.orientation, rotation, vr.offhandangles[ANGLES_DEFAULT]);
 
-        //if we are in saber block debounce, don't update the saber angles
-        if (vr.saberBlockDebounce < cl.serverTime) {
-            rotation[PITCH] = vr_saber_pitchadjust->value;
-            QuatToYawPitchRoll(pDominantTracking->GripPose.orientation, rotation, vr.weaponangles[ANGLES_KNIFE]);
-            QuatToYawPitchRoll(pOffTracking->GripPose.orientation, rotation, vr.offhandangles[ANGLES_KNIFE]);
-        }
+        QuatToYawPitchRoll(pDominantTracking->GripPose.orientation, rotation, vr.weaponangles[ANGLES_KNIFE]);
+        QuatToYawPitchRoll(pOffTracking->GripPose.orientation, rotation, vr.offhandangles[ANGLES_KNIFE]);
 
         rotation[PITCH] = vr_weapon_pitchadjust->value;
         QuatToYawPitchRoll(pDominantTracking->Pose.orientation, rotation, vr.weaponangles[ANGLES_ADJUSTED]);
@@ -62,82 +65,78 @@ void HandleInput_WeaponAlign( ovrInputStateTrackedRemote *pDominantTrackedRemote
             VectorSubtract(vr.offhandangles_last[anglesIndex], vr.offhandangles[anglesIndex], vr.offhandangles_delta[anglesIndex]);
             VectorCopy(vr.offhandangles[anglesIndex], vr.offhandangles_last[anglesIndex]);
         }
+
+        //Record recent weapon position for trajectory based stuff
+        for (int i = (NUM_WEAPON_SAMPLES - 1); i != 0; --i) {
+            VectorCopy(vr.weaponoffset_history[i - 1], vr.weaponoffset_history[i]);
+            vr.weaponoffset_history_timestamp[i] = vr.weaponoffset_history_timestamp[i - 1];
+        }
+        VectorCopy(vr.weaponoffset, vr.weaponoffset_history[0]);
+        vr.weaponoffset_history_timestamp[0] = vr.weaponoffset_timestamp;
+
+
+        VectorSet(vr.weaponposition, pDominantTracking->Pose.position.x,
+            pDominantTracking->Pose.position.y, pDominantTracking->Pose.position.z);
+
+        ///Weapon location relative to view
+        VectorSet(vr.weaponoffset, pDominantTracking->Pose.position.x,
+            pDominantTracking->Pose.position.y, pDominantTracking->Pose.position.z);
+        VectorSubtract(vr.weaponoffset, vr.hmdposition, vr.weaponoffset);
+        vr.weaponoffset_timestamp = Sys_Milliseconds();
+
+
+        vec3_t velocity;
+        VectorSet(velocity, pDominantTracking->Velocity.linearVelocity.x,
+            pDominantTracking->Velocity.linearVelocity.y, pDominantTracking->Velocity.linearVelocity.z);
+        vr.primaryswingvelocity = VectorLength(velocity);
+
+        VectorSet(velocity, pOffTracking->Velocity.linearVelocity.x,
+            pOffTracking->Velocity.linearVelocity.y, pOffTracking->Velocity.linearVelocity.z);
+        vr.secondaryswingvelocity = VectorLength(velocity);
     }
 
     //Menu button
-	handleTrackedControllerButton(&leftTrackedRemoteState_new, &leftTrackedRemoteState_old, xrButton_Enter, K_ESCAPE);
+    handleTrackedControllerButton(&leftTrackedRemoteState_new, &leftTrackedRemoteState_old, xrButton_Enter, K_ESCAPE);
 
     static float menuYaw = 0;
-    static bool switchedMenuControls = qfalse;
-    if (VR_UseScreenLayer() )
+
+    static qboolean resetCursor = qtrue;
+    if (VR_UseScreenLayer())
     {
         bool controlsLeftHanded = vr_control_scheme->integer >= 10;
-        if ((controlsLeftHanded && !switchedMenuControls) || (!controlsLeftHanded && switchedMenuControls)) {
+        if (controlsLeftHanded == vr.menu_right_handed) {
             interactWithTouchScreen(menuYaw, vr.offhandangles[ANGLES_DEFAULT]);
             handleTrackedControllerButton(pOffTrackedRemoteNew, pOffTrackedRemoteOld, offButton1, K_MOUSE1);
             handleTrackedControllerButton(pOffTrackedRemoteNew, pOffTrackedRemoteOld, xrButton_Trigger, K_MOUSE1);
             handleTrackedControllerButton(pOffTrackedRemoteNew, pOffTrackedRemoteOld, offButton2, K_ESCAPE);
             if ((pDominantTrackedRemoteNew->Buttons & xrButton_Trigger) != (pDominantTrackedRemoteOld->Buttons & xrButton_Trigger) && (pDominantTrackedRemoteNew->Buttons & xrButton_Trigger)) {
-                switchedMenuControls = !switchedMenuControls;
+                vr.menu_right_handed = !vr.menu_right_handed;
             }
-        } else {
+        }
+        else {
             interactWithTouchScreen(menuYaw, vr.weaponangles[ANGLES_DEFAULT]);
             handleTrackedControllerButton(pDominantTrackedRemoteNew, pDominantTrackedRemoteOld, domButton1, K_MOUSE1);
             handleTrackedControllerButton(pDominantTrackedRemoteNew, pDominantTrackedRemoteOld, xrButton_Trigger, K_MOUSE1);
             handleTrackedControllerButton(pDominantTrackedRemoteNew, pDominantTrackedRemoteOld, domButton2, K_ESCAPE);
             if ((pOffTrackedRemoteNew->Buttons & xrButton_Trigger) != (pOffTrackedRemoteOld->Buttons & xrButton_Trigger) && (pOffTrackedRemoteNew->Buttons & xrButton_Trigger)) {
-                switchedMenuControls = !switchedMenuControls;
+                vr.menu_right_handed = !vr.menu_right_handed;
             }
         }
     }
     else
     {
-        menuYaw = vr.hmdorientation[YAW];
-
-        //dominant hand stuff first
-        {
-            vr.weaponposition[0] = pDominantTracking->Pose.position.x;
-            vr.weaponposition[1] = pDominantTracking->Pose.position.y;
-            vr.weaponposition[2] = pDominantTracking->Pose.position.z;
-			///Weapon location relative to view
-            vr.weaponoffset[0] = pDominantTracking->Pose.position.x - vr.hmdposition[0];
-            vr.weaponoffset[1] = pDominantTracking->Pose.position.y - vr.hmdposition[1];
-            vr.weaponoffset[2] = pDominantTracking->Pose.position.z - vr.hmdposition[2];
-            vr.weaponoffset_timestamp = Sys_Milliseconds( );
-        }
-
-        float controllerYawHeading = 0.0f;
-        //off-hand stuff
-        {
-            vr.offhandposition[0][0] = pOffTracking->Pose.position.x;
-            vr.offhandposition[0][1] = pOffTracking->Pose.position.y;
-            vr.offhandposition[0][2] = pOffTracking->Pose.position.z;
-
-            vr.offhandoffset[0] = pOffTracking->Pose.position.x - vr.hmdposition[0];
-            vr.offhandoffset[1] = pOffTracking->Pose.position.y - vr.hmdposition[1];
-            vr.offhandoffset[2] = pOffTracking->Pose.position.z - vr.hmdposition[2];
-        }
-
-
-        ALOGV("        Right-Controller-Position: %f, %f, %f",
-              pDominantTracking->Pose.position.x,
-              pDominantTracking->Pose.position.y,
-              pDominantTracking->Pose.position.z);
+        resetCursor = qtrue;
 
         //This section corrects for the fact that the controller actually controls direction of movement, but we want to move relative to the direction the
         //player is facing for positional tracking
         vec2_t v;
         rotateAboutOrigin(-vr.hmdposition_delta[0] * vr_positional_factor->value,
-                          vr.hmdposition_delta[2] * vr_positional_factor->value, - vr.hmdorientation[YAW], v);
+            vr.hmdposition_delta[2] * vr_positional_factor->value, -vr.hmdorientation[YAW], v);
         positional_movementSideways = v[0];
         positional_movementForward = v[1];
 
-        ALOGV("        positional_movementSideways: %f, positional_movementForward: %f",
-              positional_movementSideways,
-              positional_movementForward);
-
         dominantGripPushed = (pDominantTrackedRemoteNew->Buttons &
-                              xrButton_GripTrigger) != 0;
+            xrButton_GripTrigger) != 0;
 
         //We need to record if we have started firing primary so that releasing trigger will stop firing, if user has pushed grip
         //in meantime, then it wouldn't stop the gun firing and it would get stuck
@@ -162,58 +161,34 @@ void HandleInput_WeaponAlign( ovrInputStateTrackedRemote *pDominantTrackedRemote
             }
         }
 
-        {
-            bool offhandX = (pOffTrackedRemoteNew->Buttons & xrButton_X);
-            if ((offhandX != (pOffTrackedRemoteOld->Buttons & xrButton_X)) &&
-                offhandX)
-            Cvar_Set("vr_control_scheme", "0");
-        }
-
-
         //Next Weapon with A
         if (((pDominantTrackedRemoteNew->Buttons & domButton1) !=
             (pDominantTrackedRemoteOld->Buttons & domButton1)) &&
-                (pDominantTrackedRemoteOld->Buttons & domButton1)){
+            (pDominantTrackedRemoteOld->Buttons & domButton1)) {
             sendButtonActionSimple("weapnext");
         }
 
         //Prev Weapon with B
         if (((pDominantTrackedRemoteNew->Buttons & domButton2) !=
             (pDominantTrackedRemoteOld->Buttons & domButton2)) &&
-                (pDominantTrackedRemoteOld->Buttons & domButton2)){
+            (pDominantTrackedRemoteOld->Buttons & domButton2)) {
             sendButtonActionSimple("weapprev");
         }
 
-        vr_weapon_adjustment_t *adjustment = &vr.weaponadjustment[cl.snap.ps.weapon];
-        if (!adjustment->loaded) {
-            return; // will be loaded "next frame"
-        }
-
         static int item_index = 0;
-        float* items[7] = {&adjustment->scale, &(adjustment->offset[0]), &(adjustment->offset[1]), &(adjustment->offset[2]),
-                           &(adjustment->angles[PITCH]), &(adjustment->angles[YAW]), &(adjustment->angles[ROLL])};
-        char*  item_names[7] = {"scale", "right", "up", "forward", "pitch", "yaw", "roll"};
-        float  item_inc[7] = {0.005, 0.02, 0.02, 0.02, 0.1, 0.1, 0.1};
-
-#define JOYX_SAMPLE_COUNT   4
-        static float joyx[JOYX_SAMPLE_COUNT] = {0};
-        for (int j = JOYX_SAMPLE_COUNT-1; j > 0; --j)
-            joyx[j] = joyx[j-1];
-        joyx[0] = pDominantTrackedRemoteNew->Joystick.x;
-        float sum = 0.0f;
-        for (int j = 0; j < JOYX_SAMPLE_COUNT; ++j)
-            sum += joyx[j];
-        float primaryJoystickX = sum / 4.0f;
-
+        float* items[7] = { &vr.test_scale, &(vr.test_offset[0]), &(vr.test_offset[1]), &(vr.test_offset[2]),
+                           &(vr.test_angles[PITCH]), &(vr.test_angles[YAW]), &(vr.test_angles[ROLL]) };
+        char* item_names[7] = { "scale", "right", "up", "forward", "pitch", "yaw", "roll" };
+        float  item_inc[7] = { 0.002, 0.02, 0.02, 0.02, 0.1, 0.1, 0.1 };
 
         //Weapon/Inventory Chooser
-        static bool itemSwitched = false;
+        static qboolean itemSwitched = false;
         if (between(-0.2f, pDominantTrackedRemoteNew->Joystick.y, 0.2f) &&
-            (between(0.8f, primaryJoystickX, 1.0f) ||
-             between(-1.0f, primaryJoystickX, -0.8f)))
+            (between(0.8f, pDominantTrackedRemoteNew->Joystick.x, 1.0f) ||
+                between(-1.0f, pDominantTrackedRemoteNew->Joystick.x, -0.8f)))
         {
             if (!itemSwitched) {
-                if (between(0.8f, primaryJoystickX, 1.0f))
+                if (between(0.8f, pDominantTrackedRemoteNew->Joystick.x, 1.0f))
                 {
                     item_index++;
                     if (item_index == 7)
@@ -227,20 +202,29 @@ void HandleInput_WeaponAlign( ovrInputStateTrackedRemote *pDominantTrackedRemote
                 }
                 itemSwitched = true;
             }
-        } else {
+        }
+        else {
             itemSwitched = false;
         }
 
         if (((pDominantTrackedRemoteNew->Buttons & xrButton_Joystick) !=
             (pDominantTrackedRemoteOld->Buttons & xrButton_Joystick)) &&
-                (pDominantTrackedRemoteOld->Buttons & xrButton_Joystick))
+            (pDominantTrackedRemoteOld->Buttons & xrButton_Joystick))
         {
             *(items[item_index]) = 0.0;
         }
 
         //Left-hand specific stuff
         {
-            if (between(-0.2f, primaryJoystickX, 0.2f))
+            if (((pOffTrackedRemoteNew->Buttons & offButton1) !=
+                (pOffTrackedRemoteOld->Buttons & offButton1)) &&
+                (pOffTrackedRemoteOld->Buttons & offButton1)) {
+                //If cheats enabled, give all weapons/pickups to player
+                Cbuf_AddText("give all\n");
+            }
+
+
+            if (between(-0.2f, pDominantTrackedRemoteNew->Joystick.x, 0.2f))
             {
                 if (pDominantTrackedRemoteNew->Joystick.y > 0.6f) {
                     *(items[item_index]) += item_inc[item_index];
@@ -252,16 +236,15 @@ void HandleInput_WeaponAlign( ovrInputStateTrackedRemote *pDominantTrackedRemote
             }
         }
 
-        Com_sprintf(vr.weaponadjustment_info, sizeof(vr.weaponadjustment_info), "%s: %.3f", item_names[item_index], *(items[item_index]));
+        Com_sprintf(vr.test_name, sizeof(vr.test_name), "ID: %i, %s: %.3f", cl.snap.ps.weapon, item_names[item_index], *(items[item_index]));
 
         char cvar_name[64];
         Com_sprintf(cvar_name, sizeof(cvar_name), "vr_weapon_adjustment_%i", cl.snap.ps.weapon);
 
         char buffer[256];
-        Com_sprintf(buffer, sizeof(buffer), "%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f", adjustment->scale,
-                adjustment->offset[0], adjustment->offset[1], adjustment->offset[2],
-                adjustment->angles[PITCH], adjustment->angles[YAW], adjustment->angles[ROLL]);
-        Cvar_Set(cvar_name, buffer );
+        Com_sprintf(buffer, sizeof(buffer), "%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f", vr.test_scale, (vr.test_offset[0] / vr.test_scale), (vr.test_offset[1] / vr.test_scale), (vr.test_offset[2] / vr.test_scale),
+            (vr.test_angles[PITCH]), (vr.test_angles[YAW]), (vr.test_angles[ROLL]));
+        Cvar_Set(cvar_name, buffer);
     }
 
 

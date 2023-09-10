@@ -3723,6 +3723,10 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 		return;
 	}
 
+	char vr_control_scheme[256];
+	trap_Cvar_VariableStringBuffer("vr_control_scheme", vr_control_scheme, 256);
+	qboolean weaponDebugging = (atoi(vr_control_scheme) == 99);
+
 	VectorClear(fovOffset);
 
 	if ( cg_fixedAspect.integer ) {
@@ -3790,7 +3794,16 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 		VectorCopy( hand.origin, hand.lightingOrigin );
 
 		hand.hModel = weapon->handsModel;
-		hand.renderfx = RF_DEPTHHACK | RF_FIRST_PERSON | RF_MINLIGHT;   //----(SA)
+
+		//Weapon offset debugging
+		if (weaponDebugging)
+		{
+			hand.renderfx = RF_FIRST_PERSON | RF_MINLIGHT /* | RF_VIEWWEAPON */; //No depth hack for weapon adjusting mode
+		}
+		else
+		{
+			hand.renderfx = RF_DEPTHHACK | RF_FIRST_PERSON | RF_MINLIGHT /* | RF_VIEWWEAPON */;   //----(SA)
+		}
 
 		//scale the whole model (hand and weapon)
 		for (int i = 0; i < 3; i++) {
@@ -3807,6 +3820,34 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 	// Rafael
 	// add the foot
 	CG_AddPlayerFoot( &hand, ps, &cg.predictedPlayerEntity );
+
+
+	//Weapon offset debugging
+	if (weaponDebugging)
+	{
+		vec3_t origin;
+		vec3_t endForward, endRight, endUp;
+		vec3_t angles;
+		clientInfo_t ci;
+		CG_CalculateVRWeaponPosition(0, origin, angles);
+
+		vec3_t forward, right, up;
+		AngleVectors(angles, forward, right, up);
+
+		trace_t trace;
+		VectorMA(origin, 8192, forward, endForward);
+		trap_CM_BoxTrace(&trace, origin, endForward, NULL, NULL, 0, MASK_SOLID);
+		VectorSet(ci.color, 1, 0, 0); // Forward is red
+		CG_RailTrail2(&ci, origin, trace.endpos);
+
+		VectorMA(origin, 20, right, endRight);
+		VectorSet(ci.color, 0, 1, 0); // right is green
+		CG_RailTrail2(&ci, origin, endRight);
+
+		VectorMA(origin, 20, up, endUp);
+		VectorSet(ci.color, 0, 0, 1); // up is blue
+		CG_RailTrail2(&ci, origin, endUp);
+	}
 
 	cg.predictedPlayerEntity.lastWeaponClientFrame = cg.clientFrame;
 }

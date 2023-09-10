@@ -107,9 +107,33 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
     if (vr_align_weapons->value)
     {
         bool offhandX = (pOffTrackedRemoteNew->Buttons & xrButton_X);
-        if ((offhandX != ((pOffTrackedRemoteOld->Buttons & xrButton_X)!=0)) &&
-                offhandX)
-        Cvar_Set("vr_control_scheme", "99");
+        if ((offhandX != ((pOffTrackedRemoteOld->Buttons & xrButton_X) != 0)) && offhandX)
+        {
+            Cvar_Set("vr_control_scheme", "99");
+
+            //Load the adjustment values
+            char cvar_name[64];
+            Com_sprintf(cvar_name, sizeof(cvar_name), "vr_weapon_adjustment_%i", cl.snap.ps.weapon);
+
+            cvar_t* cvar = Cvar_Get(cvar_name, cvar_name, CVAR_ARCHIVE);
+
+            if (cvar != NULL && strlen(cvar->string) > 0) {
+                vec3_t temp_offset;
+                VectorClear(temp_offset);
+
+                sscanf(cvar->string, "%f,%f,%f,%f,%f,%f,%f", &vr.test_scale,
+                    &(temp_offset[0]), &(temp_offset[1]), &(temp_offset[2]),
+                    &(vr.test_angles[PITCH]), &(vr.test_angles[YAW]), &(vr.test_angles[ROLL]));
+
+                VectorScale(temp_offset, vr.test_scale, vr.test_offset);
+
+
+                if (vr.test_scale < 0.1)
+                {
+                    vr.test_scale = 0.1;
+                }
+            }
+        }
     }
 
     //Set controller angles - We need to calculate all those we might need (including adjustments) for the client to then take its pick
@@ -167,7 +191,8 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
         }
 
         //Close the menu
-        if (secondaryButton1New && !secondaryButton1Old) {
+        if (!vr_align_weapons->integer &&
+            secondaryButton1New && !secondaryButton1Old) {
             CL_KeyEvent(K_ESCAPE, true, Sys_Milliseconds());
         }
 
@@ -674,7 +699,8 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
             
 
             //X button invokes menu now
-            if ((secondaryButtonsNew & secondaryButton1) &&
+            if (!vr_align_weapons->integer &&
+                (secondaryButtonsNew & secondaryButton1) &&
                 !(secondaryButtonsOld & secondaryButton1))
             {
                 CL_KeyEvent(K_ESCAPE, true, Sys_Milliseconds());

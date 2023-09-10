@@ -387,7 +387,7 @@ cvarTable_t cvarTable[] = {
 	{ &cg_reticleBrightness, "cg_reticleBrightness", "0.7", CVAR_ARCHIVE },
 	{ &cg_markTime, "cg_marktime", "30000", CVAR_ARCHIVE },
 	{ &cg_lagometer, "cg_lagometer", "0", CVAR_ARCHIVE },
-	{ &cg_railTrailTime, "cg_railTrailTime", "400", CVAR_ARCHIVE  },
+	{ &cg_railTrailTime, "cg_railTrailTime", "100", CVAR_ARCHIVE  },
 	{ &cg_gun_x, "cg_gunX", "0", CVAR_CHEAT  },
 	{ &cg_gun_y, "cg_gunY", "0", CVAR_CHEAT  },
 	{ &cg_gun_z, "cg_gunZ", "0", CVAR_CHEAT  },
