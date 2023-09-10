@@ -1849,10 +1849,26 @@ void CalcMuzzlePoint( gentity_t *ent, int weapon, vec3_t forward, vec3_t right, 
 // Rafael - for activate
 void CalcMuzzlePointForActivate( gentity_t *ent, vec3_t forward, vec3_t right, vec3_t up, vec3_t muzzlePoint ) {
 
-	VectorCopy( ent->s.pos.trBase, muzzlePoint );
-	muzzlePoint[2] += ent->client->ps.viewheight;
+	if ((ent->r.svFlags & SVF_CASTAI))
+	{
+		VectorCopy(ent->s.pos.trBase, muzzlePoint);
+		muzzlePoint[2] += ent->client->ps.viewheight;
 
-	AddLean( ent, muzzlePoint );
+		AddLean(ent, muzzlePoint);
+	}
+	else if (vr != NULL)
+	{
+		float worldscale = trap_Cvar_VariableIntegerValue("cg_worldScale");
+		float heightAdjust = 0;
+		char buffer[256];
+		trap_Cvar_VariableStringBuffer("cg_heightAdjust", buffer, 256);
+		heightAdjust = (float)atof(buffer);
+
+		BG_ConvertFromVR(ent->client->ps.viewangles[YAW], worldscale, vr->weaponoffset, ent->r.currentOrigin, muzzlePoint);
+		muzzlePoint[2] += (ent->client->ps.viewheight - DEFAULT_PLAYER_HEIGHT);
+		muzzlePoint[2] += (vr->hmdposition[1] + heightAdjust) * worldscale;
+		return;
+	}
 
 	// snap to integer coordinates for more efficient network bandwidth usage
 //	SnapVector( muzzlePoint );
@@ -1867,6 +1883,7 @@ void CalcMuzzlePoints( gentity_t *ent, int weapon ) {
 
 	VectorCopy( ent->client->ps.viewangles, viewang );
 
+	/*
 	if ( !( ent->r.svFlags & SVF_CASTAI ) ) {   // non ai's take into account scoped weapon 'sway' (just another way aimspread is visualized/utilized)
 		float spreadfrac, phase;
 
@@ -1881,6 +1898,7 @@ void CalcMuzzlePoints( gentity_t *ent, int weapon ) {
 			viewang[YAW] += ZOOM_YAW_AMPLITUDE * sin( phase ) * ( spreadfrac + ZOOM_YAW_MIN_AMPLITUDE );
 		}
 	}
+	*/
 
 	VectorCopy(vr->weaponangles[ANGLES_ADJUSTED], viewang);
 	viewang[YAW] = ent->client->ps.viewangles[YAW] + (vr->weaponangles[ANGLES_ADJUSTED][YAW] - vr->hmdorientation[YAW]);
