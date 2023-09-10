@@ -55,6 +55,13 @@ int G_GetWeaponDamage( int weapon, qboolean player ); // JPW
 
 #define NUM_NAILSHOTS 10
 
+static float Cvar_VariableFloatValue(char* name)
+{
+	char buffer[256];
+	trap_Cvar_VariableStringBuffer(name, buffer, 256);
+	return (float)atof(buffer);
+}
+
 /*
 ======================================================================
 
@@ -81,7 +88,17 @@ void Weapon_Knife( gentity_t *ent ) {
 
 	mod = MOD_KNIFE;
 
-	AngleVectors( ent->client->ps.viewangles, forward, right, up );
+	vec3_t angles;
+	if (isPlayer) {
+		VectorCopy(vr->weaponangles[ANGLES_KNIFE], angles);
+		angles[YAW] += ent->client->ps.viewangles[YAW] - vr->hmdorientation[YAW];
+	}
+	else
+	{
+		VectorCopy(ent->client->ps.viewangles, angles);
+	}
+
+	AngleVectors(angles, forward, right, up );
 	CalcMuzzlePoint( ent, ent->s.weapon, forward, right, up, muzzleTrace );
 	VectorMA( muzzleTrace, KNIFE_DIST, forward, end );
 	trap_Trace( &tr, muzzleTrace, NULL, NULL, end, ent->s.number, MASK_SHOT );
@@ -179,7 +196,18 @@ void Weapon_Dagger( gentity_t *ent ) {
 
 	mod =  MOD_DAGGER;
 
-	AngleVectors( ent->client->ps.viewangles, forward, right, up );
+	vec3_t angles;
+	if (isPlayer) {
+		VectorCopy(vr->weaponangles[ANGLES_KNIFE], angles);
+		angles[YAW] += ent->client->ps.viewangles[YAW] - vr->hmdorientation[YAW];
+	}
+	else 
+	{
+		VectorCopy(ent->client->ps.viewangles, angles);
+	}
+
+
+	AngleVectors(angles, forward, right, up);
 	CalcMuzzlePoint( ent, ent->s.weapon, forward, right, up, muzzleTrace );
 	VectorMA( muzzleTrace, KNIFE_DIST, forward, end );
 	trap_Trace( &tr, muzzleTrace, NULL, NULL, end, ent->s.number, MASK_SHOT );
@@ -1792,11 +1820,8 @@ void CalcMuzzlePoint( gentity_t *ent, int weapon, vec3_t forward, vec3_t right, 
 	}
 	else if (vr != NULL)
 	{
-		float worldscale = trap_Cvar_VariableIntegerValue("cg_worldScale");
-		float heightAdjust = 0;
-		char buffer[256];
-		trap_Cvar_VariableStringBuffer("cg_heightAdjust", buffer, 256);
-		heightAdjust = (float)atof(buffer);
+		float worldscale = Cvar_VariableFloatValue("cg_worldScale");
+		float heightAdjust = Cvar_VariableFloatValue("cg_heightAdjust");
 
 		BG_ConvertFromVR(ent->client->ps.viewangles[YAW], worldscale, vr->weaponoffset, ent->r.currentOrigin, muzzlePoint);
 		muzzlePoint[2] += (ent->client->ps.viewheight - DEFAULT_PLAYER_HEIGHT);
@@ -1849,7 +1874,7 @@ void CalcMuzzlePoint( gentity_t *ent, int weapon, vec3_t forward, vec3_t right, 
 // Rafael - for activate
 void CalcMuzzlePointForActivate( gentity_t *ent, vec3_t forward, vec3_t right, vec3_t up, vec3_t muzzlePoint ) {
 
-	if ((ent->r.svFlags & SVF_CASTAI))
+	if (ent->r.svFlags & SVF_CASTAI)
 	{
 		VectorCopy(ent->s.pos.trBase, muzzlePoint);
 		muzzlePoint[2] += ent->client->ps.viewheight;
@@ -1858,11 +1883,8 @@ void CalcMuzzlePointForActivate( gentity_t *ent, vec3_t forward, vec3_t right, v
 	}
 	else if (vr != NULL)
 	{
-		float worldscale = trap_Cvar_VariableIntegerValue("cg_worldScale");
-		float heightAdjust = 0;
-		char buffer[256];
-		trap_Cvar_VariableStringBuffer("cg_heightAdjust", buffer, 256);
-		heightAdjust = (float)atof(buffer);
+		float worldscale = Cvar_VariableFloatValue("cg_worldScale");
+		float heightAdjust = Cvar_VariableFloatValue("cg_heightAdjust");
 
 		BG_ConvertFromVR(ent->client->ps.viewangles[YAW], worldscale, vr->weaponoffset, ent->r.currentOrigin, muzzlePoint);
 		muzzlePoint[2] += (ent->client->ps.viewheight - DEFAULT_PLAYER_HEIGHT);
@@ -1900,10 +1922,10 @@ void CalcMuzzlePoints( gentity_t *ent, int weapon ) {
 	}
 	*/
 
-	VectorCopy(vr->weaponangles[ANGLES_ADJUSTED], viewang);
-	viewang[YAW] = ent->client->ps.viewangles[YAW] + (vr->weaponangles[ANGLES_ADJUSTED][YAW] - vr->hmdorientation[YAW]);
-
-
+	if (!(ent->r.svFlags & SVF_CASTAI)) {
+		VectorCopy(vr->weaponangles[ANGLES_ADJUSTED], viewang);
+		viewang[YAW] = ent->client->ps.viewangles[YAW] + (vr->weaponangles[ANGLES_ADJUSTED][YAW] - vr->hmdorientation[YAW]);
+	}
 
 	// set aiming directions
 	AngleVectors( viewang, forward, right, up );
