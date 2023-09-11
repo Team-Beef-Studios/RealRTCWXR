@@ -531,7 +531,7 @@ gentity_t *G_TempEntity( vec3_t origin, int event ) {
 	e->freeAfterEvent = qtrue;
 
 	VectorCopy( origin, snapped );
-	SnapVector( snapped );      // save network bandwidth
+	//SnapVector( snapped );      // save network bandwidth
 	G_SetOrigin( e, snapped );
 
 	// find cluster for PVS

@@ -249,7 +249,7 @@ cvarTable_t gameCvarTable[] = {
 	{ &g_debugMove, "g_debugMove", "0", 0, 0, qfalse },
 	{ &g_debugDamage, "g_debugDamage", "0", 0, 0, qfalse },
 	{ &g_debugAlloc, "g_debugAlloc", "0", 0, 0, qfalse },
-	{ &g_debugBullets, "g_debugBullets", "0", CVAR_CHEAT, 0, qfalse}, //----(SA)	added
+	{ &g_debugBullets, "g_debugBullets", "0", 0, 0, qfalse}, //----(SA)	added
 	{ &g_debugAudibleEvents, "g_debugAudibleEvents", "0", CVAR_CHEAT, 0, qfalse}, //----(SA)	added
 
 	{ &g_headshotMaxDist, "g_headshotMaxDist", "1024", CVAR_CHEAT, 0, qfalse},    //----(SA)	added

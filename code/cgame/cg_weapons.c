@@ -3829,7 +3829,7 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 		vec3_t endForward, endRight, endUp;
 		vec3_t angles;
 		clientInfo_t ci;
-		CG_CalculateVRWeaponPosition(0, origin, angles);
+		CG_CalculateVRWeaponPosition(ps->weapon, origin, angles);
 
 		vec3_t forward, right, up;
 		AngleVectors(angles, forward, right, up);
