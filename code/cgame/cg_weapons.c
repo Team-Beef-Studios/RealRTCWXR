@@ -3752,7 +3752,7 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 		// set up gun position
 			float scale = CG_CalculateWeaponPositionAndScale( ps, hand.origin, angles );
             
-			// RealRTCW gun position is defined in .weap files if CVAR is active.
+/*			// RealRTCW gun position is defined in .weap files if CVAR is active.
             if ( cg_gunPosLock.integer == 1 ) 
 			{
 		    gunoff[0] = weapon->weaponPosition[0];
@@ -3781,6 +3781,7 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 		VectorMA( hand.origin, ( gunoff[0] + fovOffset[0] ), cg.refdef.viewaxis[0], hand.origin );
 		VectorMA( hand.origin, ( gunoff[1] + fovOffset[1] ), cg.refdef.viewaxis[1], hand.origin );
 		VectorMA( hand.origin, ( gunoff[2] + fovOffset[2] ), cg.refdef.viewaxis[2], hand.origin );
+*/
 
 		AnglesToAxis( angles, hand.axis );
 
