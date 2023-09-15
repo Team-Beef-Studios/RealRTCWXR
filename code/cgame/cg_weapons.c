@@ -2295,9 +2295,21 @@ static void CG_FlamethrowerFlame( centity_t *cent, vec3_t origin ) {
 		}
 	}
 
-	CG_FireFlameChunks( cent, origin, cent->lerpAngles, 1.0, qtrue, 0 );
+	if (cent->currentState.aiChar) {
+		CG_FireFlameChunks( cent, origin, cent->lerpAngles, 1.0, qtrue, 0 );
+	}
+	else {
+		vec3_t origin, angles;
+		CG_CalculateVRWeaponPosition(0, origin, angles);
 
-	return;
+		CG_FireFlameChunks(cent, origin, angles, 1.0, qtrue, 1);
+
+		/*trap_Vibrate(-1, vr->right_handed ? 1 : 0, 0.6, "fire_flames", 0.0, 0.0);
+		if (cgVR->weapon_stabilised)
+		{
+			trap_Vibrate(-1, cgVR->right_handed ? 0 : 1, 0.5, "fire_flames", 0.0, 0.0);
+		}*/
+	}
 }
 // done.
 

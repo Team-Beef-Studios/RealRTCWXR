@@ -597,9 +597,9 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
                         sendButtonActionSimple("togglesaber");
                     }
                 }
-                else if (cl.snap.ps.weapon != WP_FG42)
+                else
                 {
-                    sendButtonAction("+altattack", primaryButton2New);
+                    sendButtonActionSimple("weapalt");
                 }
             }
 
