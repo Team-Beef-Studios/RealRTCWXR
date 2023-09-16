@@ -33,7 +33,64 @@ If you have questions concerning this license or the applicable additional terms
 #endif
 
 #include "cg_local.h"
+#include <VrClientInfo.h>
 
+
+void CG_AdjustForVRStereo(float* x, float* y, float* w, float* h) {
+	if ((!vr->cin_camera || vr->immersive_cinematics) && !vr->using_screen_layer)
+	{
+		float screenXScale = 1.0f / (!vr->using_screen_layer ? 2.5f : 1.0f);
+		float screenYScale = 1.0f / (!vr->using_screen_layer ? 2.5f : 1.0f);
+
+		float xoffset = !vr->using_screen_layer ? -20 : 0;
+		if (cg.stereoView == STEREO_LEFT) {
+			xoffset *= -1;
+		}
+
+		//We need to add an offset due to the effect of the compositor projection for asymmetric FOVs
+		xoffset += vr->off_center_fov_x * cgs.glconfig.vidWidth;
+		float yoffset = vr->off_center_fov_y * cgs.glconfig.vidHeight;
+
+		*x *= screenXScale;
+		*y *= screenYScale;
+		if (w != NULL) {
+			*w *= screenXScale;
+		}
+		if (h != NULL) {
+			*h *= screenYScale;
+		}
+
+		*x += (cgs.glconfig.vidWidth - (cgs.glconfig.vidWidth * screenXScale)) / 2.0f + xoffset;
+		*y += (cgs.glconfig.vidHeight - (cgs.glconfig.vidHeight * screenYScale)) / 2.0f - yoffset;
+	}
+}
+
+void CG_AdjustForVRStereoInt(int* x, int* y, int* w, int* h) {
+	float fx = (float)*x;
+	float fy = (float)*y;
+	float fw = 0;
+	if (w != NULL)
+	{
+		fw = (float)*w;
+	}
+	float fh = 0;
+	if (h != NULL)
+	{
+		fh = (float)*h;
+	}
+	CG_AdjustForVRStereo(&fx, &fy, (w != NULL) ? &fw : NULL, (h != NULL) ? &fh : NULL);
+	*x = (int)fx;
+	*y = (int)fy;
+	if (w != NULL)
+	{
+		*w = (int)fw;
+	}
+	if (h != NULL)
+	{
+		*h = (int)fh;
+	}
+
+}
 static intptr_t (QDECL *syscall)( intptr_t arg, ... ) = (intptr_t (QDECL *)( intptr_t, ...))-1;
 
 Q_EXPORT void dllEntry( intptr_t (QDECL  *syscallptr)( intptr_t arg,... ) ) {
@@ -341,12 +398,16 @@ void    trap_R_SetColor( const float *rgba ) {
 
 void    trap_R_DrawStretchPic( float x, float y, float w, float h,
 							   float s1, float t1, float s2, float t2, qhandle_t hShader ) {
+	CG_AdjustForVRStereo(&x, &y, &w, &h);
+
 	syscall( CG_R_DRAWSTRETCHPIC, PASSFLOAT( x ), PASSFLOAT( y ), PASSFLOAT( w ), PASSFLOAT( h ), PASSFLOAT( s1 ), PASSFLOAT( t1 ), PASSFLOAT( s2 ), PASSFLOAT( t2 ), hShader );
 }
 
 void    trap_R_DrawStretchPicGradient(  float x, float y, float w, float h,
 										float s1, float t1, float s2, float t2, qhandle_t hShader,
 										const float *gradientColor, int gradientType ) {
+	CG_AdjustForVRStereo(&x, &y, &w, &h);
+
 	syscall( CG_R_DRAWSTRETCHPIC_GRADIENT, PASSFLOAT( x ), PASSFLOAT( y ), PASSFLOAT( w ), PASSFLOAT( h ), PASSFLOAT( s1 ), PASSFLOAT( t1 ), PASSFLOAT( s2 ), PASSFLOAT( t2 ), hShader, gradientColor, gradientType  );
 }
 

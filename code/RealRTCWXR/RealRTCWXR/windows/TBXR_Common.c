@@ -902,7 +902,7 @@ void TBXR_InitialiseOpenXR()
 
 	OXR(initResult = xrGetSystem(gAppState.Instance, &systemGetInfo, &gAppState.SystemId));
 	if (initResult != XR_SUCCESS) {
-		ALOGE("Failed to get system.");
+		Sys_Dialog(DT_ERROR, "Unable to create OpenXR System - Please ensure you headset is connected and powered on.", "No VR Headset Detected");
 		exit(1);
 	}
 
@@ -1233,13 +1233,13 @@ void TBXR_submitFrame()
 		memset(&quad_layer, 0, sizeof(XrCompositionLayerQuad));
 
 		// Build the quad layers
-		int32_t width = gAppState.Renderer.FrameBuffer[1].ColorSwapChain.Width;
-		int32_t height = gAppState.Renderer.FrameBuffer[1].ColorSwapChain.Height;
+		int32_t width = gAppState.Renderer.FrameBuffer[0].ColorSwapChain.Width;
+		int32_t height = gAppState.Renderer.FrameBuffer[0].ColorSwapChain.Height;
 		quad_layer.type = XR_TYPE_COMPOSITION_LAYER_QUAD;
 		quad_layer.layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT;
 		quad_layer.space = gAppState.StageSpace;
 		quad_layer.eyeVisibility =XR_EYE_VISIBILITY_BOTH;
-		quad_layer.subImage.swapchain = gAppState.Renderer.FrameBuffer[1].ColorSwapChain.Handle;
+		quad_layer.subImage.swapchain = gAppState.Renderer.FrameBuffer[0].ColorSwapChain.Handle;
 		quad_layer.subImage.imageRect.extent.width = width;
 		quad_layer.subImage.imageRect.extent.height = height;
 		const XrVector3f axis = { 0.0f, 1.0f, 0.0f };

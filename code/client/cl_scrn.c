@@ -592,11 +592,11 @@ void SCR_UpdateScreen( void ) {
 			{
 				if (com_speeds->integer)
 				{
-					re.EndFrame(&time_frontend, &time_backend);
+					re.EndFrame(eye, &time_frontend, &time_backend);
 				}
 				else
 				{
-					re.EndFrame(NULL, NULL);
+					re.EndFrame(eye, NULL, NULL);
 				}
 			}
 
@@ -605,13 +605,6 @@ void SCR_UpdateScreen( void ) {
 
 		//And we're done
 		re.SubmitStereoFrame();
-
-
-		if ( com_speeds->integer ) {
-			re.EndFrame( &time_frontend, &time_backend );
-		} else {
-			re.EndFrame( NULL, NULL );
-		}
 	}
 
 	recursive = 0;

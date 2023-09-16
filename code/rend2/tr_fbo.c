@@ -212,10 +212,12 @@ void FBO_AttachImage(FBO_t *fbo, image_t *image, GLenum attachment, GLuint cubem
 		fbo->colorImage[index] = image;
 }
 
-GLint drawFboId;
-void FBO_StoreCurrent()
+int eyebuffer = 0;
+GLint eyeDrawFBOId[2];
+void FBO_StoreCurrent(int eye)
 {
-	glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &drawFboId);
+	eyebuffer = eye;
+	glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &eyeDrawFBOId[eyebuffer]);
 }
 
 /*
@@ -240,7 +242,7 @@ void FBO_Bind(FBO_t * fbo)
 		GLimp_LogComment(va("--- FBO_Bind( %s ) ---\n", fbo ? fbo->name : "NULL"));
 	}
 
-	GL_BindFramebuffer(GL_FRAMEBUFFER, fbo ? fbo->frameBuffer : drawFboId);
+	GL_BindFramebuffer(GL_FRAMEBUFFER, fbo ? fbo->frameBuffer : eyeDrawFBOId[eyebuffer]);
 	glState.currentFBO = fbo;
 }
 
@@ -630,7 +632,7 @@ void FBO_FastBlit(FBO_t *src, ivec4_t srcBox, FBO_t *dst, ivec4_t dstBox, int bu
 	}
 
 	srcFb = src ? src->frameBuffer : 0;
-	dstFb = dst ? dst->frameBuffer : 0;
+	dstFb = dst ? dst->frameBuffer : eyeDrawFBOId[eyebuffer];
 
 	if (!srcBox)
 	{
@@ -662,6 +664,6 @@ void FBO_FastBlit(FBO_t *src, ivec4_t srcBox, FBO_t *dst, ivec4_t dstBox, int bu
 	                      dstBoxFinal[0], dstBoxFinal[1], dstBoxFinal[2], dstBoxFinal[3],
 						  buffers, filter);
 
-	GL_BindFramebuffer(GL_FRAMEBUFFER, 0);
+	GL_BindFramebuffer(GL_FRAMEBUFFER, eyeDrawFBOId[eyebuffer]);
 	glState.currentFBO = NULL;
 }

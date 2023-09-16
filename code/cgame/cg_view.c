@@ -1498,6 +1498,8 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 
 	// update cvars
 	CG_UpdateCvars();
+
+	cg.stereoView = stereoView;
 /*
 	// RF, if we should force a weapon, then do so
 	if( !cg.weaponSelect ) {

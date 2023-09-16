@@ -552,8 +552,8 @@ RE_EndFrame
 Returns the number of msec spent in the back end
 =============
 */
-void RE_EndFrame( int *frontEndMsec, int *backEndMsec ) {
-	swapBuffersCommand_t    *cmd;
+void RE_EndFrame( int eye, int *frontEndMsec, int *backEndMsec ) {
+	endFrameCommand_t *cmd;
 
 	if ( !tr.registered ) {
 		return;
@@ -563,8 +563,9 @@ void RE_EndFrame( int *frontEndMsec, int *backEndMsec ) {
 		return;
 	}
 	cmd->commandId = RC_FLUSH;
+	cmd->buffer = eye;
 
-	R_IssueRenderCommands( qtrue );
+	R_IssueRenderCommands( qfalse );
 
 	R_InitNextFrame();
 

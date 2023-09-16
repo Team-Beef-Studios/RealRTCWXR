@@ -97,7 +97,7 @@ typedef struct {
 	void ( *BeginFrame )( stereoFrame_t stereoFrame );
 
 	// if the pointers are not NULL, timing info will be returned
-	void ( *EndFrame )( int *frontEndMsec, int *backEndMsec );
+	void ( *EndFrame )(int eye, int *frontEndMsec, int *backEndMsec );
 
 	void (*SubmitStereoFrame)();
 
