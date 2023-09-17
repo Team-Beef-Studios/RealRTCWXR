@@ -176,7 +176,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>
       </SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;ARCH_STRING="xr_64";STANDALONE;UI;USE_LOCAL_HEADERS;USE_BLOOM;USE_RENDERER_DLOPEN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;ARCH_STRING="xr_64";STANDALONE;UI;USE_LOCAL_HEADERS;USE_BLOOM;USE_RENDERER_DLOPEN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>Default</ConformanceMode>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalIncludeDirectories>..\..\..\code\RealRTCWXR\RealRTCWXR</AdditionalIncludeDirectories>
@@ -195,7 +195,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>
       </SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;ARCH_STRING="xr_64";STANDALONE;UI;USE_LOCAL_HEADERS;USE_BLOOM;USE_RENDERER_DLOPEN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;ARCH_STRING="xr_64";STANDALONE;UI;USE_LOCAL_HEADERS;USE_BLOOM;USE_RENDERER_DLOPEN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>Default</ConformanceMode>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalIncludeDirectories>..\..\..\code\RealRTCWXR\RealRTCWXR</AdditionalIncludeDirectories>

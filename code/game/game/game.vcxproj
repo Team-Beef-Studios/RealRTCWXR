@@ -179,7 +179,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>
       </SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;STEAM;ARCH_STRING="xr_64";GAMEDLL;QAGAME;USE_LOCAL_HEADERS;BOTLIB;WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;STEAM;ARCH_STRING="xr_64";GAMEDLL;QAGAME;USE_LOCAL_HEADERS;BOTLIB;WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>..\..\..\code\RealRTCWXR\RealRTCWXR</AdditionalIncludeDirectories>
       <DebugInformationFormat>None</DebugInformationFormat>
@@ -201,7 +201,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>
       </SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;STEAM;ARCH_STRING="xr_64";GAMEDLL;QAGAME;USE_LOCAL_HEADERS;BOTLIB;WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;STEAM;ARCH_STRING="xr_64";GAMEDLL;QAGAME;USE_LOCAL_HEADERS;BOTLIB;WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>..\..\..\code\RealRTCWXR\RealRTCWXR</AdditionalIncludeDirectories>
       <DebugInformationFormat>None</DebugInformationFormat>
