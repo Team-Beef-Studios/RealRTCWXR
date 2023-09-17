@@ -2302,6 +2302,11 @@ static void CG_FlamethrowerFlame( centity_t *cent, vec3_t origin ) {
 		vec3_t origin, angles;
 		CG_CalculateVRWeaponPosition(0, origin, angles);
 
+		vec3_t forward, up;
+		AngleVectors(angles, forward, NULL, up);
+		VectorMA(origin, 14.0f, forward, origin);
+		VectorMA(origin, -1.6f, up, origin);
+
 		CG_FireFlameChunks(cent, origin, angles, 1.0, qtrue, 1);
 
 		/*trap_Vibrate(-1, vr->right_handed ? 1 : 0, 0.6, "fire_flames", 0.0, 0.0);
@@ -6687,8 +6692,9 @@ static qboolean CG_CalcMuzzlePoint( int entityNum, vec3_t muzzle ) {
 		vec3_t angles;
 		CG_CalculateVRWeaponPosition(cent->currentState.weapon, muzzle, angles);
 
-		AngleVectors(angles, forward, NULL, NULL);
-		//VectorMA(muzzle, dist, forward, muzzle);
+		AngleVectors(angles, forward, NULL, NULL);	
+		VectorMA(muzzle, 14, forward, muzzle);
+
 		return qtrue;
 	}
 

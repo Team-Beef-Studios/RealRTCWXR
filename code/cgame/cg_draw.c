@@ -965,15 +965,23 @@ CG_DrawFPS
 ==================
 */
 #define FPS_FRAMES  4
-static float CG_DrawFPS( float y ) {
+static float CG_DrawFPS( stereoFrame_t stereoFrame, float y ) {
 	char        *s;
 	int w;
 	static int previousTimes[FPS_FRAMES];
 	static int index;
 	int i, total;
-	int fps;
+	static int fps;
 	static int previous;
 	int t, frameTime;
+
+	if (stereoFrame == STEREO_RIGHT)
+	{
+		s = va("%ifps", fps);
+		w = CG_DrawStrlen(s) * BIGCHAR_WIDTH;
+		CG_DrawBigString(UPPERRIGHT_X - w, y + 2, s, 1.0F);
+		return;
+	}
 
 	// don't use serverTime, because that will be drifting to
 	// correct for internet lag changes, timescales, timedemos, etc
@@ -1062,8 +1070,8 @@ static void CG_DrawUpperRight(stereoFrame_t stereoFrame) {
 	if ( cg_drawSnapshot.integer ) {
 		y = CG_DrawSnapshot( y );
 	}
-	if (cg_drawFPS.integer && (stereoFrame == STEREO_CENTER || stereoFrame == STEREO_RIGHT)) {
-		y = CG_DrawFPS( y );
+	if (cg_drawFPS.integer) {
+		y = CG_DrawFPS( stereoFrame, y );
 	}
 	if ( cg_drawTimer.integer ) {
 		y = CG_DrawTimer( y );
@@ -2581,11 +2589,16 @@ static void CG_DrawCrosshair3D( void ) {
 	stereoSep = zProj / atof(rendererinfos);
 	
 	xmax = zProj * tan(cg.refdef.fov_x * M_PI / 360.0f);
-	
+
+
+	vec3_t forward, weaponangles, origin;
+	BG_CalculateVRWeaponPosition(cg.refdefViewAngles[YAW], cg.refdef.vieworg, cg_heightAdjust.value, cg_worldScale.value, origin, weaponangles);
+	AngleVectors(weaponangles, forward, NULL, NULL);
+
 	// let the trace run through until a change in stereo separation of the crosshair becomes less than one pixel.
 	maxdist = cgs.glconfig.vidWidth * stereoSep * zProj / (2 * xmax);
-	VectorMA(cg.refdef.vieworg, maxdist, cg.refdef.viewaxis[0], endpos);
-	CG_Trace(&trace, cg.refdef.vieworg, NULL, NULL, endpos, 0, MASK_SHOT);
+	VectorMA(origin, maxdist, forward, endpos);
+	CG_Trace(&trace, origin, NULL, NULL, endpos, 0, MASK_SHOT);
 	
 	memset(&ent, 0, sizeof(ent));
 	ent.reType = RT_SPRITE;
@@ -3652,8 +3665,8 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 	}
 
 
-//	if(stereoView != STEREO_CENTER)
-//		CG_DrawCrosshair3D();
+	if(stereoView != STEREO_CENTER)
+		CG_DrawCrosshair3D();
 
 	cg.refdef.glfog.registered = 0; // make sure it doesn't use fog from another scene
 

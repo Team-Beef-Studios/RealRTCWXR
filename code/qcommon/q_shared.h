@@ -40,19 +40,26 @@ If you have questions concerning this license or the applicable additional terms
 // ver 1.2.b5	- Mac code merge in
 // ver 1.3		- patch 2 (02/13/02)
 
+#ifndef PRODUCT_VERSION
+#define PRODUCT_VERSION "4.0" // iortcw 1.51
+#endif
+
 #ifdef STANDALONE
-  #define PRODUCT_NAME			"iofoo3"
-  #define BASEGAME			"foobar"
-  #define CLIENT_WINDOW_TITLE     	"changeme"
-  #define CLIENT_WINDOW_MIN_TITLE 	"changeme2"
-  #define HOMEPATH_NAME_UNIX		".foo"
-  #define HOMEPATH_NAME_WIN		"FooBar"
-//  #define STEAMPATH_NAME		"Foo Bar"
-//  #define STEAMPATH_APPID		""
+  #define PRODUCT_NAME			"RealRTCW"
+  #define BASEGAME			"main"
+  #define CLIENT_WINDOW_TITLE     	PRODUCT_NAME " " PRODUCT_VERSION " (RealRTCW XR 0.0.6)" 
+  #define CLIENT_WINDOW_MIN_TITLE 	CLIENT_WINDOW_TITLE
+  #define HOMEPATH_NAME_UNIX		".realrtcw"
+  #define HOMEPATH_NAME_WIN		"RealRTCW 4.0"
+  #define STEAMPATH_NAME		"Return To Castle Wolfenstein"
+  #define STEAMPATH_APPID		"9010"
+  
+  #define STEAMPATH_REALNAME	"RealRTCW"
+  #define STEAMPATH_REALAPPID	"1379630"
   #define HOMEPATH_NAME_MACOSX		HOMEPATH_NAME_WIN
-  #define GAMENAME_FOR_MASTER		"foobar"	// must NOT contain whitespace
-  #define CINEMATICS_LOGO		"foologo.roq"
-  #define CINEMATICS_INTRO		"foointro.roq"
+  #define GAMENAME_FOR_MASTER		"wolfsp"
+  #define CINEMATICS_LOGO		"gmlogo.RoQ"	// non-existent
+  #define CINEMATICS_INTRO		"wolfintro.RoQ"	// SP only
 //  #define LEGACY_PROTOCOL	// You probably don't need this for your standalone game
 #else
   #define PRODUCT_NAME			"RealRTCW"  // iortcw
@@ -86,15 +93,11 @@ If you have questions concerning this license or the applicable additional terms
 #define LEGACY_MASTER_GAMENAME		"wolfsp"
 #define LEGACY_HEARTBEAT_FOR_MASTER	"Wolfenstein-1"
 
-#ifndef PRODUCT_VERSION
-  #define PRODUCT_VERSION "4.0" // iortcw 1.51
-#endif
-
 #ifndef PRODUCT_DATE
 #  define PRODUCT_DATE __DATE__
 #endif
 
-#define Q3_VERSION PRODUCT_NAME " " PRODUCT_VERSION
+#define Q3_VERSION PRODUCT_NAME " " PRODUCT_VERSION " (RealRTCW XR 0.0.6)" 
 
 #define MAX_TEAMNAME		32
 #define MAX_MASTER_SERVERS      5	// number of supported master servers

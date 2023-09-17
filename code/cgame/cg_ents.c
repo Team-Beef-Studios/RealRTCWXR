@@ -36,6 +36,10 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "cg_local.h"
 
+#include "../game/bg_local.h"
+
+#include <VrClientInfo.h>
+
 ///////////////////////
 extern int propellerModel;
 ///////////////////////
@@ -2093,6 +2097,16 @@ static void CG_Prop( centity_t *cent ) {
 		ent.backlerp = 0;
 	} else
 	{
+		BG_CalculateVROffHandPosition(cg.refdefViewAngles[YAW], cg.refdef.vieworg, cg_heightAdjust.value, cg_worldScale.value, ent.origin, angles);
+
+		//Adjust to position correctly
+		vec3_t forward, right, up;
+		AngleVectors(angles, forward, right, up);
+		VectorMA(ent.origin, -20, forward, ent.origin);
+		VectorMA(ent.origin, 18, right, ent.origin);
+		VectorMA(ent.origin, 6, up, ent.origin);
+
+/*
 		VectorCopy( cg.refdef.vieworg, ent.origin );
 		VectorCopy( cg.refdefViewAngles, angles );
 
@@ -2106,7 +2120,7 @@ static void CG_Prop( centity_t *cent ) {
 		angles[ROLL] += scale * cg.bobfracsin * 0.005;
 		angles[YAW] += scale * cg.bobfracsin * 0.01;
 		angles[PITCH] += cg.xyspeed * cg.bobfracsin * 0.005;
-
+*/
 		VectorCopy( angles, cent->lerpAngles );
 
 		ent.frame = s1->frame;

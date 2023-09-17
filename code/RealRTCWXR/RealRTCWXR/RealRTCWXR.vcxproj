@@ -302,7 +302,7 @@
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>
       </SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;STEAM;ARCH_STRING="xr_64";USE_OPENAL=1;USE_LOCAL_HEADERS;USE_BLOOM;XR_NO_STDINT_H;XR_USE_PLATFORM_WIN32;XR_USE_GRAPHICS_API_OPENGL;BOTLIB;USE_RENDERER_DLOPEN;RTCWXR_CLIENT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;STANDALONE;ARCH_STRING="xr_64";USE_OPENAL=1;USE_LOCAL_HEADERS;USE_BLOOM;XR_NO_STDINT_H;XR_USE_PLATFORM_WIN32;XR_USE_GRAPHICS_API_OPENGL;BOTLIB;USE_RENDERER_DLOPEN;RTCWXR_CLIENT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>Default</ConformanceMode>
       <Optimization>Disabled</Optimization>
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
@@ -332,7 +332,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>
       </SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;STEAM;ARCH_STRING="xr_64";USE_OPENAL=1;USE_LOCAL_HEADERS;USE_BLOOM;XR_NO_STDINT_H;XR_USE_PLATFORM_WIN32;XR_USE_GRAPHICS_API_OPENGL;BOTLIB;USE_RENDERER_DLOPEN;RTCWXR_CLIENT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;STANDALONE;ARCH_STRING="xr_64";USE_OPENAL=1;USE_LOCAL_HEADERS;USE_BLOOM;XR_NO_STDINT_H;XR_USE_PLATFORM_WIN32;XR_USE_GRAPHICS_API_OPENGL;BOTLIB;USE_RENDERER_DLOPEN;RTCWXR_CLIENT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>Default</ConformanceMode>
       <AdditionalIncludeDirectories>..\..\..\code\SDL2\include;..\..\..\code\zlib-1.2.11;..\..\..\code\qcommon;..\..\..\code\openxr\include;..\..\..\code\external\include;..\..\..\code\RealRTCWXR\RealRTCWXR;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -357,7 +357,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>
       </SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;STEAM;ARCH_STRING="xr_64";USE_OPENAL=1;USE_LOCAL_HEADERS;USE_BLOOM;XR_NO_STDINT_H;XR_USE_PLATFORM_WIN32;XR_USE_GRAPHICS_API_OPENGL;BOTLIB;USE_RENDERER_DLOPEN;RTCWXR_CLIENT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;STANDALONE;ARCH_STRING="xr_64";USE_OPENAL=1;USE_LOCAL_HEADERS;USE_BLOOM;XR_NO_STDINT_H;XR_USE_PLATFORM_WIN32;XR_USE_GRAPHICS_API_OPENGL;BOTLIB;USE_RENDERER_DLOPEN;RTCWXR_CLIENT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>Default</ConformanceMode>
       <AdditionalIncludeDirectories>..\..\..\code\SDL2\include;..\..\..\code\zlib-1.2.11;..\..\..\code\qcommon;..\..\..\code\openxr\include;..\..\..\code\external\include;..\..\..\code\RealRTCWXR\RealRTCWXR;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
