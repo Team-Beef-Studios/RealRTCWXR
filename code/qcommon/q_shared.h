@@ -44,10 +44,13 @@ If you have questions concerning this license or the applicable additional terms
 #define PRODUCT_VERSION "4.0" // iortcw 1.51
 #endif
 
+#define REALRTCWXR_VERSION		"0.1.0" 
+#define REALRTCWXR_NAME		"(RealRTCW XR " REALRTCWXR_VERSION ")" 
+
 #ifdef STANDALONE
   #define PRODUCT_NAME			"RealRTCW"
   #define BASEGAME			"main"
-  #define CLIENT_WINDOW_TITLE     	PRODUCT_NAME " " PRODUCT_VERSION " (RealRTCW XR 0.0.6)" 
+  #define CLIENT_WINDOW_TITLE     	PRODUCT_NAME " " PRODUCT_VERSION " " REALRTCWXR_NAME
   #define CLIENT_WINDOW_MIN_TITLE 	CLIENT_WINDOW_TITLE
   #define HOMEPATH_NAME_UNIX		".realrtcw"
   #define HOMEPATH_NAME_WIN		"RealRTCW 4.0"
@@ -97,7 +100,7 @@ If you have questions concerning this license or the applicable additional terms
 #  define PRODUCT_DATE __DATE__
 #endif
 
-#define Q3_VERSION PRODUCT_NAME " " PRODUCT_VERSION " (RealRTCW XR 0.0.6)" 
+#define Q3_VERSION PRODUCT_NAME " " PRODUCT_VERSION " " REALRTCWXR_NAME
 
 #define MAX_TEAMNAME		32
 #define MAX_MASTER_SERVERS      5	// number of supported master servers
