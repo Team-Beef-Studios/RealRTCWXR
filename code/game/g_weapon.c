@@ -1303,6 +1303,86 @@ gentity_t *weapon_crowbar_throw( gentity_t *ent ) {
 	return m;
 }
 
+#define OLDEST_READING		5
+#define NEWEST_READING		2
+
+gentity_t* weapon_grenadelauncher_fire_vr(gentity_t* ent, int grenType) {
+	gentity_t* m, * te; // JPW NERVE
+	float power = 1;
+	vec3_t tosspos;
+	vec3_t trajectory;
+
+	if (vr != NULL) {
+
+
+		//Caclulate speed between two controller position readings
+		float distance = VectorDistance(vr->weaponoffset_history[NEWEST_READING], vr->weaponoffset_history[OLDEST_READING]);
+		float t = vr->weaponoffset_history_timestamp[NEWEST_READING] - vr->weaponoffset_history_timestamp[OLDEST_READING];
+		float worldscale = Cvar_VariableFloatValue("cg_worldScale");
+		float velocity = distance / (t / (float)1000.0);
+
+		//Calculate trajectory
+		VectorSubtract(vr->weaponoffset_history[NEWEST_READING], vr->weaponoffset_history[OLDEST_READING], trajectory);
+		VectorNormalize(trajectory);
+		BG_ConvertFromVR(ent->client->ps.viewangles[YAW], worldscale, trajectory, NULL, trajectory);
+		VectorScale(trajectory, velocity, trajectory);
+	}
+
+	// pineapples are not thrown as far as mashers
+	if (grenType == WP_GRENADE_LAUNCHER ||
+		grenType == WP_GRENADE_PINEAPPLE)
+	{
+		power = 2.5f;
+	}
+	else {      // WP_DYNAMITE
+		power = 1.5f;
+	}
+
+	//And then throw..
+	VectorScale(trajectory, power, trajectory);
+	VectorCopy(muzzleEffect, tosspos);
+	m = fire_grenade(ent, tosspos, trajectory, grenType);
+
+
+	//m->damage *= s_quadFactor;
+	m->damage = 0;  // Ridah, grenade's don't explode on contact
+	m->splashDamage *= s_quadFactor;
+
+	if (grenType == WP_POISONGAS)
+	{
+		m->s.effect1Time = 16;
+		m->think = G_PoisonGasExplode;
+		m->poisonGasAlarm = level.time + SMOKEBOMB_GROWTIME;
+		m->poisonGasRadius = ammoTable[WP_POISONGAS].playerSplashRadius;
+		m->poisonGasDamage = ammoTable[WP_POISONGAS].playerDamage;
+
+	}
+
+	if (grenType == WP_AIRSTRIKE) {
+
+		//m->s.otherEntityNum2 = 1; 
+		m->s.otherEntityNum2 = 0;
+		m->nextthink = level.time + 4000;
+		m->think = weapon_callAirStrike;
+
+		te = G_TempEntity(m->s.pos.trBase, EV_GLOBAL_SOUND);
+		te->s.eventParm = G_SoundIndex("sound/weapons/airstrike/airstrike_01.wav");
+		te->r.svFlags |= SVF_BROADCAST | SVF_USE_CURRENT_ORIGIN;
+	}
+
+	if (ent->aiCharacter == AICHAR_VENOM) { // poison gas grenade
+		m->think = G_ExplodeMissilePoisonGas;
+		m->s.density = 1;
+	}
+
+	//----(SA)	adjust for movement of character.  TODO: Probably comment in later, but only for forward/back not strafing
+//	VectorAdd( m->s.pos.trDelta, ent->client->ps.velocity, m->s.pos.trDelta );	// "real" physics
+	// let the AI know which grenade it has fired
+	ent->grenadeFired = m->s.number;
+	// Ridah, return the grenade so we can do some prediction before deciding if we really want to throw it or not
+	return m;
+}
+
 gentity_t *weapon_grenadelauncher_fire( gentity_t *ent, int grenType ) {
 	gentity_t   *m, *te;
 	float upangle = 0;                  //	start with level throwing and adjust based on angle
@@ -1988,6 +2068,18 @@ void FireWeapon( gentity_t *ent ) {
 				aimSpreadScale += 0.3f;     // it's calculated a different way, so this keeps the accuracy never perfect, but never rediculously wild either
 				break;
 
+			//For the sniper type weapons, leave the bad shooting up to the player
+			case WP_SNIPERRIFLE:
+			case WP_SNOOPERSCOPE:
+			case WP_FG42SCOPE:
+				aimSpreadScale = 0.0f;
+				break;
+
+			case WP_M97:
+			case WP_M30:
+				aimSpreadScale = 1.0;
+				break;
+
 			default:
 				aimSpreadScale += 0.15f;
 				break;
@@ -1999,6 +2091,26 @@ void FireWeapon( gentity_t *ent ) {
 		}
 	} else {
 		aimSpreadScale = 1.0;
+	}
+
+	if (!ent->aiCharacter)
+	{
+		if (vr->weapon_stabilised)
+		{
+			//Stabilised weapon is even more accurate
+			aimSpreadScale /= 3.0f;
+
+			//		if (vr->pistol)
+			//		{
+						//Stabilised pistol is even more accurate
+			//			aimSpreadScale /= 2.0f;
+			//		}
+		}
+		else
+		{
+			//For the player the weapon spread can be reduced a bit
+			aimSpreadScale *= 0.9f;
+		}
 	}
 
 	// fire the specific weapon
@@ -2038,7 +2150,7 @@ void FireWeapon( gentity_t *ent ) {
 		Bullet_Fire( ent, SNIPER_SPREAD * aimSpreadScale, SNIPER_DAMAGE(isPlayer), qfalse );
 		if ( !ent->aiCharacter ) {
 			VectorCopy( ent->client->ps.viewangles,viewang );
-			ent->client->sniperRifleMuzzleYaw = crandom() * 0.5; // used in clientthink
+			ent->client->sniperRifleMuzzleYaw = 0;// crandom() * 0.5; // used in clientthink
 			ent->client->sniperRifleMuzzlePitch = 0.8f;
 			ent->client->sniperRifleFiredTime = level.time;
 			SetClientViewAngle( ent,viewang );
@@ -2049,7 +2161,7 @@ void FireWeapon( gentity_t *ent ) {
 		Bullet_Fire( ent, SNOOPER_SPREAD * aimSpreadScale, SNOOPER_DAMAGE(isPlayer), qfalse );
 		if ( !ent->aiCharacter ) {
 			VectorCopy( ent->client->ps.viewangles,viewang );
-			ent->client->sniperRifleMuzzleYaw = crandom() * 0.5; // used in clientthink
+			ent->client->sniperRifleMuzzleYaw = 0;// crandom() * 0.5; // used in clientthink
 			ent->client->sniperRifleMuzzlePitch = 0.9f;
 			ent->client->sniperRifleFiredTime = level.time;
 			SetClientViewAngle( ent,viewang );
@@ -2065,7 +2177,7 @@ void FireWeapon( gentity_t *ent ) {
 		Bullet_Fire( ent, DELISLESCOPE_SPREAD * aimSpreadScale, DELISLESCOPE_DAMAGE(isPlayer), qtrue);
 		if ( !ent->aiCharacter ) {
 			VectorCopy( ent->client->ps.viewangles,viewang );
-			ent->client->sniperRifleMuzzleYaw = crandom() * 0.5; // used in clientthink
+			ent->client->sniperRifleMuzzleYaw = 0;// crandom() * 0.5; // used in clientthink
 			ent->client->sniperRifleMuzzlePitch = 0.8f;
 			ent->client->sniperRifleFiredTime = level.time;
 			SetClientViewAngle( ent,viewang );
@@ -2078,7 +2190,7 @@ void FireWeapon( gentity_t *ent ) {
 		Bullet_Fire( ent, FG42SCOPE_SPREAD*aimSpreadScale, FG42SCOPE_DAMAGE(isPlayer), qfalse ); 
 		if ( !ent->aiCharacter ) {
 			VectorCopy( ent->client->ps.viewangles,viewang );
-			ent->client->sniperRifleMuzzleYaw = crandom() * 0.1; 
+			ent->client->sniperRifleMuzzleYaw = 0;// crandom() * 0.1;
 			ent->client->sniperRifleMuzzlePitch = 0.1f;
 			ent->client->sniperRifleFiredTime = level.time;
 			SetClientViewAngle( ent,viewang );
@@ -2130,14 +2242,14 @@ void FireWeapon( gentity_t *ent ) {
 	case WP_BROWNING:
 		Bullet_Fire( ent, MG42M_SPREAD * 0.6f * aimSpreadScale, MG42M_DAMAGE(isPlayer), qfalse );
 		if (!ent->aiCharacter) {
-		vec3_t vec_forward, vec_vangle;
-		VectorCopy(ent->client->ps.viewangles, vec_vangle);
-		vec_vangle[PITCH] = 0;	
-		AngleVectors(vec_vangle, vec_forward, NULL, NULL);
-		if (ent->s.groundEntityNum == ENTITYNUM_NONE)
-			VectorMA(ent->client->ps.velocity, -8, vec_forward, ent->client->ps.velocity);
-		else
-			VectorMA(ent->client->ps.velocity, -24, vec_forward, ent->client->ps.velocity);
+			vec3_t vec_forward, vec_vangle;
+			VectorCopy(ent->client->ps.viewangles, vec_vangle);
+			vec_vangle[PITCH] = 0;	
+			AngleVectors(vec_vangle, vec_forward, NULL, NULL);
+			if (ent->s.groundEntityNum == ENTITYNUM_NONE)
+				VectorMA(ent->client->ps.velocity, -8, vec_forward, ent->client->ps.velocity);
+			else
+				VectorMA(ent->client->ps.velocity, -24, vec_forward, ent->client->ps.velocity);
 		}
 		break;
 	
@@ -2204,7 +2316,12 @@ void FireWeapon( gentity_t *ent ) {
 	case WP_GRENADE_PINEAPPLE:
 	case WP_DYNAMITE:
 	case WP_POISONGAS:
-		weapon_grenadelauncher_fire( ent, ent->s.weapon );
+		if (ent->aiCharacter) {
+			weapon_grenadelauncher_fire(ent, ent->s.weapon);
+		}
+		else {
+			weapon_grenadelauncher_fire_vr(ent, ent->s.weapon);
+		}
 		break;
 	case WP_FLAMETHROWER:
 		// RF, this is done client-side only now
@@ -2212,8 +2329,9 @@ void FireWeapon( gentity_t *ent ) {
 		break;
 	case WP_TESLA:
 			Tesla_Fire( ent );
-		// push the player back a bit
-		if ( !ent->aiCharacter ) {
+			//DON'T DO THIS BIT IN VR - COULD RESULT IN NAUSEA
+			// push the player back a bit
+/*		if (!ent->aiCharacter) {
 			vec3_t forward, vangle;
 			VectorCopy( ent->client->ps.viewangles, vangle );
 			vangle[PITCH] = 0;  // nullify pitch so you can't lightning jump
@@ -2224,7 +2342,7 @@ void FireWeapon( gentity_t *ent ) {
 			} else {
 				VectorMA( ent->client->ps.velocity, -100, forward, ent->client->ps.velocity );
 			}
-		}
+		}*/
 		break;
 	case WP_GAUNTLET:
 		Weapon_Gauntlet( ent );

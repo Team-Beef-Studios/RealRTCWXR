@@ -1595,7 +1595,9 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	cg.refdef.override_fov |= inwater;
 
 	CG_CalcShakeCamera();
-	CG_ApplyShakeCamera();
+
+	//This should be haptic shake, but not camera
+	//CG_ApplyShakeCamera();
 
 	DEBUGTIME
 

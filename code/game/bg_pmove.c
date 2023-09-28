@@ -49,6 +49,9 @@ extern vmCvar_t g_gametype;
 extern vmCvar_t g_jumptime;
 #endif
 
+
+#define DELAY_THROW_VR  15 // grenades, dynamite
+
 // jpw
 
 pmove_t     *pm;
@@ -3301,6 +3304,7 @@ static void PM_Weapon( void ) {
 			if ( pm->ps->aiChar ) {
 				// ai characters go into their regular animation setup
 				BG_AnimScriptEvent( pm->ps, ANIM_ET_FIREWEAPON, qtrue, qtrue );
+				pm->ps->weaponDelay = ammoTable[pm->ps->weapon].fireDelayTime;
 			} else {
 				// the player pulls the fuse and holds the hot potato
 				if ( PM_WeaponAmmoAvailable( pm->ps->weapon ) ) {
@@ -3312,10 +3316,9 @@ static void PM_Weapon( void ) {
 					}
 					PM_StartWeaponAnim( WEAP_ATTACK1 );
 				}
+
+				pm->ps->weaponDelay = DELAY_THROW_VR;
 			}
-
-			pm->ps->weaponDelay = ammoTable[pm->ps->weapon].fireDelayTime;
-
 		}
 		break;
 	}

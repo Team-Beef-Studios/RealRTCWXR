@@ -5556,7 +5556,9 @@ void CG_FireWeapon( centity_t *cent ) {
 
 	// RF, kick angles
 	if ( ent->number == cg.snap->ps.clientNum ) {
-		CG_WeaponFireRecoil( ent->weapon );
+
+		//This shouldn't affect the camera but should affect the player's aim - need to figure that out
+		//CG_WeaponFireRecoil( ent->weapon );
 	}
 
 	// lightning gun only does this this on initial press

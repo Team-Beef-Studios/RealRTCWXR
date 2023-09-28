@@ -2592,7 +2592,7 @@ static void CG_DrawCrosshair3D( void ) {
 
 
 	vec3_t forward, weaponangles, origin;
-	BG_CalculateVRWeaponPosition(cg.refdefViewAngles[YAW], cg.refdef.vieworg, cg_heightAdjust.value, cg_worldScale.value, origin, weaponangles);
+	BG_CalculateVRWeaponPosition(cg.refdefViewAngles[YAW], cg.refdef.vieworg, cg_heightAdjust.value , cg_worldScale.value, origin, weaponangles);
 	AngleVectors(weaponangles, forward, NULL, NULL);
 
 	// let the trace run through until a change in stereo separation of the crosshair becomes less than one pixel.
@@ -2605,7 +2605,7 @@ static void CG_DrawCrosshair3D( void ) {
 	ent.renderfx = RF_DEPTHHACK | RF_CROSSHAIR;
 	
 	VectorCopy(trace.endpos, ent.origin);
-	
+
 	// scale the crosshair so it appears the same size for all distances
 	ent.radius = w / 640 * xmax * trace.fraction * maxdist / zProj;
 	ent.customShader = hShader;
@@ -3631,6 +3631,9 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 		return;
 	}
 
+	if (stereoView != STEREO_CENTER)
+		CG_DrawCrosshair3D();
+
 	vec3_t baseOrg;
 	VectorCopy(cg.refdef.vieworg, baseOrg);
 
@@ -3663,10 +3666,6 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 		cg.refdef.vieworg[2] -= DEFAULT_PLAYER_HEIGHT;
 		cg.refdef.vieworg[2] += (vr->hmdposition[1] + cg_heightAdjust.value) * cg_worldScale.value;
 	}
-
-
-	if(stereoView != STEREO_CENTER)
-		CG_DrawCrosshair3D();
 
 	cg.refdef.glfog.registered = 0; // make sure it doesn't use fog from another scene
 
