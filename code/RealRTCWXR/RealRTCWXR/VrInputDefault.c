@@ -146,7 +146,9 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
         QuatToYawPitchRoll(pWeapon->GripPose.orientation, rotation, vr.weaponangles[ANGLES_KNIFE]);
         QuatToYawPitchRoll(pOff->GripPose.orientation, rotation, vr.offhandangles[ANGLES_KNIFE]);
 
-        rotation[PITCH] = vr_weapon_pitchadjust->value;
+        //Weapon angles with muzzle bounce applied
+        rotation[PITCH] = vr_weapon_pitchadjust->value - vr.muzzlebounce[PITCH];
+        rotation[YAW] = -vr.muzzlebounce[YAW];
         QuatToYawPitchRoll(pWeapon->Pose.orientation, rotation, vr.weaponangles[ANGLES_ADJUSTED]);
         QuatToYawPitchRoll(pOff->Pose.orientation, rotation, vr.offhandangles[ANGLES_ADJUSTED]);
 

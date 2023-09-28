@@ -2098,7 +2098,7 @@ void FireWeapon( gentity_t *ent ) {
 		if (vr->weapon_stabilised)
 		{
 			//Stabilised weapon is even more accurate
-			aimSpreadScale /= 3.0f;
+			aimSpreadScale /= 2.0f;
 
 			//		if (vr->pistol)
 			//		{

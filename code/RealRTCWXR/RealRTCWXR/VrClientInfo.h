@@ -87,6 +87,8 @@ typedef struct {
     vec3_t weaponoffset_history[NUM_WEAPON_SAMPLES];
     float weaponoffset_history_timestamp[NUM_WEAPON_SAMPLES];
 
+    vec3_t muzzlebounce;
+
     int item_selector; // 1 - weapons/gadgets/saber stance, 2 - Force powers
 
     qboolean velocitytriggered;

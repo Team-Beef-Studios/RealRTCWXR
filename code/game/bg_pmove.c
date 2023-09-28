@@ -35,6 +35,8 @@ If you have questions concerning this license or the applicable additional terms
 #include "bg_public.h"
 #include "bg_local.h"
 
+#include <VrClientInfo.h>
+
 // Rafael gameskill
 int bg_pmove_gameskill_integer;
 // done
@@ -2975,7 +2977,7 @@ static void PM_Weapon( void ) {
 		int i, deltaTime;
 
  		deltaTime = pm->cmd.serverTime - pm->pmext->weapRecoilTime;
-		VectorCopy( pm->ps->viewangles, muzzlebounce );
+		VectorCopy( vr->muzzlebounce, muzzlebounce );
 
  		if ( deltaTime > pm->pmext->weapRecoilDuration ) {
 			deltaTime = pm->pmext->weapRecoilDuration;
@@ -2994,13 +2996,19 @@ static void PM_Weapon( void ) {
 		}
 
  		// set the delta angle
-		for ( i = 0; i < 3; i++ ) {
+/*		for (i = 0; i < 3; i++) {
 			int cmdAngle;
 
  			cmdAngle = ANGLE2SHORT( muzzlebounce[i] );
 			pm->ps->delta_angles[i] = cmdAngle - pm->cmd.angles[i];
 		}
-		VectorCopy( muzzlebounce, pm->ps->viewangles );
+		*/
+		if (fabsf(muzzlebounce[PITCH]) > 20.0f)
+		{
+			muzzlebounce[PITCH] *= 0.9f;
+		}
+
+		VectorCopy( muzzlebounce, vr->muzzlebounce);
 
  		if ( deltaTime == pm->pmext->weapRecoilDuration ) {
 			pm->pmext->weapRecoilTime = 0;
@@ -3008,6 +3016,11 @@ static void PM_Weapon( void ) {
 		} else {
 			pm->pmext->lastRecoilDeltaTime = deltaTime;
 		}
+	}
+	else
+	{
+		vr->muzzlebounce[PITCH] *= 0.3f;
+		vr->muzzlebounce[YAW] *= 0.3f;
 	}
 
 

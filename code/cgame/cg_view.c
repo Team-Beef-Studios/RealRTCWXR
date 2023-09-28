@@ -1495,11 +1495,14 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 
 	cg.time = serverTime;
 	cg.demoPlayback = demoPlayback;
-
-	// update cvars
-	CG_UpdateCvars();
-
 	cg.stereoView = stereoView;
+
+	if (cg.stereoView == STEREO_LEFT)
+	{
+		// update cvars
+		CG_UpdateCvars();
+	}
+
 /*
 	// RF, if we should force a weapon, then do so
 	if( !cg.weaponSelect ) {
@@ -1533,8 +1536,11 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 
 	DEBUGTIME
 
-	// set up cg.snap and possibly cg.nextSnap
-	CG_ProcessSnapshots();
+	if (cg.stereoView == STEREO_LEFT)
+	{
+		// set up cg.snap and possibly cg.nextSnap
+		CG_ProcessSnapshots();
+	}
 
 	DEBUGTIME
 
@@ -1582,8 +1588,11 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	// this counter will be bumped for every valid scene we generate
 	cg.clientFrame++;
 
-	// update cg.predictedPlayerState
-	CG_PredictPlayerState();
+	if (cg.stereoView == STEREO_LEFT)
+	{
+		// update cg.predictedPlayerState
+		CG_PredictPlayerState();
+	}
 
 	DEBUGTIME
 
@@ -1597,7 +1606,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	CG_CalcShakeCamera();
 
 	//This should be haptic shake, but not camera
-	//CG_ApplyShakeCamera();
+	CG_ApplyShakeCamera();
 
 	DEBUGTIME
 
