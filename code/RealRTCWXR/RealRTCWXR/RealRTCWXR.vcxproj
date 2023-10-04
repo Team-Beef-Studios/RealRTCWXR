@@ -320,6 +320,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>opengl32.lib;glu32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;Ws2_32.lib;Winmm.lib;..\..\..\code\libs\win64\libSDL264.dll.a;..\..\..\code\libs\win64\libSDL264main.a;..\..\..\code\libs\win64\OpenAL32.lib;..\..\..\code\openxr\lib\x64\openxr_loaderd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <StackReserveSize>10240000</StackReserveSize>
     </Link>
     <ProjectReference>
       <LinkLibraryDependencies>false</LinkLibraryDependencies>

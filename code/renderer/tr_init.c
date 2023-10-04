@@ -1604,6 +1604,7 @@ refexport_t *GetRefAPI( int apiVersion, refimport_t *rimp ) {
 
 	re.BeginFrame       = RE_BeginFrame;
 	re.EndFrame         = RE_EndFrame;
+	re.SubmitStereoFrame = RE_SubmitStereoFrame;
 
 	re.MarkFragments    = R_MarkFragments;
 	re.LerpTag          = R_LerpTag;
@@ -1631,6 +1632,10 @@ refexport_t *GetRefAPI( int apiVersion, refimport_t *rimp ) {
 	re.RemapShader      = R_RemapShader;
 	re.GetEntityToken   = R_GetEntityToken;
 	re.TakeVideoFrame = RE_TakeVideoFrame;
+
+	//RTCWXR added stuff
+	re.GetModeInfo = R_GetModeInfo;
+	re.WIN_SwapWindow = WIN_SwapWindow;
 
 	// RF
 	re.ZombieFXAddNewHit = RB_ZombieFXAddNewHit;

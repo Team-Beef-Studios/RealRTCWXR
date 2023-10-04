@@ -442,7 +442,7 @@ cvarTable_t cvarTable[] = {
 	{ &cg_teamChatHeight, "cg_teamChatHeight", "8", CVAR_ARCHIVE  },
 	{ &cg_forceModel, "cg_forceModel", "0", CVAR_ARCHIVE  },
 	{ &cg_coronafardist, "cg_coronafardist", "1536", CVAR_ARCHIVE },
-	{ &cg_coronas, "cg_coronas", "1", CVAR_ARCHIVE },
+	{ &cg_coronas, "cg_coronas", "0", CVAR_ARCHIVE },
 	{ &cg_predictItems, "cg_predictItems", "1", CVAR_ARCHIVE },
 	{ &cg_deferPlayers, "cg_deferPlayers", "1", CVAR_ARCHIVE },
 	{ &cg_drawTeamOverlay, "cg_drawTeamOverlay", "0", CVAR_ARCHIVE },

@@ -252,7 +252,7 @@ void VR_FrameSetup()
 	vr.immersive_cinematics = (vr_immersive_cinematics->value != 0.0f);
 }
 
-qboolean VR_GetVRProjection(float zNear, float zFar, float zZoomX, float zZoomY, float* projection)
+qboolean VR_GetVRProjection(float zNear, float zFar, float gameFovX, float gameFovY, float* projection)
 {
 	//Don't use our projection if playing a cinematic and we are not immersive
 	if (vr.cin_camera && !vr.immersive_cinematics)
@@ -267,6 +267,9 @@ qboolean VR_GetVRProjection(float zNear, float zFar, float zZoomX, float zZoomY,
 	}
 
 	XrFovf fov = gAppState.Views[vr.eye].fov;
+
+	float zZoomX = (vr.fov_x / gameFovX);
+	float zZoomY = (vr.fov_y / gameFovY);
 	
 	fov.angleLeft = atanf((tanf(fov.angleLeft) / zZoomX));
 	fov.angleRight = atanf((tanf(fov.angleRight) / zZoomX));

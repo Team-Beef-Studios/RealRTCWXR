@@ -11,7 +11,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RealRTCWXR", "RealRTCWXR\Re
 		{F5F35743-BBD8-4374-8ED6-D65FC4AA9FBD} = {F5F35743-BBD8-4374-8ED6-D65FC4AA9FBD}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Renderer", "..\rend2\Renderer\Renderer.vcxproj", "{71CBF00E-38B7-42B9-8E99-EA2D436A0FDB}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Rend2", "..\rend2\Renderer\Renderer.vcxproj", "{71CBF00E-38B7-42B9-8E99-EA2D436A0FDB}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "stringify", "..\tools\stringify\stringify.vcxproj", "{77BDD387-AFB0-457C-AA90-2E6917EE4D63}"
 EndProject
@@ -20,6 +20,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "game", "..\game\game\game.vcxproj", "{089E1391-9F29-40D1-A70E-E2D693735BB1}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cgame", "..\cgame\cgame\cgame.vcxproj", "{EEAAD0EB-8E8B-47A2-AD95-6F7DD438D235}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "renderergl1", "..\renderer\renderergl1\renderergl1.vcxproj", "{58CE3CC4-312F-4CBE-9EBA-AD1DEE09D264}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -103,6 +105,18 @@ Global
 		{EEAAD0EB-8E8B-47A2-AD95-6F7DD438D235}.Release|x64.Build.0 = Release|x64
 		{EEAAD0EB-8E8B-47A2-AD95-6F7DD438D235}.Release|x86.ActiveCfg = Release|Win32
 		{EEAAD0EB-8E8B-47A2-AD95-6F7DD438D235}.Release|x86.Build.0 = Release|Win32
+		{58CE3CC4-312F-4CBE-9EBA-AD1DEE09D264}.Debug|x64.ActiveCfg = Debug|x64
+		{58CE3CC4-312F-4CBE-9EBA-AD1DEE09D264}.Debug|x64.Build.0 = Debug|x64
+		{58CE3CC4-312F-4CBE-9EBA-AD1DEE09D264}.Debug|x86.ActiveCfg = Debug|Win32
+		{58CE3CC4-312F-4CBE-9EBA-AD1DEE09D264}.Debug|x86.Build.0 = Debug|Win32
+		{58CE3CC4-312F-4CBE-9EBA-AD1DEE09D264}.Production|x64.ActiveCfg = Debug|x64
+		{58CE3CC4-312F-4CBE-9EBA-AD1DEE09D264}.Production|x64.Build.0 = Debug|x64
+		{58CE3CC4-312F-4CBE-9EBA-AD1DEE09D264}.Production|x86.ActiveCfg = Debug|Win32
+		{58CE3CC4-312F-4CBE-9EBA-AD1DEE09D264}.Production|x86.Build.0 = Debug|Win32
+		{58CE3CC4-312F-4CBE-9EBA-AD1DEE09D264}.Release|x64.ActiveCfg = Release|x64
+		{58CE3CC4-312F-4CBE-9EBA-AD1DEE09D264}.Release|x64.Build.0 = Release|x64
+		{58CE3CC4-312F-4CBE-9EBA-AD1DEE09D264}.Release|x86.ActiveCfg = Release|Win32
+		{58CE3CC4-312F-4CBE-9EBA-AD1DEE09D264}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

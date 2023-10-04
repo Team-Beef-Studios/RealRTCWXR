@@ -479,91 +479,25 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 	}
 
 #ifndef USE_OPENGLES
-	if (glConfig.stereoEnabled) {
-		if( !(cmd = R_GetCommandBuffer(sizeof(*cmd))) )
-			return;
-			
-		cmd->commandId = RC_DRAW_BUFFER;
-		if ( stereoFrame == STEREO_LEFT ) {
-			cmd->buffer = (int)GL_BACK_LEFT;
-		} else if ( stereoFrame == STEREO_RIGHT ) {
-			cmd->buffer = (int)GL_BACK_RIGHT;
-		} else {
-			ri.Error( ERR_FATAL, "RE_BeginFrame: Stereo is enabled, but stereoFrame was %i", stereoFrame );
-		}
+	//
+	// draw buffer stuff
+	//
+	cmd = (drawBufferCommand_t*)R_GetCommandBuffer(sizeof(*cmd));
+	if (!cmd) {
+		return;
 	}
-	else
+	cmd->commandId = RC_DRAW_BUFFER;
+
 	{
-		if(r_anaglyphMode->integer)
-		{
-			if(r_anaglyphMode->modified)
-			{
-				// clear both, front and backbuffer.
-				qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-				qglClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-
-				qglDrawBuffer(GL_FRONT);
-				qglClear(GL_COLOR_BUFFER_BIT);
-				qglDrawBuffer(GL_BACK);
-				qglClear(GL_COLOR_BUFFER_BIT);
-				
-				r_anaglyphMode->modified = qfalse;
-			}
-			
-			if(stereoFrame == STEREO_LEFT)
-			{
-				if( !(cmd = R_GetCommandBuffer(sizeof(*cmd))) )
-					return;
-				
-				if( !(colcmd = R_GetCommandBuffer(sizeof(*colcmd))) )
-					return;
-			}
-			else if(stereoFrame == STEREO_RIGHT)
-			{
-				clearDepthCommand_t *cldcmd;
-				
-				if( !(cldcmd = R_GetCommandBuffer(sizeof(*cldcmd))) )
-					return;
-
-				cldcmd->commandId = RC_CLEARDEPTH;
-
-				if( !(colcmd = R_GetCommandBuffer(sizeof(*colcmd))) )
-					return;
-			}
-			else
-				ri.Error( ERR_FATAL, "RE_BeginFrame: Stereo is enabled, but stereoFrame was %i", stereoFrame );
-
-			R_SetColorMode(colcmd->rgba, stereoFrame, r_anaglyphMode->integer);
-			colcmd->commandId = RC_COLORMASK;
+		if (stereoFrame == STEREO_LEFT) {
+			cmd->buffer = (int)0;
 		}
-		else
-#endif
-		{
-			if(stereoFrame != STEREO_CENTER)
-				ri.Error( ERR_FATAL, "RE_BeginFrame: Stereo is disabled, but stereoFrame was %i", stereoFrame );
-
-			if( !(cmd = R_GetCommandBuffer(sizeof(*cmd))) )
-				return;
+		else if (stereoFrame == STEREO_RIGHT) {
+			cmd->buffer = (int)1;
 		}
-
-		if(cmd)
-		{
-			cmd->commandId = RC_DRAW_BUFFER;
-
-#ifndef USE_OPENGLES
-			if(r_anaglyphMode->modified)
-			{
-				qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-				r_anaglyphMode->modified = qfalse;
-			}
-
-			if (!Q_stricmp(r_drawBuffer->string, "GL_FRONT"))
-				cmd->buffer = (int)GL_FRONT;
-			else
-#endif
-				cmd->buffer = (int)GL_BACK;
+		else {
+			ri.Error(ERR_FATAL, "RE_BeginFrame: Stereo is enabled, but stereoFrame was %i", stereoFrame);
 		}
-#ifndef USE_OPENGLES
 	}
 #endif
 
@@ -578,8 +512,8 @@ RE_EndFrame
 Returns the number of msec spent in the back end
 =============
 */
-void RE_EndFrame( int *frontEndMsec, int *backEndMsec ) {
-	swapBuffersCommand_t    *cmd;
+void RE_EndFrame(int eye, int *frontEndMsec, int *backEndMsec ) {
+	endFrameCommand_t *cmd;
 
 	if ( !tr.registered ) {
 		return;
@@ -588,9 +522,10 @@ void RE_EndFrame( int *frontEndMsec, int *backEndMsec ) {
 	if ( !cmd ) {
 		return;
 	}
-	cmd->commandId = RC_SWAP_BUFFERS;
+	cmd->commandId = RC_FLUSH;
+	cmd->buffer = eye;
 
-	R_IssueRenderCommands( qtrue );
+	R_IssueRenderCommands( qfalse );
 
 	R_InitNextFrame();
 
@@ -602,6 +537,23 @@ void RE_EndFrame( int *frontEndMsec, int *backEndMsec ) {
 		*backEndMsec = backEnd.pc.msec;
 	}
 	backEnd.pc.msec = 0;
+}
+
+void RE_SubmitStereoFrame() {
+	swapBuffersCommand_t* cmd;
+
+	if (!tr.registered) {
+		return;
+	}
+
+	cmd = (swapBuffersCommand_t*)R_GetCommandBuffer(sizeof(*cmd));
+	if (!cmd) {
+		return;
+	}
+
+	cmd->commandId = RC_SWAP_BUFFERS;
+
+	R_IssueRenderCommands(qtrue);
 }
 
 /*

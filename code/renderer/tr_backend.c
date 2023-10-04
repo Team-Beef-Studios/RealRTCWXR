@@ -1009,7 +1009,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 						{
 							viewParms_t temp = backEnd.viewParms;
 
-							R_SetupProjection(&temp, r_znear->value, qfalse);
+							R_SetupProjection(&temp, r_znear->value, 0, qfalse);
 
 							qglMatrixMode(GL_PROJECTION);
 							qglLoadMatrixf(temp.projectionMatrix);
@@ -1461,7 +1461,7 @@ const void  *RB_DrawBuffer( const void *data ) {
 	cmd = (const drawBufferCommand_t *)data;
 
 #ifndef USE_OPENGLES
-	qglDrawBuffer( cmd->buffer );
+	//qglDrawBuffer( cmd->buffer );
 #endif
 
 	// clear screen for debugging
@@ -1598,6 +1598,58 @@ const void *RB_ClearDepth(const void *data)
 	return (const void *)(cmd + 1);
 }
 
+
+
+/*
+=============
+RB_Flush
+
+=============
+*/
+const void* RB_Flush(const void* data) {
+	const endFrameCommand_t* cmd;
+
+	// finish any 2D drawing if needed
+	if (tess.numIndexes) {
+		RB_EndSurface();
+	}
+
+	// texture swapping test
+	if (r_showImages->integer) {
+		RB_ShowImages();
+	}
+
+	cmd = (const endFrameCommand_t*)data;
+
+	// we measure overdraw by reading back the stencil buffer and
+// counting up the number of increments that have happened
+#ifndef USE_OPENGLES
+	if (r_measureOverdraw->integer) {
+		int i;
+		long sum = 0;
+		unsigned char* stencilReadback;
+
+		stencilReadback = ri.Hunk_AllocateTempMemory(glConfig.vidWidth * glConfig.vidHeight);
+		qglReadPixels(0, 0, glConfig.vidWidth, glConfig.vidHeight, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, stencilReadback);
+
+		for (i = 0; i < glConfig.vidWidth * glConfig.vidHeight; i++) {
+			sum += stencilReadback[i];
+		}
+
+		backEnd.pc.c_overDraw += sum;
+		ri.Hunk_FreeTempMemory(stencilReadback);
+	}
+#endif
+
+	if (!glState.finishCalled) {
+		//qglFinish();
+	}
+
+	backEnd.projection2D = qfalse;
+
+	return (const void*)(cmd + 1);
+}
+
 /*
 =============
 RB_SwapBuffers
@@ -1618,31 +1670,6 @@ const void  *RB_SwapBuffers( const void *data ) {
 	}
 
 	cmd = (const swapBuffersCommand_t *)data;
-
-	// we measure overdraw by reading back the stencil buffer and
-	// counting up the number of increments that have happened
-#ifndef USE_OPENGLES
-	if ( r_measureOverdraw->integer ) {
-		int i;
-		long sum = 0;
-		unsigned char *stencilReadback;
-
-		stencilReadback = ri.Hunk_AllocateTempMemory( glConfig.vidWidth * glConfig.vidHeight );
-		qglReadPixels( 0, 0, glConfig.vidWidth, glConfig.vidHeight, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, stencilReadback );
-
-		for ( i = 0; i < glConfig.vidWidth * glConfig.vidHeight; i++ ) {
-			sum += stencilReadback[i];
-		}
-
-		backEnd.pc.c_overDraw += sum;
-		ri.Hunk_FreeTempMemory( stencilReadback );
-	}
-#endif
-
-
-	if ( !glState.finishCalled ) {
-		qglFinish();
-	}
 
 	GLimp_LogComment( "***************** RB_SwapBuffers *****************\n\n\n" );
 
@@ -1713,6 +1740,9 @@ void RB_ExecuteRenderCommands( const void *data ) {
 			break;
 		case RC_CLEARDEPTH:
 			data = RB_ClearDepth(data);
+			break;
+		case RC_FLUSH:
+			data = RB_Flush(data);
 			break;
 		case RC_END_OF_LIST:
 		default:

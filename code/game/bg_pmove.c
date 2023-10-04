@@ -3019,8 +3019,8 @@ static void PM_Weapon( void ) {
 	}
 	else
 	{
-		vr->muzzlebounce[PITCH] *= 0.3f;
-		vr->muzzlebounce[YAW] *= 0.3f;
+		vr->muzzlebounce[PITCH] *= 0.95f;
+		vr->muzzlebounce[YAW] *= 0.95f;
 	}
 
 

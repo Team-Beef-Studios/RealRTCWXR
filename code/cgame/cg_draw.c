@@ -3440,7 +3440,7 @@ static void CG_Draw2D(stereoFrame_t stereoFrame) {
 	if ( cg.snap->ps.persistant[PERS_TEAM] == TEAM_SPECTATOR ) {
 		CG_DrawSpectator();
 
-		if(stereoFrame == STEREO_CENTER)
+		//if(stereoFrame == STEREO_CENTER)
 			CG_DrawCrosshair();
 
 		CG_DrawCrosshairNames();
@@ -3448,7 +3448,7 @@ static void CG_Draw2D(stereoFrame_t stereoFrame) {
 		// don't draw any status if dead
 		if ( cg.snap->ps.stats[STAT_HEALTH] > 0 && !cg.cameraMode) {
 
-			if(stereoFrame == STEREO_CENTER)
+//			if(stereoFrame == STEREO_CENTER)
 				CG_DrawCrosshair();
 
 			if ( cg_drawStatus.integer ) {

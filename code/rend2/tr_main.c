@@ -1020,7 +1020,7 @@ void R_SetupProjection(viewParms_t *dest, float zProj, float zFar, qboolean comp
 	width = xmax - xmin;
 	height = ymax - ymin;
 
-	if (ri.TBXR_GetVRProjection(zProj, tr.viewParms.zFar, 1.0, 1.0, dest->projectionMatrix))
+	if (ri.TBXR_GetVRProjection(zProj, tr.viewParms.zFar, dest->fovX, dest->fovY, dest->projectionMatrix))
 	{
 		if (computeFrustum)
 			R_SetupFrustum(dest);// , xmin, xmax, ymax, zProj, zFar, 0);

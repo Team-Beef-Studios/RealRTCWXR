@@ -2075,11 +2075,6 @@ void FireWeapon( gentity_t *ent ) {
 				aimSpreadScale = 0.0f;
 				break;
 
-			case WP_M97:
-			case WP_M30:
-				aimSpreadScale = 1.0;
-				break;
-
 			default:
 				aimSpreadScale += 0.15f;
 				break;
@@ -2095,21 +2090,24 @@ void FireWeapon( gentity_t *ent ) {
 
 	if (!ent->aiCharacter)
 	{
-		if (vr->weapon_stabilised)
+		if (ent->s.weapon != WP_M97 && ent->s.weapon != WP_M30)
 		{
-			//Stabilised weapon is even more accurate
-			aimSpreadScale /= 2.0f;
+			if (vr->weapon_stabilised)
+			{
+				//Stabilised weapon is even more accurate
+				aimSpreadScale /= 2.0f;
 
-			//		if (vr->pistol)
-			//		{
-						//Stabilised pistol is even more accurate
-			//			aimSpreadScale /= 2.0f;
-			//		}
-		}
-		else
-		{
-			//For the player the weapon spread can be reduced a bit
-			aimSpreadScale *= 0.9f;
+				//		if (vr->pistol)
+				//		{
+							//Stabilised pistol is even more accurate
+				//			aimSpreadScale /= 2.0f;
+				//		}
+			}
+			else
+			{
+				//For the player the weapon spread can be reduced a bit
+				aimSpreadScale *= 0.9f;
+			}
 		}
 	}
 

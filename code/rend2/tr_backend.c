@@ -1919,7 +1919,7 @@ const void* RB_Flush(const void* data) {
 	}
 
 	if (!glState.finishCalled) {
-		qglFinish();
+		//qglFinish();
 	}
 
 	backEnd.framePostProcessed = qfalse;

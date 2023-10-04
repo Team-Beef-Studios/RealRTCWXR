@@ -477,6 +477,7 @@ typedef struct dlight_s {
 // as well as the locally generated scene information
 typedef struct {
 	int x, y, width, height;
+	qboolean override_fov;
 	float fov_x, fov_y;
 	vec3_t vieworg;
 	vec3_t viewaxis[3];             // transformation matrix
@@ -1345,7 +1346,7 @@ int R_CullLocalBox( vec3_t bounds[2] );
 int R_CullPointAndRadius( vec3_t origin, float radius );
 int R_CullLocalPointAndRadius( vec3_t origin, float radius );
 
-void R_SetupProjection(viewParms_t *dest, float zProj, qboolean computeFrustum);
+void R_SetupProjection(viewParms_t *dest, float zProj, float zFar, qboolean computeFrustum);
 void R_RotateForEntity( const trRefEntity_t * ent, const viewParms_t * viewParms, orientationr_t * or );
 
 /*
@@ -1870,7 +1871,8 @@ typedef enum {
 	RC_SCREENSHOT,
 	RC_VIDEOFRAME,
 	RC_COLORMASK,
-	RC_CLEARDEPTH
+	RC_CLEARDEPTH,
+	RC_FLUSH
 } renderCommand_t;
 
 
@@ -1916,12 +1918,15 @@ void RE_StretchPicGradient( float x, float y, float w, float h,
 							float s1, float t1, float s2, float t2, qhandle_t hShader, const float *gradientColor, int gradientType );
 void RE_BeginFrame( stereoFrame_t stereoFrame );
 void RE_EndFrame(int eye, int *frontEndMsec, int *backEndMsec );
+void RE_SubmitStereoFrame();
 void RE_SaveJPG(char * filename, int quality, int image_width, int image_height,
                 unsigned char *image_buffer, int padding);
 size_t RE_SaveJPGToBuffer(byte *buffer, size_t bufSize, int quality,
 		          int image_width, int image_height, byte *image_buffer, int padding);
 void RE_TakeVideoFrame( int width, int height,
 		byte *captureBuffer, byte *encodeBuffer, qboolean motionJpeg );
+
+void WIN_SwapWindow();
 
 void R_DrawElements( int numIndexes, const glIndex_t *indexes );
 void VectorArrayNormalize( vec4_t *normals, unsigned int count );

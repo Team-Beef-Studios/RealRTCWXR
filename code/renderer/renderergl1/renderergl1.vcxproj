@@ -5,14 +5,6 @@
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Production|Win32">
-      <Configuration>Production</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Production|x64">
-      <Configuration>Production</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
       <Platform>Win32</Platform>
@@ -29,10 +21,9 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{71cbf00e-38b7-42b9-8e99-ea2d436a0fdb}</ProjectGuid>
-    <RootNamespace>Renderer</RootNamespace>
+    <ProjectGuid>{58ce3cc4-312f-4cbe-9eba-ad1dee09d264}</ProjectGuid>
+    <RootNamespace>renderergl1</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>Rend2</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -42,13 +33,6 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Production|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
@@ -66,17 +50,9 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
     <PreferredToolArchitecture>x64</PreferredToolArchitecture>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Production|x64'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>MultiByte</CharacterSet>
-    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -89,27 +65,18 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Production|Win32'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Production|x64'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <TargetName>renderer_sp_rend2_xr_64</TargetName>
+    <TargetName>renderer_sp_renderergl1_xr_64</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <TargetName>renderer_sp_rend2_xr_64</TargetName>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Production|x64'">
-    <TargetName>renderer_sp_rend2_xr_64</TargetName>
+    <TargetName>renderer_sp_renderergl1_xr_64</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -139,22 +106,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Production|Win32'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-    </ClCompile>
-    <Link>
-      <SubSystem>Console</SubSystem>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -163,13 +114,12 @@
       <PreprocessorDefinitions>_DEBUG;ARCH_STRING="xr_64";STANDALONE;USE_LOCAL_HEADERS;USE_BLOOM;USE_RENDERER_DLOPEN;USE_INTERNAL_JPEG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>Default</ConformanceMode>
       <AdditionalIncludeDirectories>..\..\..\code\SDL2\include;..\..\..\code\jpeg-8c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <SupportJustMyCode>false</SupportJustMyCode>
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
-      <RuntimeTypeInfo>false</RuntimeTypeInfo>
-      <UseFullPaths>false</UseFullPaths>
       <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -180,15 +130,16 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <FunctionLevelLinking>
+      </FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>
       </SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;ARCH_STRING="xr_64";STANDALONE;USE_LOCAL_HEADERS;USE_BLOOM;USE_RENDERER_DLOPEN;USE_INTERNAL_JPEG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>Default</ConformanceMode>
-      <AdditionalIncludeDirectories>..\..\..\code\SDL2\include;..\..\..\code\jpeg-8c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <DebugInformationFormat>None</DebugInformationFormat>
+      <PreprocessorDefinitions>_DEBUG;ARCH_STRING="xr_64";STANDALONE;USE_LOCAL_HEADERS;USE_BLOOM;USE_RENDERER_DLOPEN;USE_INTERNAL_JPEG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalIncludeDirectories>..\..\..\code\SDL2\include;..\..\..\code\jpeg-8c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
     </ClCompile>
@@ -196,30 +147,7 @@
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalDependencies>opengl32.lib;glu32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;Ws2_32.lib;Winmm.lib;..\..\..\code\libs\win64\libSDL264.dll.a;..\..\..\code\libs\win64\libSDL264main.a;%(AdditionalDependencies)</AdditionalDependencies>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Production|x64'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>
-      </SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;ARCH_STRING="xr_64";STANDALONE;USE_LOCAL_HEADERS;USE_BLOOM;USE_RENDERER_DLOPEN;USE_INTERNAL_JPEG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>Default</ConformanceMode>
-      <AdditionalIncludeDirectories>..\..\..\code\SDL2\include;..\..\..\code\jpeg-8c;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <DebugInformationFormat>None</DebugInformationFormat>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <ExceptionHandling>false</ExceptionHandling>
-      <RuntimeTypeInfo>false</RuntimeTypeInfo>
-    </ClCompile>
-    <Link>
-      <SubSystem>Console</SubSystem>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>opengl32.lib;glu32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;Ws2_32.lib;Winmm.lib;..\..\..\code\libs\win64\libSDL264.dll.a;..\..\..\code\libs\win64\libSDL264main.a;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -275,49 +203,18 @@
     <ClCompile Include="..\..\qcommon\q_shared.c" />
     <ClCompile Include="..\..\sdl\sdl_gamma.c" />
     <ClCompile Include="..\..\sdl\sdl_glimp.c" />
-    <ClCompile Include="..\glsl\bokeh_fp.c" />
-    <ClCompile Include="..\glsl\bokeh_vp.c" />
-    <ClCompile Include="..\glsl\calclevels4x_fp.c" />
-    <ClCompile Include="..\glsl\calclevels4x_vp.c" />
-    <ClCompile Include="..\glsl\depthblur_fp.c" />
-    <ClCompile Include="..\glsl\depthblur_vp.c" />
-    <ClCompile Include="..\glsl\dlight_fp.c" />
-    <ClCompile Include="..\glsl\dlight_vp.c" />
-    <ClCompile Include="..\glsl\down4x_fp.c" />
-    <ClCompile Include="..\glsl\down4x_vp.c" />
-    <ClCompile Include="..\glsl\fogpass_fp.c" />
-    <ClCompile Include="..\glsl\fogpass_vp.c" />
-    <ClCompile Include="..\glsl\generic_fp.c" />
-    <ClCompile Include="..\glsl\generic_vp.c" />
-    <ClCompile Include="..\glsl\lightall_fp.c" />
-    <ClCompile Include="..\glsl\lightall_vp.c" />
-    <ClCompile Include="..\glsl\pshadow_fp.c" />
-    <ClCompile Include="..\glsl\pshadow_vp.c" />
-    <ClCompile Include="..\glsl\shadowfill_fp.c" />
-    <ClCompile Include="..\glsl\shadowfill_vp.c" />
-    <ClCompile Include="..\glsl\shadowmask_fp.c" />
-    <ClCompile Include="..\glsl\shadowmask_vp.c" />
-    <ClCompile Include="..\glsl\ssao_fp.c" />
-    <ClCompile Include="..\glsl\ssao_vp.c" />
-    <ClCompile Include="..\glsl\texturecolor_fp.c" />
-    <ClCompile Include="..\glsl\texturecolor_vp.c" />
-    <ClCompile Include="..\glsl\tonemap_fp.c" />
-    <ClCompile Include="..\glsl\tonemap_vp.c" />
+    <ClCompile Include="..\tr_altivec.c" />
     <ClCompile Include="..\tr_animation.c" />
     <ClCompile Include="..\tr_backend.c" />
+    <ClCompile Include="..\tr_bloom.c" />
     <ClCompile Include="..\tr_bsp.c" />
     <ClCompile Include="..\tr_cmds.c" />
+    <ClCompile Include="..\tr_cmesh.c" />
     <ClCompile Include="..\tr_curve.c" />
-    <ClCompile Include="..\tr_dsa.c" />
-    <ClCompile Include="..\tr_extensions.c" />
-    <ClCompile Include="..\tr_extramath.c" />
-    <ClCompile Include="..\tr_fbo.c" />
     <ClCompile Include="..\tr_flares.c" />
     <ClCompile Include="..\tr_font.c" />
-    <ClCompile Include="..\tr_glsl.c" />
     <ClCompile Include="..\tr_image.c" />
     <ClCompile Include="..\tr_image_bmp.c" />
-    <ClCompile Include="..\tr_image_dds.c" />
     <ClCompile Include="..\tr_image_jpg.c" />
     <ClCompile Include="..\tr_image_pcx.c" />
     <ClCompile Include="..\tr_image_png.c" />
@@ -330,7 +227,6 @@
     <ClCompile Include="..\tr_model.c" />
     <ClCompile Include="..\tr_model_iqm.c" />
     <ClCompile Include="..\tr_noise.c" />
-    <ClCompile Include="..\tr_postprocess.c" />
     <ClCompile Include="..\tr_scene.c" />
     <ClCompile Include="..\tr_shade.c" />
     <ClCompile Include="..\tr_shader.c" />
@@ -339,38 +235,15 @@
     <ClCompile Include="..\tr_sky.c" />
     <ClCompile Include="..\tr_subs.c" />
     <ClCompile Include="..\tr_surface.c" />
-    <ClCompile Include="..\tr_vbo.c" />
     <ClCompile Include="..\tr_world.c" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\glsl\bokeh_fp.glsl" />
-    <None Include="..\glsl\bokeh_vp.glsl" />
-    <None Include="..\glsl\calclevels4x_fp.glsl" />
-    <None Include="..\glsl\calclevels4x_vp.glsl" />
-    <None Include="..\glsl\depthblur_fp.glsl" />
-    <None Include="..\glsl\depthblur_vp.glsl" />
-    <None Include="..\glsl\dlight_fp.glsl" />
-    <None Include="..\glsl\dlight_vp.glsl" />
-    <None Include="..\glsl\down4x_fp.glsl" />
-    <None Include="..\glsl\down4x_vp.glsl" />
-    <None Include="..\glsl\fogpass_fp.glsl" />
-    <None Include="..\glsl\fogpass_vp.glsl" />
-    <None Include="..\glsl\generic_fp.glsl" />
-    <None Include="..\glsl\generic_vp.glsl" />
-    <None Include="..\glsl\lightall_fp.glsl" />
-    <None Include="..\glsl\lightall_vp.glsl" />
-    <None Include="..\glsl\pshadow_fp.glsl" />
-    <None Include="..\glsl\pshadow_vp.glsl" />
-    <None Include="..\glsl\shadowfill_fp.glsl" />
-    <None Include="..\glsl\shadowfill_vp.glsl" />
-    <None Include="..\glsl\shadowmask_fp.glsl" />
-    <None Include="..\glsl\shadowmask_vp.glsl" />
-    <None Include="..\glsl\ssao_fp.glsl" />
-    <None Include="..\glsl\ssao_vp.glsl" />
-    <None Include="..\glsl\texturecolor_fp.glsl" />
-    <None Include="..\glsl\texturecolor_vp.glsl" />
-    <None Include="..\glsl\tonemap_fp.glsl" />
-    <None Include="..\glsl\tonemap_vp.glsl" />
+    <ClInclude Include="..\anorms256.h" />
+    <ClInclude Include="..\iqm.h" />
+    <ClInclude Include="..\qgl.h" />
+    <ClInclude Include="..\tr_local.h" />
+    <ClInclude Include="..\tr_public.h" />
+    <ClInclude Include="..\tr_types.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

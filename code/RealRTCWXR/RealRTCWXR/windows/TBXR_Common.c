@@ -771,16 +771,16 @@ void TBXR_EnterVR( ) {
 	}
 
 	// Create the OpenXR Session.
-	XrGraphicsBindingOpenGLWin32KHR graphicsBindingAndroidOpenGL = {0};
-	graphicsBindingAndroidOpenGL.type = XR_TYPE_GRAPHICS_BINDING_OPENGL_WIN32_KHR;
-	graphicsBindingAndroidOpenGL.next = NULL;
-	graphicsBindingAndroidOpenGL.hDC = wglGetCurrentDC();
-	graphicsBindingAndroidOpenGL.hGLRC = wglGetCurrentContext();
+	XrGraphicsBindingOpenGLWin32KHR graphicsBindingOpenGLWin32KHR = {0};
+	graphicsBindingOpenGLWin32KHR.type = XR_TYPE_GRAPHICS_BINDING_OPENGL_WIN32_KHR;
+	graphicsBindingOpenGLWin32KHR.next = NULL;
+	graphicsBindingOpenGLWin32KHR.hDC = wglGetCurrentDC();
+	graphicsBindingOpenGLWin32KHR.hGLRC = wglGetCurrentContext();
 
 	XrSessionCreateInfo sessionCreateInfo = {0};
 	memset(&sessionCreateInfo, 0, sizeof(sessionCreateInfo));
 	sessionCreateInfo.type = XR_TYPE_SESSION_CREATE_INFO;
-	sessionCreateInfo.next = &graphicsBindingAndroidOpenGL;
+	sessionCreateInfo.next = &graphicsBindingOpenGLWin32KHR;
 	sessionCreateInfo.createFlags = 0;
 	sessionCreateInfo.systemId = gAppState.SystemId;
 
@@ -1019,7 +1019,9 @@ void TBXR_FrameSetup()
 
 	memset(&gAppState.FrameState, 0, sizeof(XrFrameState));
 	gAppState.FrameState.type = XR_TYPE_FRAME_STATE;
+	int t = Sys_Milliseconds();
 	OXR(xrWaitFrame(gAppState.Session, NULL, &gAppState.FrameState));
+	ALOGV(" xrWaitFrame took %d ms\n", (Sys_Milliseconds() - t));
 
 	// Get the HMD pose, predicted for the middle of the time period during which
 	// the new eye images will be displayed. The number of frames predicted ahead
@@ -1028,7 +1030,9 @@ void TBXR_FrameSetup()
 	XrFrameBeginInfo beginFrameDesc = {0};
 	beginFrameDesc.type = XR_TYPE_FRAME_BEGIN_INFO;
 	beginFrameDesc.next = NULL;
+	t = Sys_Milliseconds();
 	OXR(xrBeginFrame(gAppState.Session, &beginFrameDesc));
+	ALOGV(" xrBeginFrame took %d ms\n", (Sys_Milliseconds() - t));
 
 	//Game specific frame setup stuff called here
 	VR_FrameSetup();
@@ -1244,7 +1248,9 @@ void TBXR_submitFrame()
 
 
 	endFrameInfo.layerCount = layerCount;
+	int t = Sys_Milliseconds();
 	OXR(xrEndFrame(gAppState.Session, &endFrameInfo));
+	ALOGV(" xrEndFrame took %d ms\n", (Sys_Milliseconds() - t));
 
 	gAppState.FrameSetup = false;
 }

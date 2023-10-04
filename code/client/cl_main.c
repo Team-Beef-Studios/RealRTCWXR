@@ -3346,7 +3346,7 @@ int CL_ScaledMilliseconds( void ) {
 void VR_Init();
 void TBXR_GetScreenRes(int* width, int* height);
 qboolean VR_UseScreenLayer();
-qboolean VR_GetVRProjection(float zNear, float zFar, float zZoomX, float zZoomY, float* projection);
+qboolean VR_GetVRProjection(float zNear, float zFar, float gameFovX, float gameFovY, float* projection);
 void TBXR_submitFrame();
 
 /*
@@ -3365,7 +3365,7 @@ void CL_InitRef( void ) {
 	Com_Printf( "----- Initializing Renderer ----\n" );
 
 #ifdef USE_RENDERER_DLOPEN
-	cl_renderer = Cvar_Get("cl_renderer", "rend2", CVAR_ARCHIVE | CVAR_LATCH); // removed cvar protected
+	cl_renderer = Cvar_Get("cl_renderer", "renderergl1", CVAR_ARCHIVE | CVAR_LATCH); // removed cvar protected
 
 	Com_sprintf(dllName, sizeof(dllName), "renderer_sp_%s_" ARCH_STRING DLL_EXT, cl_renderer->string);
 
