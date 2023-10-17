@@ -3634,13 +3634,6 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 	if (stereoView != STEREO_CENTER)
 		CG_DrawCrosshair3D();
 
-	vec3_t baseOrg;
-	VectorCopy(cg.refdef.vieworg, baseOrg);
-
-	float separation = stereoView == 1 ?
-		cg_worldScale.value * (-cg_ipd.value / 2) : //left
-		cg_worldScale.value * (cg_ipd.value / 2); // right
-
 	if (!cg.cameraMode)
 	{
 		VectorCopy(vr->hmdorientation, cg.refdef.viewangles);
@@ -3658,9 +3651,9 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 
 	cg.refdef.worldscale = cg_worldScale.value;
 
-	VectorMA(cg.refdef.vieworg, -separation, cg.refdef.viewaxis[1], cg.refdef.vieworg);
-
 	//Vertical Positional Movement
+	vec3_t prevOrigin;
+	VectorCopy(cg.refdef.vieworg, prevOrigin);
 	if (!vr->using_screen_layer)
 	{
 		cg.refdef.vieworg[2] -= DEFAULT_PLAYER_HEIGHT;
@@ -3676,10 +3669,8 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 
 	trap_R_RenderScene( &cg.refdef );
 
-	// restore original viewpoint if running stereo
-	if (separation != 0) {
-		VectorCopy(baseOrg, cg.refdef.vieworg);
-	}
+	//Restore origin
+	VectorCopy(prevOrigin, cg.refdef.vieworg);
 
 	// clear around the rendered view if sized down
 	CG_TileClear();     //----(SA)	moved to 2d section to avoid 2d/3d fog-state problems

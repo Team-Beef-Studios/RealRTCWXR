@@ -31,6 +31,8 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "tr_types.h"
 
+#include <VrClientInfo.h>
+
 #define REF_API_VERSION     8
 
 //
@@ -97,7 +99,7 @@ typedef struct {
 	void ( *BeginFrame )( stereoFrame_t stereoFrame );
 
 	// if the pointers are not NULL, timing info will be returned
-	void ( *EndFrame )(int eye, int *frontEndMsec, int *backEndMsec );
+	void ( *EndFrame )(int *frontEndMsec, int *backEndMsec );
 
 	void (*SubmitStereoFrame)();
 
@@ -216,9 +218,9 @@ typedef struct {
 // If the module can't init to a valid rendering state, NULL will be
 // returned.
 #ifdef USE_RENDERER_DLOPEN
-typedef	refexport_t* (QDECL *GetRefAPI_t) (int apiVersion, refimport_t * rimp);
+typedef	refexport_t* (QDECL *GetRefAPI_t) (int apiVersion, refimport_t * rimp, vr_client_info_t *vr);
 #else
-refexport_t*GetRefAPI( int apiVersion, refimport_t *rimp );
+refexport_t*GetRefAPI( int apiVersion, refimport_t *rimp, vr_client_info_t* vr);
 #endif
 
 #endif  // __TR_PUBLIC_H

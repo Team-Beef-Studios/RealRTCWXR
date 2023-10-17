@@ -365,6 +365,14 @@ extern void (APIENTRYP qglPNTrianglesfATI)(GLenum pname, GLfloat param);
 #define QGL_3_0_PROCS \
 	GLE(const GLubyte *, GetStringi, GLenum name, GLuint index) \
 
+//OpenGL EXT specific
+#define QGL_EXT_PROCS \
+	GLE(void*, MapBufferRange, GLenum target, GLintptr offset, GLsizeiptr length, GLbitfield access) \
+	GLE(GLboolean , UnmapBuffer, GLenum target) \
+	GLE(GLuint, GetUniformBlockIndex, GLuint program, const GLchar* uniformBlockName) \
+	GLE(void, UniformBlockBinding, GLuint program, GLuint uniformBlockIndex, GLuint uniformBlockBinding) \
+	GLE(void, BindBufferBase, GLenum target, GLuint index, GLuint buffer) \
+
 // GL_ARB_framebuffer_object, built-in to OpenGL 3.0
 #define QGL_ARB_framebuffer_object_PROCS \
 	GLE(void, BindRenderbuffer, GLenum target, GLuint renderbuffer) \
@@ -448,6 +456,7 @@ QGL_1_3_PROCS;
 QGL_1_5_PROCS;
 QGL_2_0_PROCS;
 QGL_3_0_PROCS;
+QGL_EXT_PROCS;
 QGL_ARB_occlusion_query_PROCS;
 QGL_ARB_framebuffer_object_PROCS;
 QGL_ARB_vertex_array_object_PROCS;

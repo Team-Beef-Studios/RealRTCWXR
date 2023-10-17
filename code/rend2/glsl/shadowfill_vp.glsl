@@ -16,7 +16,6 @@ uniform float    u_DeformParams[5];
 //#endif
 
 uniform float   u_Time;
-uniform mat4    u_ModelViewProjectionMatrix;
 
 uniform mat4   u_ModelMatrix;
 
@@ -25,6 +24,15 @@ uniform float   u_VertexLerp;
 #elif defined(USE_BONE_ANIMATION)
 uniform mat4 u_BoneMatrix[MAX_GLSL_BONES];
 #endif
+
+layout(shared) uniform ViewMatrices
+{
+    uniform mat4 u_ViewMatrices[NUM_VIEWS];
+};
+layout(shared) uniform ProjectionMatrix
+{
+    uniform mat4 u_ProjectionMatrix[NUM_VIEWS];
+};
 
 varying vec3    var_Position;
 
@@ -102,7 +110,7 @@ void main()
 
 	position = DeformPosition(position, normal, attr_TexCoord0.st);
 
-	gl_Position = u_ModelViewProjectionMatrix * vec4(position, 1.0);
+	gl_Position = u_ProjectionMatrix[gl_ViewID_OVR] * (u_ViewMatrices[gl_ViewID_OVR] * (u_ModelMatrix * vec4(position, 1.0)));
 	
 	var_Position  = (u_ModelMatrix * vec4(position, 1.0)).xyz;
 }

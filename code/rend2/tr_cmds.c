@@ -528,20 +528,11 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 		return;
 	}
 	cmd->commandId = RC_DRAW_BUFFER;
-
-	{
-		if (stereoFrame == STEREO_LEFT) {
-			cmd->buffer = (int)0;
-		}
-		else if (stereoFrame == STEREO_RIGHT) {
-			cmd->buffer = (int)1;
-		}
-		else {
-			ri.Error(ERR_FATAL, "RE_BeginFrame: Stereo is enabled, but stereoFrame was %i", stereoFrame);
-		}
-	}
+	cmd->buffer = (int)0;
 
 	tr.refdef.stereoFrame = stereoFrame;
+
+	GLSL_PrepareUniformBuffers();
 }
 
 
@@ -552,7 +543,7 @@ RE_EndFrame
 Returns the number of msec spent in the back end
 =============
 */
-void RE_EndFrame( int eye, int *frontEndMsec, int *backEndMsec ) {
+void RE_EndFrame( int *frontEndMsec, int *backEndMsec ) {
 	endFrameCommand_t *cmd;
 
 	if ( !tr.registered ) {
@@ -563,7 +554,6 @@ void RE_EndFrame( int eye, int *frontEndMsec, int *backEndMsec ) {
 		return;
 	}
 	cmd->commandId = RC_FLUSH;
-	cmd->buffer = eye;
 
 	R_IssueRenderCommands( qfalse );
 

@@ -42,15 +42,6 @@ void CG_AdjustForVRStereo(float* x, float* y, float* w, float* h) {
 		float screenXScale = 1.0f / (!vr->using_screen_layer ? 2.5f : 1.0f);
 		float screenYScale = 1.0f / (!vr->using_screen_layer ? 2.5f : 1.0f);
 
-		float xoffset = !vr->using_screen_layer ? -20 : 0;
-		if (cg.stereoView == STEREO_LEFT) {
-			xoffset *= -1;
-		}
-
-		//We need to add an offset due to the effect of the compositor projection for asymmetric FOVs
-		xoffset += vr->off_center_fov_x * cgs.glconfig.vidWidth;
-		float yoffset = vr->off_center_fov_y * cgs.glconfig.vidHeight;
-
 		*x *= screenXScale;
 		*y *= screenYScale;
 		if (w != NULL) {
@@ -60,8 +51,8 @@ void CG_AdjustForVRStereo(float* x, float* y, float* w, float* h) {
 			*h *= screenYScale;
 		}
 
-		*x += (cgs.glconfig.vidWidth - (cgs.glconfig.vidWidth * screenXScale)) / 2.0f + xoffset;
-		*y += (cgs.glconfig.vidHeight - (cgs.glconfig.vidHeight * screenYScale)) / 2.0f - yoffset;
+		*x += (cgs.glconfig.vidWidth - (cgs.glconfig.vidWidth * screenXScale)) / 2.0f;
+		*y += (cgs.glconfig.vidHeight - (cgs.glconfig.vidHeight * screenYScale)) / 2.0f;
 	}
 }
 

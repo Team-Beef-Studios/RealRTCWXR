@@ -33,13 +33,12 @@ typedef struct {
     float remote_snapTurn; // how much turn has been applied to the yaw by joystick for a remote controlled entity
     int remote_cooldown;
 
-    int eye;
     qboolean using_screen_layer;
     qboolean third_person;
     float fov_x;
     float fov_y;
-    float off_center_fov_x;
-    float off_center_fov_y;
+    float off_center_fov_x[2];
+    float off_center_fov_y[2];
 
     float tempWeaponVelocity;
 
@@ -126,6 +125,8 @@ typedef struct {
 
 #ifndef RTCWXR_CLIENT
 extern vr_client_info_t *vr;
+#else 
+extern vr_client_info_t vr;
 #endif
 
 #endif //vr_client_info_h

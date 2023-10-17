@@ -137,7 +137,7 @@ ovrRenderer
 
 typedef struct
 {
-    ovrFramebuffer	FrameBuffer[ovrMaxNumEyes];
+    ovrFramebuffer	FrameBuffer;
     ovrFramebuffer	NullFrameBuffer; // Used to draw black projection view when showing quad layer
 } ovrRenderer;
 
@@ -263,8 +263,8 @@ void TBXR_ProcessHaptics();
 void TBXR_FrameSetup();
 void TBXR_updateProjections();
 void TBXR_UpdateControllers( );
-void TBXR_prepareEyeBuffer(int eye );
-void TBXR_finishEyeBuffer(int eye );
+void TBXR_prepareEyeBuffer();
+void TBXR_finishEyeBuffer();
 void TBXR_submitFrame();
 
 #endif //vrcommon_h

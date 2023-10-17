@@ -339,9 +339,6 @@
     <ClCompile Include="..\glsl\pshadow_fp.c">
       <Filter>Source Files\glsl</Filter>
     </ClCompile>
-    <ClCompile Include="..\glsl\pshadow_vp.c">
-      <Filter>Source Files\glsl</Filter>
-    </ClCompile>
     <ClCompile Include="..\glsl\shadowfill_fp.c">
       <Filter>Source Files\glsl</Filter>
     </ClCompile>
@@ -370,6 +367,9 @@
       <Filter>Source Files\glsl</Filter>
     </ClCompile>
     <ClCompile Include="..\glsl\tonemap_vp.c">
+      <Filter>Source Files\glsl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\glsl\pshadow_vp.c">
       <Filter>Source Files\glsl</Filter>
     </ClCompile>
   </ItemGroup>
@@ -425,9 +425,6 @@
     <None Include="..\glsl\pshadow_fp.glsl">
       <Filter>Source Files\glsl</Filter>
     </None>
-    <None Include="..\glsl\pshadow_vp.glsl">
-      <Filter>Source Files\glsl</Filter>
-    </None>
     <None Include="..\glsl\shadowfill_fp.glsl">
       <Filter>Source Files\glsl</Filter>
     </None>
@@ -458,5 +455,34 @@
     <None Include="..\glsl\tonemap_vp.glsl">
       <Filter>Source Files\glsl</Filter>
     </None>
+    <None Include="..\glsl\pshadow_vp.glsl">
+      <Filter>Source Files\glsl</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\anorms256.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\qgl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\tr_dsa.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\tr_extramath.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\tr_extratypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\tr_fbo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\tr_local.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\tr_postprocess.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

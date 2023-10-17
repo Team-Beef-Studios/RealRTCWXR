@@ -44,6 +44,7 @@ QGL_1_3_PROCS;
 QGL_1_5_PROCS;
 QGL_2_0_PROCS;
 QGL_3_0_PROCS;
+QGL_EXT_PROCS;
 QGL_ARB_occlusion_query_PROCS;
 QGL_ARB_framebuffer_object_PROCS;
 QGL_ARB_vertex_array_object_PROCS;
@@ -92,7 +93,7 @@ typedef struct {
 	vec3_t axis[3];             // orientation in world
 	vec3_t viewOrigin;          // viewParms->or.origin in local coordinates
 	float modelMatrix[16];
-	float		transformMatrix[16];
+	float       eyeViewMatrix[2][16];
 } orientationr_t;
 
 typedef enum
@@ -762,7 +763,6 @@ typedef enum
 	UNIFORM_FOGCOLORMASK,
 
 	UNIFORM_MODELMATRIX,
-	UNIFORM_MODELVIEWPROJECTIONMATRIX,
 
 	UNIFORM_TIME,
 	UNIFORM_VERTEXLERP,
@@ -808,6 +808,10 @@ typedef struct shaderProgram_s
 	GLuint          vertexShader;
 	GLuint          fragmentShader;
 	uint32_t        attribs;	// vertex array attributes
+
+	//New for multiview - The view and projection matrix uniforms
+	GLuint		projectionMatrixBinding;
+	GLuint		viewMatricesBinding;
 
 	// uniform parameters
 	GLint uniforms[UNIFORM_COUNT];
@@ -941,7 +945,7 @@ typedef struct {
 	int         targetFboLayer;
 	int         targetFboCubemapIndex;
 	float fovX, fovY;
-	float projectionMatrix[16];
+	float projectionMatrix[32];
 	cplane_t frustum[5];
 	vec3_t visBounds[2];
 	float zFar;
@@ -953,6 +957,14 @@ typedef struct {
 	glfog_t glFog;                  // fog parameters	//----(SA)	added
 
 } viewParms_t;
+
+typedef struct {
+	qboolean	valid;
+	float		projection[32];
+	float		mirrorProjection[32];
+	int			renderBuffer;
+	int			renderBufferOriginal;
+} vrParms_t;
 
 
 /*
@@ -1519,9 +1531,10 @@ typedef struct {
 	FBO_t          *currentFBO;
 	uint32_t		eyeFBO; // The OpenXR render buffer
 	vao_t          *currentVao;
-	mat4_t        modelview;
-	mat4_t        projection;
-	mat4_t		modelviewProjection;
+
+	mat4_t        modelMatrix;
+	float         projection[32];
+	qboolean 		isDrawingHUD;
 } glstate_t;
 
 typedef enum {
@@ -1743,7 +1756,8 @@ typedef struct {
 
 	// -----------------------------------------
 
-	viewParms_t viewParms;
+	viewParms_t				viewParms;
+	vrParms_t				vrParms;
 
 	float identityLight;                        // 1.0 / ( 1 << overbrightBits )
 	int identityLightByte;                      // identityLight * 255
@@ -2139,8 +2153,8 @@ void    GL_TextureMode( const char *string );
 void	GL_CheckErrs( char *file, int line );
 #define GL_CheckErrors(...) GL_CheckErrs(__FILE__, __LINE__)
 void    GL_State( unsigned long stateVector );
-void    GL_SetProjectionMatrix(mat4_t matrix);
-void    GL_SetModelviewMatrix(mat4_t matrix);
+void    GL_SetProjectionMatrix(float* matrix);
+void    GL_SetModelMatrix(float* matrix);
 void    GL_Cull( int cullType );
 
 #define GLS_SRCBLEND_ZERO                       0x00000001
@@ -2492,6 +2506,7 @@ void GLSL_InitGPUShaders(void);
 void GLSL_ShutdownGPUShaders(void);
 void GLSL_VertexAttribPointers(uint32_t attribBits);
 void GLSL_BindProgram(shaderProgram_t * program);
+void GLSL_BindBuffers(shaderProgram_t* program);
 
 void GLSL_SetUniformInt(shaderProgram_t *program, int uniformNum, GLint value);
 void GLSL_SetUniformFloat(shaderProgram_t *program, int uniformNum, GLfloat value);
@@ -2662,7 +2677,6 @@ typedef struct {
 
 typedef struct {
 	int commandId;
-	int buffer;
 } endFrameCommand_t;
 
 typedef struct {
@@ -2796,7 +2810,7 @@ void RE_StretchPic( float x, float y, float w, float h,
 void RE_StretchPicGradient( float x, float y, float w, float h,
 							float s1, float t1, float s2, float t2, qhandle_t hShader, const float *gradientColor, int gradientType );
 void RE_BeginFrame( stereoFrame_t stereoFrame );
-void RE_EndFrame(int eye, int *frontEndMsec, int *backEndMsec );
+void RE_EndFrame(int *frontEndMsec, int *backEndMsec );
 void RE_SubmitStereoFrame();
 void RE_SaveJPG(char * filename, int quality, int image_width, int image_height,
                 unsigned char *image_buffer, int padding);

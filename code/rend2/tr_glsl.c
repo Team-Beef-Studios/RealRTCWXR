@@ -24,6 +24,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "tr_dsa.h"
 
+#include <VrClientInfo.h>
+
 extern const char *fallbackShader_bokeh_vp;
 extern const char *fallbackShader_bokeh_fp;
 extern const char *fallbackShader_calclevels4x_vp;
@@ -59,6 +61,21 @@ typedef struct uniformInfo_s
 	int type;
 }
 uniformInfo_t;
+
+typedef enum {
+	FULLSCREEN_ORTHO_PROJECTION, // Orthographic projection and no stereo view for fullscreen rendering
+	HUDBUFFER_ORTHO_PROJECTION, // Orthographic projection and no stereo view for the HUD buffer
+	VR_PROJECTION,
+	MIRROR_VR_PROJECTION, // For mirrors etc
+
+	PROJECTION_COUNT
+} projection_t;
+
+GLuint		viewMatricesBuffer[PROJECTION_COUNT];
+GLuint		projectionMatricesBuffer[PROJECTION_COUNT];
+
+float       orthoProjectionMatrix[32];
+
 
 // These must be in the same order as in uniform_t in tr_local.h.
 static uniformInfo_t uniformsInfo[] =
@@ -121,8 +138,7 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_FogEyeT",      GLSL_FLOAT },
 	{ "u_FogColorMask", GLSL_VEC4 },
 
-	{ "u_ModelMatrix",               GLSL_MAT16 },
-	{ "u_ModelViewProjectionMatrix", GLSL_MAT16 },
+	{ "u_ModelMatrix",   GLSL_MAT16 },
 
 	{ "u_Time",          GLSL_FLOAT },
 	{ "u_VertexLerp" ,   GLSL_FLOAT },
@@ -164,9 +180,96 @@ typedef enum
 }
 glslPrintLog_t;
 
+
+/*
+====================
+GLSL_ViewMatricesUniformBuffer
+====================
+*/
+static void GLSL_ViewMatricesUniformBuffer(const float eyeView[32]) {
+
+	for (int i = 0; i < PROJECTION_COUNT; ++i)
+	{
+		// Update the scene matrices for when we are using a normal projection
+		qglBindBuffer(GL_UNIFORM_BUFFER, viewMatricesBuffer[i]);
+		float* viewMatrices = (float*)qglMapBufferRange(
+			GL_UNIFORM_BUFFER,
+			0,
+			2 * 16 * sizeof(float),
+			GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+
+		if (viewMatrices == NULL)
+		{
+			ri.Error(ERR_DROP, "View Matrices Uniform Buffer is NULL");
+			return;
+		}
+
+		switch (i)
+		{
+		case FULLSCREEN_ORTHO_PROJECTION:
+		case HUDBUFFER_ORTHO_PROJECTION:
+		{
+			{
+				const auto xDepthOffset = (vr->off_center_fov_x[0] * glConfig.vidWidth) + 20;
+				const auto yDepthOffset = (vr->off_center_fov_y[0] * glConfig.vidHeight);
+				vec3_t translate;
+				VectorSet(translate, xDepthOffset, yDepthOffset, 0);
+				Mat4Translation(translate, viewMatrices);
+			}
+
+			{
+				const auto xDepthOffset = (vr->off_center_fov_x[1] * glConfig.vidWidth) - 20;
+				const auto yDepthOffset = (vr->off_center_fov_y[1] * glConfig.vidHeight);
+				vec3_t translate;
+				VectorSet(translate, xDepthOffset, yDepthOffset, 0);
+				Mat4Translation(translate, viewMatrices + 16);
+			}
+		}
+		break;
+		case MIRROR_VR_PROJECTION:
+		case VR_PROJECTION:
+		{
+			Mat4Copy(eyeView, viewMatrices);
+			Mat4Copy(eyeView + 16, viewMatrices + 16);
+		}
+		break;
+		}
+
+		qglUnmapBuffer(GL_UNIFORM_BUFFER);
+		qglBindBuffer(GL_UNIFORM_BUFFER, 0);
+	}
+}
+
+/*
+====================
+GLSL_ProjectionMatricesUniformBuffer
+====================
+*/
+static void GLSL_ProjectionMatricesUniformBuffer(GLint uniformBuffer, const float value[32]) {
+
+	// Update the scene matrices.
+	qglBindBuffer(GL_UNIFORM_BUFFER, uniformBuffer);
+	float* projectionMatrix = (float*)qglMapBufferRange(
+		GL_UNIFORM_BUFFER,
+		0,
+		2 * 16 * sizeof(float),
+		GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+
+	if (projectionMatrix == NULL)
+	{
+		ri.Error(ERR_DROP, "Projection Matrices Uniform Buffer is NULL");
+		return;
+	}
+
+	memcpy((char*)projectionMatrix, value, 2 * 16 * sizeof(float));
+
+	qglUnmapBuffer(GL_UNIFORM_BUFFER);
+	qglBindBuffer(GL_UNIFORM_BUFFER, 0);
+}
+
 static void GLSL_PrintLog(GLuint programOrShader, glslPrintLog_t type, qboolean developerOnly)
 {
-	char           *msg;
+	char* msg;
 	static char     msgPart[1024];
 	int             maxLength = 0;
 	int             i;
@@ -245,15 +348,50 @@ static void GLSL_GetShaderHeader( GLenum shaderType, const GLchar *extra, char *
 	dest[0] = '\0';
 
 	// HACK: abuse the GLSL preprocessor to turn GLSL 1.20 shaders into 1.30 ones
-	if(glRefConfig.glslMajorVersion > 1 || (glRefConfig.glslMajorVersion == 1 && glRefConfig.glslMinorVersion >= 30))
+#ifdef __ANDROID__
+	Q_strcat(dest, size, "#version 300 es\n");
+
+	if (shaderType == GL_VERTEX_SHADER)
+	{
+		//Enable multiview
+		Q_strcat(dest, size, "#define NUM_VIEWS 2\n");
+		Q_strcat(dest, size, "#extension GL_OVR_multiview2 : enable\n");
+		Q_strcat(dest, size, "layout(num_views=NUM_VIEWS) in;\n");
+	}
+
+	Q_strcat(dest, size, "precision mediump float;\n");
+
+	if (shaderType == GL_VERTEX_SHADER)
+	{
+		Q_strcat(dest, size, "#define attribute in\n");
+		Q_strcat(dest, size, "#define varying out\n");
+	}
+	else
+	{
+		Q_strcat(dest, size, "#define varying in\n");
+
+		Q_strcat(dest, size, "out vec4 out_Color;\n");
+		Q_strcat(dest, size, "#define gl_FragColor out_Color\n");
+		Q_strcat(dest, size, "#define texture2D texture\n");
+		Q_strcat(dest, size, "#define textureCubeLod textureLod\n");
+		Q_strcat(dest, size, "#define shadow2D texture\n");
+	}
+#else
+	if (glRefConfig.glslMajorVersion > 1 || (glRefConfig.glslMajorVersion == 1 && glRefConfig.glslMinorVersion >= 30))
 	{
 		if (glRefConfig.glslMajorVersion > 1 || (glRefConfig.glslMajorVersion == 1 && glRefConfig.glslMinorVersion >= 50))
-			Q_strcat(dest, size, "#version 150\n");
+			Q_strcat(dest, size, "#version 330\n");
 		else
 			Q_strcat(dest, size, "#version 130\n");
 
 		if(shaderType == GL_VERTEX_SHADER)
 		{
+			//Multiview stuff
+			Q_strcat(dest, size, "#define NUM_VIEWS 2\n");
+			Q_strcat(dest, size, "#define VIEW_ID gl_ViewID_OVR\n");
+			Q_strcat(dest, size, "#extension GL_OVR_multiview2 : require\n");
+			Q_strcat(dest, size, "layout(num_views=NUM_VIEWS) in;\n");
+
 			Q_strcat(dest, size, "#define attribute in\n");
 			Q_strcat(dest, size, "#define varying out\n");
 		}
@@ -273,6 +411,7 @@ static void GLSL_GetShaderHeader( GLenum shaderType, const GLchar *extra, char *
 		Q_strcat(dest, size, "#version 120\n");
 		Q_strcat(dest, size, "#define shadow2D(a,b) shadow2D(a,b).r \n");
 	}
+#endif
 
 	// HACK: add some macros to avoid extra uniforms and save speed and code maintenance
 	//Q_strcat(dest, size,
@@ -536,46 +675,46 @@ static int GLSL_InitGPUShader2(shaderProgram_t * program, const char *name, int 
 	if(attribs & ATTR_POSITION)
 		qglBindAttribLocation(program->program, ATTR_INDEX_POSITION, "attr_Position");
 
-	if(attribs & ATTR_TEXCOORD)
+	if (attribs & ATTR_TEXCOORD)
 		qglBindAttribLocation(program->program, ATTR_INDEX_TEXCOORD, "attr_TexCoord0");
 
-	if(attribs & ATTR_LIGHTCOORD)
+	if (attribs & ATTR_LIGHTCOORD)
 		qglBindAttribLocation(program->program, ATTR_INDEX_LIGHTCOORD, "attr_TexCoord1");
 
-//  if(attribs & ATTR_TEXCOORD2)
-//      qglBindAttribLocation(program->program, ATTR_INDEX_TEXCOORD2, "attr_TexCoord2");
+	//  if(attribs & ATTR_TEXCOORD2)
+	//      qglBindAttribLocation(program->program, ATTR_INDEX_TEXCOORD2, "attr_TexCoord2");
 
-//  if(attribs & ATTR_TEXCOORD3)
-//      qglBindAttribLocation(program->program, ATTR_INDEX_TEXCOORD3, "attr_TexCoord3");
+	//  if(attribs & ATTR_TEXCOORD3)
+	//      qglBindAttribLocation(program->program, ATTR_INDEX_TEXCOORD3, "attr_TexCoord3");
 
-	if(attribs & ATTR_TANGENT)
+	if (attribs & ATTR_TANGENT)
 		qglBindAttribLocation(program->program, ATTR_INDEX_TANGENT, "attr_Tangent");
 
-	if(attribs & ATTR_NORMAL)
+	if (attribs & ATTR_NORMAL)
 		qglBindAttribLocation(program->program, ATTR_INDEX_NORMAL, "attr_Normal");
 
-	if(attribs & ATTR_COLOR)
+	if (attribs & ATTR_COLOR)
 		qglBindAttribLocation(program->program, ATTR_INDEX_COLOR, "attr_Color");
 
-	if(attribs & ATTR_PAINTCOLOR)
+	if (attribs & ATTR_PAINTCOLOR)
 		qglBindAttribLocation(program->program, ATTR_INDEX_PAINTCOLOR, "attr_PaintColor");
 
-	if(attribs & ATTR_LIGHTDIRECTION)
+	if (attribs & ATTR_LIGHTDIRECTION)
 		qglBindAttribLocation(program->program, ATTR_INDEX_LIGHTDIRECTION, "attr_LightDirection");
 
-	if(attribs & ATTR_BONE_INDEXES)
+	if (attribs & ATTR_BONE_INDEXES)
 		qglBindAttribLocation(program->program, ATTR_INDEX_BONE_INDEXES, "attr_BoneIndexes");
 
-	if(attribs & ATTR_BONE_WEIGHTS)
+	if (attribs & ATTR_BONE_WEIGHTS)
 		qglBindAttribLocation(program->program, ATTR_INDEX_BONE_WEIGHTS, "attr_BoneWeights");
 
-	if(attribs & ATTR_POSITION2)
+	if (attribs & ATTR_POSITION2)
 		qglBindAttribLocation(program->program, ATTR_INDEX_POSITION2, "attr_Position2");
 
-	if(attribs & ATTR_NORMAL2)
+	if (attribs & ATTR_NORMAL2)
 		qglBindAttribLocation(program->program, ATTR_INDEX_NORMAL2, "attr_Normal2");
 
-	if(attribs & ATTR_TANGENT2)
+	if (attribs & ATTR_TANGENT2)
 		qglBindAttribLocation(program->program, ATTR_INDEX_TANGENT2, "attr_Tangent2");
 
 	GLSL_LinkProgram(program->program);
@@ -589,7 +728,7 @@ static int GLSL_InitGPUShader(shaderProgram_t * program, const char *name,
 {
 	char vpCode[32000];
 	char fpCode[32000];
-	char *postHeader;
+	char* postHeader;
 	int size;
 	int result;
 
@@ -635,11 +774,28 @@ static int GLSL_InitGPUShader(shaderProgram_t * program, const char *name,
 	return result;
 }
 
-void GLSL_InitUniforms(shaderProgram_t *program)
+void GLSL_InitUniforms(shaderProgram_t* program)
 {
 	int i, size;
 
-	GLint *uniforms = program->uniforms;
+	GLint* uniforms = program->uniforms;
+
+	//Shader Matrices for the View Matrices
+	GLuint viewMatricesUniformLocation = qglGetUniformBlockIndex(program->program, "ViewMatrices");
+	int numBufferBindings = 0;
+	program->viewMatricesBinding = numBufferBindings++;
+	qglUniformBlockBinding(
+		program->program,
+		viewMatricesUniformLocation,
+		program->viewMatricesBinding);
+
+	//Shader Matrices for the Projection Matrix
+	GLuint projectionMatrixUniformLocation = qglGetUniformBlockIndex(program->program, "ProjectionMatrix");
+	program->projectionMatrixBinding = numBufferBindings++;
+	qglUniformBlockBinding(
+		program->program,
+		projectionMatrixUniformLocation,
+		program->projectionMatrixBinding);
 
 	size = 0;
 	for (i = 0; i < UNIFORM_COUNT; i++)
@@ -648,10 +804,10 @@ void GLSL_InitUniforms(shaderProgram_t *program)
 
 		if (uniforms[i] == -1)
 			continue;
-		 
+
 		program->uniformBufferOffsets[i] = size;
 
-		switch(uniformsInfo[i].type)
+		switch (uniformsInfo[i].type)
 		{
 			case GLSL_INT:
 				size += sizeof(GLint);
@@ -685,23 +841,23 @@ void GLSL_InitUniforms(shaderProgram_t *program)
 	program->uniformBuffer = ri.Z_Malloc(size);
 }
 
-void GLSL_FinishGPUShader(shaderProgram_t *program)
+void GLSL_FinishGPUShader(shaderProgram_t* program)
 {
 	GLSL_ShowProgramUniforms(program->program);
 	GL_CheckErrors();
 }
 
-void GLSL_SetUniformInt(shaderProgram_t *program, int uniformNum, GLint value)
+void GLSL_SetUniformInt(shaderProgram_t* program, int uniformNum, GLint value)
 {
-	GLint *uniforms = program->uniforms;
-	GLint *compare = (GLint *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
+	GLint* uniforms = program->uniforms;
+	GLint* compare = (GLint*)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
 
 	if (uniforms[uniformNum] == -1)
 		return;
 
 	if (uniformsInfo[uniformNum].type != GLSL_INT)
 	{
-		ri.Printf( PRINT_WARNING, "GLSL_SetUniformInt: wrong type for uniform %i in program %s\n", uniformNum, program->name);
+		ri.Printf(PRINT_WARNING, "GLSL_SetUniformInt: wrong type for uniform %i in program %s\n", uniformNum, program->name);
 		return;
 	}
 
@@ -735,21 +891,21 @@ void GLSL_SetUniformFloat(shaderProgram_t *program, int uniformNum, GLfloat valu
 	}
 
 	*compare = value;
-	
+
 	qglProgramUniform1fEXT(program->program, uniforms[uniformNum], value);
 }
 
-void GLSL_SetUniformVec2(shaderProgram_t *program, int uniformNum, const vec2_t v)
+void GLSL_SetUniformVec2(shaderProgram_t* program, int uniformNum, const vec2_t v)
 {
-	GLint *uniforms = program->uniforms;
-	vec_t *compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
+	GLint* uniforms = program->uniforms;
+	vec_t* compare = (float*)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
 
 	if (uniforms[uniformNum] == -1)
 		return;
 
 	if (uniformsInfo[uniformNum].type != GLSL_VEC2)
 	{
-		ri.Printf( PRINT_WARNING, "GLSL_SetUniformVec2: wrong type for uniform %i in program %s\n", uniformNum, program->name);
+		ri.Printf(PRINT_WARNING, "GLSL_SetUniformVec2: wrong type for uniform %i in program %s\n", uniformNum, program->name);
 		return;
 	}
 
@@ -764,17 +920,17 @@ void GLSL_SetUniformVec2(shaderProgram_t *program, int uniformNum, const vec2_t 
 	qglProgramUniform2fEXT(program->program, uniforms[uniformNum], v[0], v[1]);
 }
 
-void GLSL_SetUniformVec3(shaderProgram_t *program, int uniformNum, const vec3_t v)
+void GLSL_SetUniformVec3(shaderProgram_t* program, int uniformNum, const vec3_t v)
 {
-	GLint *uniforms = program->uniforms;
-	vec_t *compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
+	GLint* uniforms = program->uniforms;
+	vec_t* compare = (float*)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
 
 	if (uniforms[uniformNum] == -1)
 		return;
 
 	if (uniformsInfo[uniformNum].type != GLSL_VEC3)
 	{
-		ri.Printf( PRINT_WARNING, "GLSL_SetUniformVec3: wrong type for uniform %i in program %s\n", uniformNum, program->name);
+		ri.Printf(PRINT_WARNING, "GLSL_SetUniformVec3: wrong type for uniform %i in program %s\n", uniformNum, program->name);
 		return;
 	}
 
@@ -788,17 +944,17 @@ void GLSL_SetUniformVec3(shaderProgram_t *program, int uniformNum, const vec3_t 
 	qglProgramUniform3fEXT(program->program, uniforms[uniformNum], v[0], v[1], v[2]);
 }
 
-void GLSL_SetUniformVec4(shaderProgram_t *program, int uniformNum, const vec4_t v)
+void GLSL_SetUniformVec4(shaderProgram_t* program, int uniformNum, const vec4_t v)
 {
-	GLint *uniforms = program->uniforms;
-	vec_t *compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
+	GLint* uniforms = program->uniforms;
+	vec_t* compare = (float*)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
 
 	if (uniforms[uniformNum] == -1)
 		return;
 
 	if (uniformsInfo[uniformNum].type != GLSL_VEC4)
 	{
-		ri.Printf( PRINT_WARNING, "GLSL_SetUniformVec4: wrong type for uniform %i in program %s\n", uniformNum, program->name);
+		ri.Printf(PRINT_WARNING, "GLSL_SetUniformVec4: wrong type for uniform %i in program %s\n", uniformNum, program->name);
 		return;
 	}
 
@@ -812,17 +968,17 @@ void GLSL_SetUniformVec4(shaderProgram_t *program, int uniformNum, const vec4_t 
 	qglProgramUniform4fEXT(program->program, uniforms[uniformNum], v[0], v[1], v[2], v[3]);
 }
 
-void GLSL_SetUniformFloat5(shaderProgram_t *program, int uniformNum, const vec5_t v)
+void GLSL_SetUniformFloat5(shaderProgram_t* program, int uniformNum, const vec5_t v)
 {
-	GLint *uniforms = program->uniforms;
-	vec_t *compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
+	GLint* uniforms = program->uniforms;
+	vec_t* compare = (float*)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
 
 	if (uniforms[uniformNum] == -1)
 		return;
 
 	if (uniformsInfo[uniformNum].type != GLSL_FLOAT5)
 	{
-		ri.Printf( PRINT_WARNING, "GLSL_SetUniformFloat5: wrong type for uniform %i in program %s\n", uniformNum, program->name);
+		ri.Printf(PRINT_WARNING, "GLSL_SetUniformFloat5: wrong type for uniform %i in program %s\n", uniformNum, program->name);
 		return;
 	}
 
@@ -836,17 +992,17 @@ void GLSL_SetUniformFloat5(shaderProgram_t *program, int uniformNum, const vec5_
 	qglProgramUniform1fvEXT(program->program, uniforms[uniformNum], 5, v);
 }
 
-void GLSL_SetUniformMat4(shaderProgram_t *program, int uniformNum, const mat4_t matrix)
+void GLSL_SetUniformMat4(shaderProgram_t* program, int uniformNum, const mat4_t matrix)
 {
-	GLint *uniforms = program->uniforms;
-	vec_t *compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
+	GLint* uniforms = program->uniforms;
+	vec_t* compare = (float*)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
 
 	if (uniforms[uniformNum] == -1)
 		return;
 
 	if (uniformsInfo[uniformNum].type != GLSL_MAT16)
 	{
-		ri.Printf( PRINT_WARNING, "GLSL_SetUniformMat4: wrong type for uniform %i in program %s\n", uniformNum, program->name);
+		ri.Printf(PRINT_WARNING, "GLSL_SetUniformMat4: wrong type for uniform %i in program %s\n", uniformNum, program->name);
 		return;
 	}
 
@@ -860,10 +1016,10 @@ void GLSL_SetUniformMat4(shaderProgram_t *program, int uniformNum, const mat4_t 
 	qglProgramUniformMatrix4fvEXT(program->program, uniforms[uniformNum], 1, GL_FALSE, matrix);
 }
 
-void GLSL_SetUniformMat4BoneMatrix(shaderProgram_t *program, int uniformNum, /*const*/ mat4_t *matrix, int numMatricies)
+void GLSL_SetUniformMat4BoneMatrix(shaderProgram_t* program, int uniformNum, /*const*/ mat4_t* matrix, int numMatricies)
 {
-	GLint *uniforms = program->uniforms;
-	vec_t *compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
+	GLint* uniforms = program->uniforms;
+	vec_t* compare = (float*)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
 
 	if (uniforms[uniformNum] == -1) {
 		return;
@@ -871,14 +1027,14 @@ void GLSL_SetUniformMat4BoneMatrix(shaderProgram_t *program, int uniformNum, /*c
 
 	if (uniformsInfo[uniformNum].type != GLSL_MAT16_BONEMATRIX)
 	{
-		ri.Printf( PRINT_WARNING, "GLSL_SetUniformMat4BoneMatrix: wrong type for uniform %i in program %s\n", uniformNum, program->name);
+		ri.Printf(PRINT_WARNING, "GLSL_SetUniformMat4BoneMatrix: wrong type for uniform %i in program %s\n", uniformNum, program->name);
 		return;
 	}
 
 	if (numMatricies > glRefConfig.glslMaxAnimatedBones)
 	{
-		ri.Printf( PRINT_WARNING, "GLSL_SetUniformMat4BoneMatrix: too many matricies (%d/%d) for uniform %i in program %s\n",
-				numMatricies, glRefConfig.glslMaxAnimatedBones, uniformNum, program->name);
+		ri.Printf(PRINT_WARNING, "GLSL_SetUniformMat4BoneMatrix: too many matricies (%d/%d) for uniform %i in program %s\n",
+			numMatricies, glRefConfig.glslMaxAnimatedBones, uniformNum, program->name);
 		return;
 	}
 
@@ -892,9 +1048,9 @@ void GLSL_SetUniformMat4BoneMatrix(shaderProgram_t *program, int uniformNum, /*c
 	qglProgramUniformMatrix4fvEXT(program->program, uniforms[uniformNum], numMatricies, GL_FALSE, &matrix[0][0]);
 }
 
-void GLSL_DeleteGPUShader(shaderProgram_t *program)
+void GLSL_DeleteGPUShader(shaderProgram_t* program)
 {
-	if(program->program)
+	if (program->program)
 	{
 		if (program->vertexShader)
 		{
@@ -929,12 +1085,34 @@ void GLSL_InitGPUShaders(void)
 
 	ri.Printf(PRINT_ALL, "------- GLSL_InitGPUShaders -------\n");
 
+	for (int i = 0; i < PROJECTION_COUNT; ++i)
+	{
+		//Generate buffer for 2 * view matrices
+		qglGenBuffers(1, &viewMatricesBuffer[i]);
+		qglBindBuffer(GL_UNIFORM_BUFFER, viewMatricesBuffer[i]);
+		qglBufferData(
+			GL_UNIFORM_BUFFER,
+			2 * 16 * sizeof(float),
+			NULL,
+			GL_STATIC_DRAW);
+		qglBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+		qglGenBuffers(1, &projectionMatricesBuffer[i]);
+		qglBindBuffer(GL_UNIFORM_BUFFER, projectionMatricesBuffer[i]);
+		qglBufferData(
+			GL_UNIFORM_BUFFER,
+			2 * 16 * sizeof(float),
+			NULL,
+			GL_STATIC_DRAW);
+		qglBindBuffer(GL_UNIFORM_BUFFER, 0);
+	}
+
 	R_IssuePendingRenderCommands();
 
 	startTime = ri.Milliseconds();
 
 	for (i = 0; i < GENERICDEF_COUNT; i++)
-	{	
+	{
 		if ((i & GENERICDEF_USE_VERTEX_ANIMATION) && (i & GENERICDEF_USE_BONE_ANIMATION))
 			continue;
 
@@ -984,7 +1162,7 @@ void GLSL_InitGPUShaders(void)
 		GLSL_InitUniforms(&tr.genericShader[i]);
 
 		GLSL_SetUniformInt(&tr.genericShader[i], UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-		GLSL_SetUniformInt(&tr.genericShader[i], UNIFORM_LIGHTMAP,   TB_LIGHTMAP);
+		GLSL_SetUniformInt(&tr.genericShader[i], UNIFORM_LIGHTMAP, TB_LIGHTMAP);
 
 		GLSL_FinishGPUShader(&tr.genericShader[i]);
 
@@ -998,7 +1176,7 @@ void GLSL_InitGPUShaders(void)
 	{
 		ri.Error(ERR_FATAL, "Could not load texturecolor shader!");
 	}
-	
+
 	GLSL_InitUniforms(&tr.textureColorShader);
 
 	GLSL_SetUniformInt(&tr.textureColorShader, UNIFORM_TEXTUREMAP, TB_DIFFUSEMAP);
@@ -1066,7 +1244,7 @@ void GLSL_InitGPUShaders(void)
 		}
 
 		GLSL_InitUniforms(&tr.dlightShader[i]);
-		
+
 		GLSL_SetUniformInt(&tr.dlightShader[i], UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 
 		GLSL_FinishGPUShader(&tr.dlightShader[i]);
@@ -1277,7 +1455,7 @@ void GLSL_InitGPUShaders(void)
 	{
 		ri.Error(ERR_FATAL, "Could not load pshadow shader!");
 	}
-	
+
 	GLSL_InitUniforms(&tr.pshadowShader);
 
 	GLSL_SetUniformInt(&tr.pshadowShader, UNIFORM_SHADOWMAP, TB_DIFFUSEMAP);
@@ -1294,7 +1472,7 @@ void GLSL_InitGPUShaders(void)
 	{
 		ri.Error(ERR_FATAL, "Could not load down4x shader!");
 	}
-	
+
 	GLSL_InitUniforms(&tr.down4xShader);
 
 	GLSL_SetUniformInt(&tr.down4xShader, UNIFORM_TEXTUREMAP, TB_DIFFUSEMAP);
@@ -1332,7 +1510,7 @@ void GLSL_InitGPUShaders(void)
 	GLSL_InitUniforms(&tr.tonemapShader);
 
 	GLSL_SetUniformInt(&tr.tonemapShader, UNIFORM_TEXTUREMAP, TB_COLORMAP);
-	GLSL_SetUniformInt(&tr.tonemapShader, UNIFORM_LEVELSMAP,  TB_LEVELSMAP);
+	GLSL_SetUniformInt(&tr.tonemapShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
 
 	GLSL_FinishGPUShader(&tr.tonemapShader);
 
@@ -1358,7 +1536,7 @@ void GLSL_InitGPUShaders(void)
 
 		GLSL_FinishGPUShader(&tr.calclevels4xShader[i]);
 
-		numEtcShaders++;		
+		numEtcShaders++;
 	}
 
 
@@ -1382,7 +1560,7 @@ void GLSL_InitGPUShaders(void)
 	{
 		ri.Error(ERR_FATAL, "Could not load shadowmask shader!");
 	}
-	
+
 	GLSL_InitUniforms(&tr.shadowmaskShader);
 
 	GLSL_SetUniformInt(&tr.shadowmaskShader, UNIFORM_SCREENDEPTHMAP, TB_COLORMAP);
@@ -1431,7 +1609,7 @@ void GLSL_InitGPUShaders(void)
 		{
 			ri.Error(ERR_FATAL, "Could not load depthBlur shader!");
 		}
-		
+
 		GLSL_InitUniforms(&tr.depthBlurShader[i]);
 
 		GLSL_SetUniformInt(&tr.depthBlurShader[i], UNIFORM_SCREENIMAGEMAP, TB_COLORMAP);
@@ -1479,21 +1657,21 @@ void GLSL_ShutdownGPUShaders(void)
 
 	GL_BindNullProgram();
 
-	for ( i = 0; i < GENERICDEF_COUNT; i++)
+	for (i = 0; i < GENERICDEF_COUNT; i++)
 		GLSL_DeleteGPUShader(&tr.genericShader[i]);
 
 	GLSL_DeleteGPUShader(&tr.textureColorShader);
 
-	for ( i = 0; i < FOGDEF_COUNT; i++)
+	for (i = 0; i < FOGDEF_COUNT; i++)
 		GLSL_DeleteGPUShader(&tr.fogShader[i]);
 
-	for ( i = 0; i < DLIGHTDEF_COUNT; i++)
+	for (i = 0; i < DLIGHTDEF_COUNT; i++)
 		GLSL_DeleteGPUShader(&tr.dlightShader[i]);
 
-	for ( i = 0; i < LIGHTDEF_COUNT; i++)
+	for (i = 0; i < LIGHTDEF_COUNT; i++)
 		GLSL_DeleteGPUShader(&tr.lightallShader[i]);
 
-	for ( i = 0; i < SHADOWMAPDEF_COUNT; i++)
+	for (i = 0; i < SHADOWMAPDEF_COUNT; i++)
 		GLSL_DeleteGPUShader(&tr.shadowmapShader[i]);
 
 	GLSL_DeleteGPUShader(&tr.pshadowShader);
@@ -1501,18 +1679,60 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.bokehShader);
 	GLSL_DeleteGPUShader(&tr.tonemapShader);
 
-	for ( i = 0; i < 2; i++)
+	for (i = 0; i < 2; i++)
 		GLSL_DeleteGPUShader(&tr.calclevels4xShader[i]);
 
 	GLSL_DeleteGPUShader(&tr.shadowmaskShader);
 	GLSL_DeleteGPUShader(&tr.ssaoShader);
 
-	for ( i = 0; i < 4; i++)
+	for (i = 0; i < 4; i++)
 		GLSL_DeleteGPUShader(&tr.depthBlurShader[i]);
+
+	//Clean up buffers
+	qglDeleteBuffers(PROJECTION_COUNT, viewMatricesBuffer);
+	qglDeleteBuffers(PROJECTION_COUNT, projectionMatricesBuffer);
 }
 
+void GLSL_PrepareUniformBuffers(void)
+{
+	int width, height;
+	if (glState.currentFBO)
+	{
+		width = glState.currentFBO->width;
+		height = glState.currentFBO->height;
+	}
+	else
+	{
+		width = glConfig.vidWidth;
+		height = glConfig.vidHeight;
+	}
 
-void GLSL_BindProgram(shaderProgram_t * program)
+	Mat4Ortho(0, width, height, 0, 0, 1, orthoProjectionMatrix);
+	Mat4Ortho(0, width, height, 0, 0, 1, orthoProjectionMatrix+16);
+
+	//ortho projection matrices
+	GLSL_ProjectionMatricesUniformBuffer(projectionMatricesBuffer[FULLSCREEN_ORTHO_PROJECTION],
+		orthoProjectionMatrix);
+
+	float hudOrthoProjectionMatrix[32];
+	Mat4Ortho(0, 640, 480, 0, 0, 1, hudOrthoProjectionMatrix);
+	Mat4Ortho(0, 640, 480, 0, 0, 1, hudOrthoProjectionMatrix+16);
+	GLSL_ProjectionMatricesUniformBuffer(projectionMatricesBuffer[HUDBUFFER_ORTHO_PROJECTION],
+		hudOrthoProjectionMatrix);
+
+	//VR projection matrix
+	GLSL_ProjectionMatricesUniformBuffer(projectionMatricesBuffer[VR_PROJECTION],
+		tr.vrParms.projection);
+
+	//Mirror VR projection matrix
+	GLSL_ProjectionMatricesUniformBuffer(projectionMatricesBuffer[MIRROR_VR_PROJECTION],
+		tr.vrParms.mirrorProjection);
+
+	//Set all view matrices
+	GLSL_ViewMatricesUniformBuffer(tr.viewParms.world.eyeViewMatrix);
+}
+
+void GLSL_BindProgram(shaderProgram_t* program)
 {
 	GLuint programObject = program ? program->program : 0;
 	char *name = program ? program->name : "NULL";
@@ -1525,6 +1745,44 @@ void GLSL_BindProgram(shaderProgram_t * program)
 
 	if (GL_UseProgram(programObject))
 		backEnd.pc.c_glslShaderBinds++;
+}
+
+static GLuint GLSL_CalculateProjection() {
+	GLuint result = VR_PROJECTION;
+
+	if (backEnd.viewParms.isPortal)
+	{
+		result = MIRROR_VR_PROJECTION;
+	}
+
+	if (Mat4Compare(&orthoProjectionMatrix, glState.projection))
+	{
+		if (glState.isDrawingHUD)
+		{
+			result = HUDBUFFER_ORTHO_PROJECTION;
+		}
+		else
+		{
+			result = FULLSCREEN_ORTHO_PROJECTION;
+		}
+	}
+
+	return result;
+}
+
+void GLSL_BindBuffers(shaderProgram_t* program)
+{
+	GLuint projection = GLSL_CalculateProjection();
+	qglBindBufferBase(
+		GL_UNIFORM_BUFFER,
+		program->viewMatricesBinding,
+		viewMatricesBuffer[projection]);
+
+	qglBindBufferBase(
+		GL_UNIFORM_BUFFER,
+		program->projectionMatrixBinding,
+		projectionMatricesBuffer[projection]);
+
 }
 
 

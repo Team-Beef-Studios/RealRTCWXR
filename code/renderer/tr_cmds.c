@@ -512,7 +512,7 @@ RE_EndFrame
 Returns the number of msec spent in the back end
 =============
 */
-void RE_EndFrame(int eye, int *frontEndMsec, int *backEndMsec ) {
+void RE_EndFrame(int *frontEndMsec, int *backEndMsec ) {
 	endFrameCommand_t *cmd;
 
 	if ( !tr.registered ) {

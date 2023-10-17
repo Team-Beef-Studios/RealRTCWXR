@@ -1497,11 +1497,8 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	cg.demoPlayback = demoPlayback;
 	cg.stereoView = stereoView;
 
-	if (cg.stereoView == STEREO_LEFT)
-	{
-		// update cvars
-		CG_UpdateCvars();
-	}
+	// update cvars
+	CG_UpdateCvars();
 
 /*
 	// RF, if we should force a weapon, then do so
@@ -1536,11 +1533,8 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 
 	DEBUGTIME
 
-	if (cg.stereoView == STEREO_LEFT)
-	{
-		// set up cg.snap and possibly cg.nextSnap
-		CG_ProcessSnapshots();
-	}
+	// set up cg.snap and possibly cg.nextSnap
+	CG_ProcessSnapshots();
 
 	DEBUGTIME
 
@@ -1588,11 +1582,8 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	// this counter will be bumped for every valid scene we generate
 	cg.clientFrame++;
 
-	if (cg.stereoView == STEREO_LEFT)
-	{
-		// update cg.predictedPlayerState
-		CG_PredictPlayerState();
-	}
+	// update cg.predictedPlayerState
+	CG_PredictPlayerState();
 
 	DEBUGTIME
 
@@ -1681,14 +1672,12 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	CG_PowerupTimerSounds();
 
 	// make sure the lagometerSample and frame timing isn't done twice when in stereo
-	if ( stereoView != STEREO_RIGHT ) {
-		cg.frametime = cg.time - cg.oldTime;
-		if ( cg.frametime < 0 ) {
-			cg.frametime = 0;
-		}
-		cg.oldTime = cg.time;
-		CG_AddLagometerFrameInfo();
+	cg.frametime = cg.time - cg.oldTime;
+	if ( cg.frametime < 0 ) {
+		cg.frametime = 0;
 	}
+	cg.oldTime = cg.time;
+	CG_AddLagometerFrameInfo();
 
 	DEBUGTIME
 

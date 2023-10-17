@@ -266,19 +266,22 @@ qboolean VR_GetVRProjection(float zNear, float zFar, float gameFovX, float gameF
 		return qfalse;
 	}
 
-	XrFovf fov = gAppState.Views[vr.eye].fov;
+	for (int eye = 0; eye < 2; ++eye)
+	{
+		XrFovf fov = gAppState.Views[eye].fov;
 
-	float zZoomX = (vr.fov_x / gameFovX);
-	float zZoomY = (vr.fov_y / gameFovY);
-	
-	fov.angleLeft = atanf((tanf(fov.angleLeft) / zZoomX));
-	fov.angleRight = atanf((tanf(fov.angleRight) / zZoomX));
-	fov.angleUp = atanf((tanf(fov.angleUp) / zZoomY));
-	fov.angleDown = atanf((tanf(fov.angleDown) / zZoomY));
+		float zZoomX = (vr.fov_x / gameFovX);
+		float zZoomY = (vr.fov_y / gameFovY);
 
-	XrMatrix4x4f_CreateProjectionFov(
-		(XrMatrix4x4f*)projection, GRAPHICS_OPENGL,
-		fov, zNear, zFar);
+		fov.angleLeft = atanf((tanf(fov.angleLeft) / zZoomX));
+		fov.angleRight = atanf((tanf(fov.angleRight) / zZoomX));
+		fov.angleUp = atanf((tanf(fov.angleUp) / zZoomY));
+		fov.angleDown = atanf((tanf(fov.angleDown) / zZoomY));
+
+		XrMatrix4x4f_CreateProjectionFov(
+			(XrMatrix4x4f*)(projection+(eye*16)), GRAPHICS_OPENGL,
+			fov, zNear, zFar);
+	}
 
 	return qtrue;
 }

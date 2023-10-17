@@ -88,6 +88,7 @@ QGL_1_3_PROCS;
 QGL_1_5_PROCS;
 QGL_2_0_PROCS;
 QGL_3_0_PROCS;
+QGL_EXT_PROCS;
 QGL_ARB_occlusion_query_PROCS;
 QGL_ARB_framebuffer_object_PROCS;
 QGL_ARB_vertex_array_object_PROCS;
@@ -1084,6 +1085,13 @@ static void GLimp_InitExtensions( qboolean fixedFunction )
 	{
 		ri.Printf( PRINT_ALL, "...GL_EXT_texture_filter_anisotropic not found\n" );
 	}
+
+	//GL EXT
+	qglMapBufferRange = (void* (APIENTRY*)(GLenum, GLintptr, GLsizeiptr, GLbitfield)) SDL_GL_GetProcAddress("glMapBufferRange");
+	qglUnmapBuffer = (GLboolean (APIENTRY*)(GLenum)) SDL_GL_GetProcAddress("glUnmapBuffer");
+	qglGetUniformBlockIndex = (GLuint (APIENTRY*)(GLuint, const GLchar *)) SDL_GL_GetProcAddress("glGetUniformBlockIndex");
+	qglUniformBlockBinding = (void (APIENTRY*)(GLuint, GLuint, GLuint)) SDL_GL_GetProcAddress("glUniformBlockBinding");
+	qglBindBufferBase = (void (APIENTRY*)(GLenum target, GLuint index, GLuint buffer)) SDL_GL_GetProcAddress("glBindBufferBase");
 
 	haveClampToEdge = qfalse;
 	if ( QGL_VERSION_ATLEAST( 1, 2 ) || QGLES_VERSION_ATLEAST( 1, 0 ) || SDL_GL_ExtensionSupported( "GL_SGIS_texture_edge_clamp" ) )

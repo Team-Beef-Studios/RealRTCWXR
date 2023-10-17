@@ -34,6 +34,8 @@ If you have questions concerning this license or the applicable additional terms
 #include "../sys/sys_local.h"
 #include "../sys/sys_loadlib.h"
 
+#include <VrClientInfo.h>
+
 #ifdef USE_MUMBLE
 #include "libmumblelink.h"
 #endif
@@ -3452,7 +3454,7 @@ void CL_InitRef( void ) {
 	ri.TBXR_GetVRProjection = VR_GetVRProjection;
 	ri.TBXR_submitFrame = TBXR_submitFrame;
 
-	ret = GetRefAPI( REF_API_VERSION, &ri );
+	ret = GetRefAPI( REF_API_VERSION, &ri, &vr );
 
 	if ( !ret ) {
 		Com_Error( ERR_FATAL, "Couldn't initialize refresh" );

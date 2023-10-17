@@ -21,7 +21,9 @@ const uint32_t numRequiredExtensions =
 		sizeof(requiredExtensionNames) / sizeof(requiredExtensionNames[0]);
 
 
+PFNGLTEXSTORAGE3DPROC glTexStorage3D;
 PFNGLGENFRAMEBUFFERSPROC glGenFramebuffers;
+PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC glFramebufferTextureMultiviewOVR;
 PFNGLDELETEFRAMEBUFFERSPROC glDeleteFramebuffers;
 PFNGLBINDFRAMEBUFFERPROC glBindFramebuffer;
 PFNGLBLITFRAMEBUFFERPROC glBlitFramebuffer;
@@ -31,7 +33,6 @@ PFNGLBINDRENDERBUFFERPROC glBindRenderbuffer;
 PFNGLISRENDERBUFFERPROC glIsRenderbuffer;
 PFNGLRENDERBUFFERSTORAGEPROC glRenderbufferStorage;
 PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC glRenderbufferStorageMultisample;
-PFNGLRENDERBUFFERSTORAGEMULTISAMPLEEXTPROC glRenderbufferStorageMultisampleEXT;
 PFNGLFRAMEBUFFERRENDERBUFFERPROC glFramebufferRenderbuffer;
 PFNGLFRAMEBUFFERTEXTURE2DPROC glFramebufferTexture2D;
 PFNGLFRAMEBUFFERTEXTURELAYERPROC glFramebufferTextureLayer;
@@ -40,7 +41,9 @@ PFNGLCHECKFRAMEBUFFERSTATUSPROC glCheckFramebufferStatus;
 PFNGLCHECKNAMEDFRAMEBUFFERSTATUSPROC glCheckNamedFramebufferStatus;
 
 void GlInitExtensions() {
+	glTexStorage3D = (PFNGLTEXSTORAGE3DPROC)SDL_GL_GetProcAddress("glTexStorage3D");
 	glGenFramebuffers = (PFNGLGENFRAMEBUFFERSPROC)SDL_GL_GetProcAddress("glGenFramebuffers");
+	glFramebufferTextureMultiviewOVR = (PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC)SDL_GL_GetProcAddress("glFramebufferTextureMultiviewOVR");
 	glDeleteFramebuffers = (PFNGLDELETEFRAMEBUFFERSPROC)SDL_GL_GetProcAddress("glDeleteFramebuffers");
 	glBindFramebuffer = (PFNGLBINDFRAMEBUFFERPROC)SDL_GL_GetProcAddress("glBindFramebuffer");
 	glBlitFramebuffer = (PFNGLBLITFRAMEBUFFERPROC)SDL_GL_GetProcAddress("glBlitFramebuffer");
@@ -50,8 +53,6 @@ void GlInitExtensions() {
 	glIsRenderbuffer = (PFNGLISRENDERBUFFERPROC)SDL_GL_GetProcAddress("glIsRenderbuffer");
 	glRenderbufferStorage = (PFNGLRENDERBUFFERSTORAGEPROC)SDL_GL_GetProcAddress("glRenderbufferStorage");
 	glRenderbufferStorageMultisample = (PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC)SDL_GL_GetProcAddress("glRenderbufferStorageMultisample");
-	glRenderbufferStorageMultisampleEXT =
-		(PFNGLRENDERBUFFERSTORAGEMULTISAMPLEEXTPROC)SDL_GL_GetProcAddress("glRenderbufferStorageMultisampleEXT");
 	glFramebufferRenderbuffer = (PFNGLFRAMEBUFFERRENDERBUFFERPROC)SDL_GL_GetProcAddress("glFramebufferRenderbuffer");
 	glFramebufferTexture2D = (PFNGLFRAMEBUFFERTEXTURE2DPROC)SDL_GL_GetProcAddress("glFramebufferTexture2D");
 	glFramebufferTextureLayer = (PFNGLFRAMEBUFFERTEXTURELAYERPROC)SDL_GL_GetProcAddress("glFramebufferTextureLayer");
@@ -123,7 +124,7 @@ static bool ovrFramebuffer_Create(
     swapChainCreateInfo.width = width;
     swapChainCreateInfo.height = height;
     swapChainCreateInfo.faceCount = 1;
-    swapChainCreateInfo.arraySize = 1;
+    swapChainCreateInfo.arraySize = 2;
 
     frameBuffer->ColorSwapChain.Width = swapChainCreateInfo.width;
     frameBuffer->ColorSwapChain.Height = swapChainCreateInfo.height;
@@ -154,6 +155,7 @@ static bool ovrFramebuffer_Create(
     frameBuffer->FrameBuffers =
             (GLuint*)malloc(frameBuffer->TextureSwapChainLength * sizeof(GLuint));
 
+	/*
     for (uint32_t i = 0; i < frameBuffer->TextureSwapChainLength; i++) {
         // Create the color buffer texture.
         const GLuint colorTexture = frameBuffer->ColorSwapChainImage[i].image;
@@ -165,21 +167,82 @@ static bool ovrFramebuffer_Create(
         {
 			GLint width;
 			GLint height;
-			glBindTexture(GL_TEXTURE_2D, colorTexture);
-			glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
-			glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
+			GLenum colorTextureTarget = GL_TEXTURE_2D;
+			glBindTexture(colorTextureTarget, colorTexture);
+			glGetTexLevelParameteriv(colorTextureTarget, 0, GL_TEXTURE_WIDTH, &width);
+			glGetTexLevelParameteriv(colorTextureTarget, 0, GL_TEXTURE_HEIGHT, &height);
 			TBXR_ClearFrameBuffer(width, height);
 
 			glGenTextures(1, &frameBuffer->DepthBuffers[i]);
-			glBindTexture(GL_TEXTURE_2D, frameBuffer->DepthBuffers[i]);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-			glBindTexture(GL_TEXTURE_2D,0);
+			glBindTexture(colorTextureTarget, frameBuffer->DepthBuffers[i]);
+			GLfloat borderColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+			GL(glTexParameterfv(colorTextureTarget, GL_TEXTURE_BORDER_COLOR, borderColor));
+			glTexParameteri(colorTextureTarget, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glTexParameteri(colorTextureTarget, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(colorTextureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(colorTextureTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			glTexImage2D(colorTextureTarget, 0, GL_DEPTH_COMPONENT32, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+			glBindTexture(colorTextureTarget,0);
         }
     }
+	*/
+
+	for (int i = 0; i < frameBuffer->TextureSwapChainLength; i++) {
+		frameBuffer->FrameBuffers[i] = 0;
+		// Create the color buffer texture.
+		const GLuint colorTexture = frameBuffer->ColorSwapChainImage[i].image;
+		GLenum colorTextureTarget = GL_TEXTURE_2D_ARRAY;
+		GL(glBindTexture(colorTextureTarget, colorTexture));
+		GL(glTexParameteri(colorTextureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER));
+		GL(glTexParameteri(colorTextureTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER));
+		GLfloat borderColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+		GL(glTexParameterfv(colorTextureTarget, GL_TEXTURE_BORDER_COLOR, borderColor));
+		GL(glTexParameteri(colorTextureTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+		GL(glTexParameteri(colorTextureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+		GL(glBindTexture(colorTextureTarget, 0));
+
+		// Create the depth buffer texture.
+		GL(glGenTextures(1, &frameBuffer->DepthBuffers[i]));
+		GL(glBindTexture(GL_TEXTURE_2D_ARRAY, frameBuffer->DepthBuffers[i]));
+		GL(glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_DEPTH24_STENCIL8, width, height, 2));
+		GL(glBindTexture(GL_TEXTURE_2D_ARRAY, 0));
+
+		// Create the frame buffer.
+		GL(glGenFramebuffers(1, &frameBuffer->FrameBuffers[i]));
+		GL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frameBuffer->FrameBuffers[i]));
+		
+		{
+			GL(glFramebufferTextureMultiviewOVR(
+				GL_DRAW_FRAMEBUFFER,
+				GL_DEPTH_ATTACHMENT,
+				frameBuffer->DepthBuffers[i],
+				0 /* level */,
+				0 /* baseViewIndex */,
+				2 /* numViews */));
+			GL(glFramebufferTextureMultiviewOVR(
+				GL_DRAW_FRAMEBUFFER,
+				GL_STENCIL_ATTACHMENT,
+				frameBuffer->DepthBuffers[i],
+				0 /* level */,
+				0 /* baseViewIndex */,
+				2 /* numViews */));
+			GL(glFramebufferTextureMultiviewOVR(
+				GL_DRAW_FRAMEBUFFER,
+				GL_COLOR_ATTACHMENT0,
+				colorTexture,
+				0 /* level */,
+				0 /* baseViewIndex */,
+				2 /* numViews */));
+		}
+
+		GL(GLenum renderFramebufferStatus = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER));
+		GL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0));
+		if (renderFramebufferStatus != GL_FRAMEBUFFER_COMPLETE) {
+			ALOGE(
+				"Incomplete frame buffer object");
+			return false;
+		}
+	}
 
     return true;
 }
@@ -200,8 +263,8 @@ void ovrFramebuffer_SetCurrent(ovrFramebuffer* frameBuffer) {
 	const GLuint colorTexture = frameBuffer->ColorSwapChainImage[frameBuffer->TextureSwapChainIndex].image;
 	const uint32_t depthTexture = frameBuffer->DepthBuffers[frameBuffer->TextureSwapChainIndex];
 
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTexture, 0);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_ARRAY, colorTexture, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D_ARRAY, depthTexture, 0);
 }
 
 void ovrFramebuffer_SetNone() {
@@ -268,14 +331,12 @@ void ovrRenderer_Create(
 		int suggestedEyeTextureWidth,
 		int suggestedEyeTextureHeight) {
 	// Create the frame buffers.
-	for (int eye = 0; eye < ovrMaxNumEyes; eye++) {
-		ovrFramebuffer_Create(
-				session,
-				&renderer->FrameBuffer[eye],
-				GL_SRGB8_ALPHA8,
-				suggestedEyeTextureWidth,
-				suggestedEyeTextureHeight);
-	}
+	ovrFramebuffer_Create(
+			session,
+			&renderer->FrameBuffer,
+			GL_SRGB8_ALPHA8,
+			suggestedEyeTextureWidth,
+			suggestedEyeTextureHeight);
 
 	ovrFramebuffer_Create(
 		session,
@@ -286,9 +347,7 @@ void ovrRenderer_Create(
 }
 
 void ovrRenderer_Destroy(ovrRenderer* renderer) {
-	for (int eye = 0; eye < ovrMaxNumEyes; eye++) {
-		ovrFramebuffer_Destroy(&renderer->FrameBuffer[eye]);
-	}
+	ovrFramebuffer_Destroy(&renderer->FrameBuffer);
 }
 
 
@@ -1072,10 +1131,9 @@ void TBXR_ClearFrameBuffer(int width, int height)
 	glDisable( GL_FRAMEBUFFER_SRGB );
 }
 
-void TBXR_prepareEyeBuffer(int eye )
+void TBXR_prepareEyeBuffer()
 {
-	vr.eye = eye;
-	ovrFramebuffer* frameBuffer = &(gAppState.Renderer.FrameBuffer[eye]);
+	ovrFramebuffer* frameBuffer = &(gAppState.Renderer.FrameBuffer);
 	ovrFramebuffer_Acquire(frameBuffer);
 	ovrFramebuffer_SetCurrent(frameBuffer);
 	TBXR_ClearFrameBuffer(frameBuffer->ColorSwapChain.Width, frameBuffer->ColorSwapChain.Height);
@@ -1085,15 +1143,18 @@ void TBXR_prepareEyeBuffer(int eye )
 	//Seems odd, but used to move the HUD elements to be central on the player's view
 	//HMDs with a symmetric fov (like the PICO) will have 0 in this value, but the Meta Quest
 	//will have an asymmetric fov and the HUD would be very misaligned as a result
-	vr.off_center_fov_x = -(gAppState.Views[eye].fov.angleLeft + gAppState.Views[eye].fov.angleRight) / 2.0f;
-	vr.off_center_fov_y = -(gAppState.Views[eye].fov.angleUp + gAppState.Views[eye].fov.angleDown) / 2.0f;
+	for (int eye = 0; eye < 2; ++eye)
+	{
+		vr.off_center_fov_x[eye] = -(gAppState.Views[eye].fov.angleLeft + gAppState.Views[eye].fov.angleRight) / 2.0f;
+		vr.off_center_fov_y[eye] = -(gAppState.Views[eye].fov.angleUp + gAppState.Views[eye].fov.angleDown) / 2.0f;
+	}
 }
 
-void TBXR_finishEyeBuffer(int eye )
+void TBXR_finishEyeBuffer()
 {
 	ovrRenderer *renderer = &gAppState.Renderer;
 
-	ovrFramebuffer *frameBuffer = &(renderer->FrameBuffer[eye]);
+	ovrFramebuffer *frameBuffer = &(renderer->FrameBuffer);
 
 	// Clear the alpha channel, other way OpenXR would not transfer the framebuffer fully
 	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_TRUE);
@@ -1105,12 +1166,9 @@ void TBXR_finishEyeBuffer(int eye )
 
 	ovrFramebuffer_SetNone();
 
-	if (eye == 0)
-	{
-		ovrFramebuffer_Resolve(frameBuffer);
+	ovrFramebuffer_Resolve(frameBuffer);
 
-		re.WIN_SwapWindow();
-	}
+	re.WIN_SwapWindow();
 
 	ovrFramebuffer_Release(frameBuffer);
 }
@@ -1188,9 +1246,10 @@ void TBXR_submitFrame()
 			projection_layer_elements[eye].type = XR_TYPE_COMPOSITION_LAYER_PROJECTION_VIEW;
 			projection_layer_elements[eye].pose = gAppState.Views[eye].pose;
 			projection_layer_elements[eye].fov = fov;
-			projection_layer_elements[eye].subImage.swapchain = gAppState.Renderer.FrameBuffer[eye].ColorSwapChain.Handle;
-			projection_layer_elements[eye].subImage.imageRect.extent.width = gAppState.Renderer.FrameBuffer[eye].ColorSwapChain.Width;
-			projection_layer_elements[eye].subImage.imageRect.extent.height = gAppState.Renderer.FrameBuffer[eye].ColorSwapChain.Height;
+			projection_layer_elements[eye].subImage.imageArrayIndex = eye;
+			projection_layer_elements[eye].subImage.swapchain = gAppState.Renderer.FrameBuffer.ColorSwapChain.Handle;
+			projection_layer_elements[eye].subImage.imageRect.extent.width = gAppState.Renderer.FrameBuffer.ColorSwapChain.Width;
+			projection_layer_elements[eye].subImage.imageRect.extent.height = gAppState.Renderer.FrameBuffer.ColorSwapChain.Height;
 		}
 
 		// Compose the layers for this frame.
@@ -1212,6 +1271,7 @@ void TBXR_submitFrame()
 			projection_layer_elements[eye].type = XR_TYPE_COMPOSITION_LAYER_PROJECTION_VIEW;
 			projection_layer_elements[eye].pose = gAppState.Views[eye].pose;
 			projection_layer_elements[eye].fov = gAppState.Views[eye].fov;
+			projection_layer_elements[eye].subImage.imageArrayIndex = eye;
 			projection_layer_elements[eye].subImage.swapchain = gAppState.Renderer.NullFrameBuffer.ColorSwapChain.Handle;
 			projection_layer_elements[eye].subImage.imageRect.extent.width = gAppState.Renderer.NullFrameBuffer.ColorSwapChain.Width;
 			projection_layer_elements[eye].subImage.imageRect.extent.height = gAppState.Renderer.NullFrameBuffer.ColorSwapChain.Height;
@@ -1223,15 +1283,14 @@ void TBXR_submitFrame()
 		memset(&quad_layer, 0, sizeof(XrCompositionLayerQuad));
 
 		// Build the quad layers
-		int32_t width = gAppState.Renderer.FrameBuffer[0].ColorSwapChain.Width;
-		int32_t height = gAppState.Renderer.FrameBuffer[0].ColorSwapChain.Height;
 		quad_layer.type = XR_TYPE_COMPOSITION_LAYER_QUAD;
 		quad_layer.layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT;
 		quad_layer.space = gAppState.StageSpace;
 		quad_layer.eyeVisibility =XR_EYE_VISIBILITY_BOTH;
-		quad_layer.subImage.swapchain = gAppState.Renderer.FrameBuffer[0].ColorSwapChain.Handle;
-		quad_layer.subImage.imageRect.extent.width = width;
-		quad_layer.subImage.imageRect.extent.height = height;
+		quad_layer.subImage.imageArrayIndex = 0;
+		quad_layer.subImage.swapchain = gAppState.Renderer.FrameBuffer.ColorSwapChain.Handle;
+		quad_layer.subImage.imageRect.extent.width = gAppState.Renderer.FrameBuffer.ColorSwapChain.Width;
+		quad_layer.subImage.imageRect.extent.height = gAppState.Renderer.FrameBuffer.ColorSwapChain.Height;
 		const XrVector3f axis = { 0.0f, 1.0f, 0.0f };
 		XrVector3f pos = {
 				gAppState.xfStageFromHead.position.x - sin(DEG2RAD(vr.hmdorientation_snap[YAW])) * VR_GetScreenLayerDistance(),

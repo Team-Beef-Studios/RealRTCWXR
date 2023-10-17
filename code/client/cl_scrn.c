@@ -581,27 +581,23 @@ void SCR_UpdateScreen( void ) {
 		//Try again here in case we've not done it yet
 		TBXR_FrameSetup();
 
-		for (int eye = 0; eye < 2; ++eye)
+		TBXR_prepareEyeBuffer();
+
+		SCR_DrawScreenField(STEREO_CENTER);
+
+		//This won't perform the submit eye buffers
 		{
-			TBXR_prepareEyeBuffer(eye);
-
-			//Draw twice for Quest
-			SCR_DrawScreenField(eye == 0 ? STEREO_LEFT : STEREO_RIGHT);
-
-			//This won't perform the submit eye buffers
+			if (com_speeds->integer)
 			{
-				if (com_speeds->integer)
-				{
-					re.EndFrame(eye, &time_frontend, &time_backend);
-				}
-				else
-				{
-					re.EndFrame(eye, NULL, NULL);
-				}
+				re.EndFrame(&time_frontend, &time_backend);
 			}
-
-			TBXR_finishEyeBuffer(eye);
+			else
+			{
+				re.EndFrame(NULL, NULL);
+			}
 		}
+
+		TBXR_finishEyeBuffer();
 
 		//And we're done
 		re.SubmitStereoFrame();
