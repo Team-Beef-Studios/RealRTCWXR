@@ -104,6 +104,7 @@ static void ovrFramebuffer_Clear(ovrFramebuffer* frameBuffer) {
 
 void TBXR_ClearFrameBuffer(int width, int height);
 
+
 static bool ovrFramebuffer_Create(
         XrSession session,
         ovrFramebuffer* frameBuffer,
@@ -155,39 +156,7 @@ static bool ovrFramebuffer_Create(
     frameBuffer->FrameBuffers =
             (GLuint*)malloc(frameBuffer->TextureSwapChainLength * sizeof(GLuint));
 
-	/*
-    for (uint32_t i = 0; i < frameBuffer->TextureSwapChainLength; i++) {
-        // Create the color buffer texture.
-        const GLuint colorTexture = frameBuffer->ColorSwapChainImage[i].image;
-
-		// Create the frame buffer.
-		frameBuffer->FrameBuffers[i] = 0;
-		GL(glGenFramebuffers(1, &frameBuffer->FrameBuffers[i]));
-
-        {
-			GLint width;
-			GLint height;
-			GLenum colorTextureTarget = GL_TEXTURE_2D;
-			glBindTexture(colorTextureTarget, colorTexture);
-			glGetTexLevelParameteriv(colorTextureTarget, 0, GL_TEXTURE_WIDTH, &width);
-			glGetTexLevelParameteriv(colorTextureTarget, 0, GL_TEXTURE_HEIGHT, &height);
-			TBXR_ClearFrameBuffer(width, height);
-
-			glGenTextures(1, &frameBuffer->DepthBuffers[i]);
-			glBindTexture(colorTextureTarget, frameBuffer->DepthBuffers[i]);
-			GLfloat borderColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
-			GL(glTexParameterfv(colorTextureTarget, GL_TEXTURE_BORDER_COLOR, borderColor));
-			glTexParameteri(colorTextureTarget, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			glTexParameteri(colorTextureTarget, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-			glTexParameteri(colorTextureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-			glTexParameteri(colorTextureTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-			glTexImage2D(colorTextureTarget, 0, GL_DEPTH_COMPONENT32, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-			glBindTexture(colorTextureTarget,0);
-        }
-    }
-	*/
-
-	for (int i = 0; i < frameBuffer->TextureSwapChainLength; i++) {
+		for (int i = 0; i < frameBuffer->TextureSwapChainLength; i++) {
 		frameBuffer->FrameBuffers[i] = 0;
 		// Create the color buffer texture.
 		const GLuint colorTexture = frameBuffer->ColorSwapChainImage[i].image;
@@ -1204,8 +1173,8 @@ void TBXR_submitFrame()
 	TBXR_updateProjections();
 
 	//Calculate the maximum extent fov for use in culling in the engine (we won't want to cull inside this fov)
-	vr.fov_x = (fabs(gAppState.Views[0].fov.angleLeft) + fabs(gAppState.Views[1].fov.angleLeft)) * 180.0f / M_PI;
-	vr.fov_y = (fabs(gAppState.Views[0].fov.angleUp) + fabs(gAppState.Views[0].fov.angleUp)) * 180.0f / M_PI;
+	vr.fov_x = (fabs(gAppState.Views[0].fov.angleLeft) + fabs(gAppState.Views[1].fov.angleRight)) * 180.0f / M_PI;
+	vr.fov_y = (fabs(gAppState.Views[0].fov.angleUp) + fabs(gAppState.Views[0].fov.angleDown)) * 180.0f / M_PI;
 
 
 	XrFrameEndInfo endFrameInfo = {0};

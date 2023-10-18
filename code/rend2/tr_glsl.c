@@ -66,6 +66,7 @@ typedef enum {
 	FULLSCREEN_ORTHO_PROJECTION, // Orthographic projection and no stereo view for fullscreen rendering
 	HUDBUFFER_ORTHO_PROJECTION, // Orthographic projection and no stereo view for the HUD buffer
 	VR_PROJECTION,
+	VR_PROJECTION_MONO,
 	MIRROR_VR_PROJECTION, // For mirrors etc
 
 	PROJECTION_COUNT
@@ -211,7 +212,7 @@ static void GLSL_ViewMatricesUniformBuffer(const float eyeView[32]) {
 		{
 			{
 				const auto xDepthOffset = (vr->off_center_fov_x[0] * glConfig.vidWidth) + 20;
-				const auto yDepthOffset = (vr->off_center_fov_y[0] * glConfig.vidHeight);
+				const auto yDepthOffset = (-vr->off_center_fov_y[0] * glConfig.vidHeight);
 				vec3_t translate;
 				VectorSet(translate, xDepthOffset, yDepthOffset, 0);
 				Mat4Translation(translate, viewMatrices);
@@ -219,7 +220,7 @@ static void GLSL_ViewMatricesUniformBuffer(const float eyeView[32]) {
 
 			{
 				const auto xDepthOffset = (vr->off_center_fov_x[1] * glConfig.vidWidth) - 20;
-				const auto yDepthOffset = (vr->off_center_fov_y[1] * glConfig.vidHeight);
+				const auto yDepthOffset = (-vr->off_center_fov_y[1] * glConfig.vidHeight);
 				vec3_t translate;
 				VectorSet(translate, xDepthOffset, yDepthOffset, 0);
 				Mat4Translation(translate, viewMatrices + 16);
@@ -231,6 +232,12 @@ static void GLSL_ViewMatricesUniformBuffer(const float eyeView[32]) {
 		{
 			Mat4Copy(eyeView, viewMatrices);
 			Mat4Copy(eyeView + 16, viewMatrices + 16);
+		}
+		break;
+		case VR_PROJECTION_MONO:
+		{
+			Mat4Identity(viewMatrices);
+			Mat4Identity(viewMatrices + 16);
 		}
 		break;
 		}
@@ -1722,6 +1729,8 @@ void GLSL_PrepareUniformBuffers(void)
 
 	//VR projection matrix
 	GLSL_ProjectionMatricesUniformBuffer(projectionMatricesBuffer[VR_PROJECTION],
+		tr.vrParms.projection);	
+	GLSL_ProjectionMatricesUniformBuffer(projectionMatricesBuffer[VR_PROJECTION_MONO],
 		tr.vrParms.projection);
 
 	//Mirror VR projection matrix
@@ -1782,6 +1791,20 @@ void GLSL_BindBuffers(shaderProgram_t* program)
 		GL_UNIFORM_BUFFER,
 		program->projectionMatrixBinding,
 		projectionMatricesBuffer[projection]);
+
+}
+
+void GLSL_BindBuffersMono(shaderProgram_t* program)
+{
+	qglBindBufferBase(
+		GL_UNIFORM_BUFFER,
+		program->viewMatricesBinding,
+		viewMatricesBuffer[VR_PROJECTION_MONO]);
+
+	qglBindBufferBase(
+		GL_UNIFORM_BUFFER,
+		program->projectionMatrixBinding,
+		projectionMatricesBuffer[VR_PROJECTION_MONO]);
 
 }
 

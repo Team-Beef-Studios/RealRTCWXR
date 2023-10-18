@@ -2507,6 +2507,7 @@ void GLSL_ShutdownGPUShaders(void);
 void GLSL_VertexAttribPointers(uint32_t attribBits);
 void GLSL_BindProgram(shaderProgram_t * program);
 void GLSL_BindBuffers(shaderProgram_t* program);
+void GLSL_BindBuffersMono(shaderProgram_t* program);
 
 void GLSL_SetUniformInt(shaderProgram_t *program, int uniformNum, GLint value);
 void GLSL_SetUniformFloat(shaderProgram_t *program, int uniformNum, GLfloat value);

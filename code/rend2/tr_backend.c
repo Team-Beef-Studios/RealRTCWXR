@@ -484,7 +484,8 @@ void RB_BeginDrawingView( void ) {
 		plane2[3] = DotProduct( plane, backEnd.viewParms.or.origin ) - plane[3];
 
 #endif
-//		GL_SetModelviewMatrix( s_flipMatrix );
+
+		GL_SetModelMatrix( s_flipMatrix );
 	}
 }
 

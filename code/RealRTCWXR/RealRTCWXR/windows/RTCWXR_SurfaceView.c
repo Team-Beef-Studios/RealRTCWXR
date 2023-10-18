@@ -270,13 +270,14 @@ qboolean VR_GetVRProjection(float zNear, float zFar, float gameFovX, float gameF
 	{
 		XrFovf fov = gAppState.Views[eye].fov;
 
-		float zZoomX = (vr.fov_x / gameFovX);
-		float zZoomY = (vr.fov_y / gameFovY);
+		//Just use X for zoom level for now.. something off with Y on Quest 3
+		float zZoom = (vr.fov_x / gameFovX);
+		//float zZoomY = (vr.fov_y / gameFovY);
 
-		fov.angleLeft = atanf((tanf(fov.angleLeft) / zZoomX));
-		fov.angleRight = atanf((tanf(fov.angleRight) / zZoomX));
-		fov.angleUp = atanf((tanf(fov.angleUp) / zZoomY));
-		fov.angleDown = atanf((tanf(fov.angleDown) / zZoomY));
+		fov.angleLeft = atanf((tanf(fov.angleLeft) / zZoom));
+		fov.angleRight = atanf((tanf(fov.angleRight) / zZoom));
+		fov.angleUp = atanf((tanf(fov.angleUp) / zZoom));
+		fov.angleDown = atanf((tanf(fov.angleDown) / zZoom));
 
 		XrMatrix4x4f_CreateProjectionFov(
 			(XrMatrix4x4f*)(projection+(eye*16)), GRAPHICS_OPENGL,
