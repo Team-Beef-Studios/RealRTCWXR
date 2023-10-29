@@ -250,7 +250,16 @@ void ovrFramebuffer_Resolve(ovrFramebuffer* frameBuffer) {
 	cvar_t* r_mode = Cvar_Get("r_mode", "3", CVAR_ARCHIVE | CVAR_LATCH);
 	re.GetModeInfo(&width, &height, &aspect, r_mode->integer);
 
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, colorTexture);
+	//Create a framebuffer solely for the purpose of binding the color texture to as a single texture layer in order to blit from
+	//as we can't blit direct from the eye FBO as that doesn't work (no idea why.. no sensible explanation anywhere I can find)
+	static GLuint fb = -1;
+	if (fb == -1)
+	{
+		glGenFramebuffers(1, &fb);
+	}
+
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, fb);
+	glFramebufferTextureLayer(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, colorTexture, 0, 0); // the magic line!
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 	glBlitFramebuffer(0, 0, gAppState.Width, gAppState.Height,
 		0, 0, width, height,
@@ -1122,7 +1131,6 @@ void TBXR_prepareEyeBuffer()
 void TBXR_finishEyeBuffer()
 {
 	ovrRenderer *renderer = &gAppState.Renderer;
-
 	ovrFramebuffer *frameBuffer = &(renderer->FrameBuffer);
 
 	// Clear the alpha channel, other way OpenXR would not transfer the framebuffer fully
@@ -1134,10 +1142,6 @@ void TBXR_finishEyeBuffer()
 	ovrFramebuffer_Release(&gAppState.Renderer.NullFrameBuffer);
 
 	ovrFramebuffer_SetNone();
-
-	ovrFramebuffer_Resolve(frameBuffer);
-
-	re.WIN_SwapWindow();
 
 	ovrFramebuffer_Release(frameBuffer);
 }
@@ -1273,6 +1277,10 @@ void TBXR_submitFrame()
 
 		layers[layerCount++] = (const XrCompositionLayerBaseHeader*)&quad_layer;
 	}
+
+	ovrFramebuffer* frameBuffer = &(gAppState.Renderer.FrameBuffer);
+	ovrFramebuffer_Resolve(frameBuffer);
+	re.WIN_SwapWindow();
 
 
 	endFrameInfo.layerCount = layerCount;
