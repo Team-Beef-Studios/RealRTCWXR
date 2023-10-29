@@ -1049,7 +1049,7 @@ void TBXR_FrameSetup()
 	gAppState.FrameState.type = XR_TYPE_FRAME_STATE;
 	int t = Sys_Milliseconds();
 	OXR(xrWaitFrame(gAppState.Session, NULL, &gAppState.FrameState));
-	ALOGV(" xrWaitFrame took %d ms\n", (Sys_Milliseconds() - t));
+	//ALOGV(" xrWaitFrame took %d ms\n", (Sys_Milliseconds() - t));
 
 	// Get the HMD pose, predicted for the middle of the time period during which
 	// the new eye images will be displayed. The number of frames predicted ahead
@@ -1060,7 +1060,7 @@ void TBXR_FrameSetup()
 	beginFrameDesc.next = NULL;
 	t = Sys_Milliseconds();
 	OXR(xrBeginFrame(gAppState.Session, &beginFrameDesc));
-	ALOGV(" xrBeginFrame took %d ms\n", (Sys_Milliseconds() - t));
+	//ALOGV(" xrBeginFrame took %d ms\n", (Sys_Milliseconds() - t));
 
 	//Game specific frame setup stuff called here
 	VR_FrameSetup();
@@ -1278,7 +1278,7 @@ void TBXR_submitFrame()
 	endFrameInfo.layerCount = layerCount;
 	int t = Sys_Milliseconds();
 	OXR(xrEndFrame(gAppState.Session, &endFrameInfo));
-	ALOGV(" xrEndFrame took %d ms\n", (Sys_Milliseconds() - t));
+	//ALOGV(" xrEndFrame took %d ms\n", (Sys_Milliseconds() - t));
 
 	gAppState.FrameSetup = false;
 }

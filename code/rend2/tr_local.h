@@ -92,8 +92,10 @@ typedef struct {
 	vec3_t origin;              // in world coordinates
 	vec3_t axis[3];             // orientation in world
 	vec3_t viewOrigin;          // viewParms->or.origin in local coordinates
+	float modelView[16];
 	float modelMatrix[16];
 	float       eyeViewMatrix[2][16];
+	float       monoEyeViewMatrix[16];
 } orientationr_t;
 
 typedef enum
@@ -827,6 +829,8 @@ typedef struct {
 	float fov_x, fov_y;
 	vec3_t vieworg;
 	vec3_t viewaxis[3];             // transformation matrix
+
+	int is_skybox;
 
 	stereoFrame_t	stereoFrame;
 
@@ -2507,7 +2511,6 @@ void GLSL_ShutdownGPUShaders(void);
 void GLSL_VertexAttribPointers(uint32_t attribBits);
 void GLSL_BindProgram(shaderProgram_t * program);
 void GLSL_BindBuffers(shaderProgram_t* program);
-void GLSL_BindBuffersMono(shaderProgram_t* program);
 
 void GLSL_SetUniformInt(shaderProgram_t *program, int uniformNum, GLint value);
 void GLSL_SetUniformFloat(shaderProgram_t *program, int uniformNum, GLfloat value);

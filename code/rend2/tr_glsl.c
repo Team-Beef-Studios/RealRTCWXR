@@ -187,7 +187,7 @@ glslPrintLog_t;
 GLSL_ViewMatricesUniformBuffer
 ====================
 */
-static void GLSL_ViewMatricesUniformBuffer(const float eyeView[32]) {
+static void GLSL_ViewMatricesUniformBuffer(const float eyeView[32], const float monoEyeView[16]) {
 
 	for (int i = 0; i < PROJECTION_COUNT; ++i)
 	{
@@ -236,8 +236,8 @@ static void GLSL_ViewMatricesUniformBuffer(const float eyeView[32]) {
 		break;
 		case VR_PROJECTION_MONO:
 		{
-			Mat4Identity(viewMatrices);
-			Mat4Identity(viewMatrices + 16);
+			Mat4Copy(monoEyeView, viewMatrices);
+			Mat4Copy(monoEyeView, viewMatrices + 16);
 		}
 		break;
 		}
@@ -1738,7 +1738,7 @@ void GLSL_PrepareUniformBuffers(void)
 		tr.vrParms.mirrorProjection);
 
 	//Set all view matrices
-	GLSL_ViewMatricesUniformBuffer(tr.viewParms.world.eyeViewMatrix);
+	GLSL_ViewMatricesUniformBuffer(tr.viewParms.world.eyeViewMatrix, tr.viewParms.world.monoEyeViewMatrix);
 }
 
 void GLSL_BindProgram(shaderProgram_t* program)
@@ -1757,7 +1757,7 @@ void GLSL_BindProgram(shaderProgram_t* program)
 }
 
 static GLuint GLSL_CalculateProjection() {
-	GLuint result = VR_PROJECTION;
+	GLuint result = backEnd.refdef.is_skybox ? VR_PROJECTION_MONO : VR_PROJECTION;
 
 	if (backEnd.viewParms.isPortal)
 	{
@@ -1793,21 +1793,6 @@ void GLSL_BindBuffers(shaderProgram_t* program)
 		projectionMatricesBuffer[projection]);
 
 }
-
-void GLSL_BindBuffersMono(shaderProgram_t* program)
-{
-	qglBindBufferBase(
-		GL_UNIFORM_BUFFER,
-		program->viewMatricesBinding,
-		viewMatricesBuffer[VR_PROJECTION_MONO]);
-
-	qglBindBufferBase(
-		GL_UNIFORM_BUFFER,
-		program->projectionMatrixBinding,
-		projectionMatricesBuffer[VR_PROJECTION_MONO]);
-
-}
-
 
 shaderProgram_t *GLSL_GetGenericShaderProgram(int stage, glfog_t *glFog)
 {

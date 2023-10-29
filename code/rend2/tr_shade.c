@@ -617,9 +617,9 @@ static void ComputeFogValues(vec4_t fogDistanceVector, vec4_t fogDepthVector, fl
 	if (glFog)
 	{
 		VectorSubtract( backEnd.or.origin, backEnd.viewParms.or.origin, local );
-		fogDistanceVector[0] = -backEnd.or.modelMatrix[2];
-		fogDistanceVector[1] = -backEnd.or.modelMatrix[6];
-		fogDistanceVector[2] = -backEnd.or.modelMatrix[10];
+		fogDistanceVector[0] = -backEnd.or.modelView[2];
+		fogDistanceVector[1] = -backEnd.or.modelView[6];
+		fogDistanceVector[2] = -backEnd.or.modelView[10];
 		fogDistanceVector[3] = DotProduct( local, backEnd.viewParms.or.axis[0] );
 		
 		fogDepthVector[0] = glFog->start;
@@ -636,9 +636,9 @@ static void ComputeFogValues(vec4_t fogDistanceVector, vec4_t fogDepthVector, fl
 	fog = tr.world->fogs + tess.fogNum;
 
 	VectorSubtract( backEnd.or.origin, backEnd.viewParms.or.origin, local );
-	fogDistanceVector[0] = -backEnd.or.modelMatrix[2];
-	fogDistanceVector[1] = -backEnd.or.modelMatrix[6];
-	fogDistanceVector[2] = -backEnd.or.modelMatrix[10];
+	fogDistanceVector[0] = -backEnd.or.modelView[2];
+	fogDistanceVector[1] = -backEnd.or.modelView[6];
+	fogDistanceVector[2] = -backEnd.or.modelView[10];
 	fogDistanceVector[3] = DotProduct( local, backEnd.viewParms.or.axis[0] );
 
 	// scale the fog vectors based on the fog's thickness

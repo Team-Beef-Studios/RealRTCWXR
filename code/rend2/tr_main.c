@@ -652,6 +652,7 @@ void R_RotateForEntity( const trRefEntity_t *ent, const viewParms_t *viewParms,
 	glMatrix[15] = 1;
 
 	myGlMultMatrix( glMatrix, viewParms->world.modelMatrix, or->modelMatrix );
+	myGlMultMatrix(glMatrix, viewParms->world.modelView, or->modelView);
 
 	// calculate the viewer origin in the model's space
 	// needed for fog, specular, and environment mapping
@@ -700,12 +701,14 @@ void R_RotateForViewer( void ) {
 			float scale = ((r_stereoSeparation->value / 1000.0f) / 2.0f) * vr_worldscale;
 			VectorSet(origin, 0, (eye == 0 ? -1.0f : 1.0f) * scale, 0);
 			Mat4Translation(origin, viewerMatrix);
-			myGlMultMatrix(viewerMatrix, s_flipMatrix, tr. or .eyeViewMatrix[eye]);
+			myGlMultMatrix(viewerMatrix, s_flipMatrix, tr.or.eyeViewMatrix[eye]);
+			Mat4Identity(viewerMatrix);
+			myGlMultMatrix(viewerMatrix, s_flipMatrix, tr.or.monoEyeViewMatrix);
 			continue;
 		}
 
 		// transform by the camera placement
-		VectorCopy(tr.viewParms. or .origin, origin);
+		VectorCopy(tr.viewParms.or.origin, origin);
 
 		viewerMatrix[0] = tr.viewParms.or.axis[0][0];
 		viewerMatrix[4] = tr.viewParms.or.axis[0][1];
@@ -730,6 +733,7 @@ void R_RotateForViewer( void ) {
 		// convert from our coordinate system (looking down X)
 		// to OpenGL's coordinate system (looking down -Z)
 		Mat4Copy(viewerMatrix, tr.or.modelMatrix);
+		myGlMultMatrix(viewerMatrix, s_flipMatrix, tr.or.modelView);
 	}
 
 	tr.viewParms.world = tr.or;
@@ -1491,7 +1495,7 @@ static qboolean SurfIsOffscreen( const drawSurf_t *drawSurf, vec4_t clipDest[128
 		int j;
 		unsigned int pointFlags = 0;
 
-		R_TransformModelToClip( tess.xyz[i], tr.or.modelMatrix, tr.viewParms.projectionMatrix, eye, clip );
+		R_TransformModelToClip( tess.xyz[i], tr.or.modelView, tr.viewParms.projectionMatrix, eye, clip );
 
 		for ( j = 0; j < 3; j++ )
 		{
@@ -2832,7 +2836,7 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 			R_SortDrawSurfs( tr.refdef.drawSurfs + firstDrawSurf, tr.refdef.numDrawSurfs - firstDrawSurf );
 		}
 
-		Mat4Multiply(tr.viewParms.projectionMatrix, tr.viewParms.world.modelMatrix, tr.refdef.sunShadowMvp[level]);
+		Mat4Multiply(tr.viewParms.projectionMatrix, tr.viewParms.world.modelView, tr.refdef.sunShadowMvp[level]);
 	}
 }
 

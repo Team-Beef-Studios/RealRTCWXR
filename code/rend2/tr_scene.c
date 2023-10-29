@@ -424,7 +424,10 @@ void RE_BeginScene(const refdef_t *fd)
 	tr.refdef.rdflags = fd->rdflags;
 
 	if ( fd->rdflags & RDF_SKYBOXPORTAL ) {
-		skyboxportal = 1;
+		tr.refdef.is_skybox = skyboxportal = 1;
+	}
+	else {
+		tr.refdef.is_skybox = 0;
 	}
 
 	if ( fd->rdflags & RDF_DRAWSKYBOX ) {
