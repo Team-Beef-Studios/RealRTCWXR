@@ -3909,6 +3909,11 @@ void CG_DrawWeaponSelect( void ) {
 		return;
 	}
 
+	// don't display when weapon wheel is opened
+	if (vr->item_selector) {
+		return;
+	}
+
 	if ( !cg.weaponSelect ) {
 		return;
 	}
@@ -4320,6 +4325,338 @@ static int getPrevBankWeap( int bank, int cycle, qboolean sameBankPosition ) {
 			// if it gets to here, no valid weaps in this bank, go down another bank
 			return getPrevBankWeap( bank, cycle, sameBankPosition );
 		}
+}
+
+void CG_ItemSelectorNext_f(void)
+{
+	centity_t* cent = &cg_entities[cg.snap->ps.clientNum];
+	if (cg.itemSelectorType == ST_WEAPON)
+	{
+		int weap = getNextBankWeap(cg.itemSelectorWeaponBank, cg.itemSelectorWeaponCycle, qfalse);
+		CG_WeaponIndex(weap, &cg.itemSelectorWeaponBank, &cg.itemSelectorWeaponCycle);
+		cg.itemSelectorTime = cg.time;
+	}
+}
+
+void CG_ItemSelectorPrev_f(void)
+{
+	if (cg.itemSelectorType == ST_WEAPON)
+	{
+		int weap = getPrevBankWeap(cg.itemSelectorWeaponBank, cg.itemSelectorWeaponCycle, qfalse);
+		CG_WeaponIndex(weap, &cg.itemSelectorWeaponBank, &cg.itemSelectorWeaponCycle);
+		cg.itemSelectorTime = cg.time;
+	}
+}
+
+
+
+//Selects the currently selected thing (if one _is_ selected)
+void CG_ItemSelectorSelect_f(void)
+{
+	cg.itemSelectorTime = 0;
+	trap_Cvar_Set("timescale", "1.0");
+
+	if (cg.itemSelectorSelection == ST_NONE)
+	{
+		return;
+	}
+
+	if (cg.itemSelectorType == ST_WEAPON) // weapons
+	{
+		centity_t* cent = &cg_entities[cg.snap->ps.clientNum];
+		{
+			if (cg.weaponSelect == cg.itemSelectorSelection)
+			{
+				return;
+			}
+
+			cg.weaponSelectTime = cg.time;
+			cg.weaponSelect = cg.itemSelectorSelection;
+		}
+	}
+	else if (cg.itemSelectorType == ST_GADGET) // gadgets
+	{
+		cg.holdableSelectTime = cg.time;
+		cg.holdableSelect = cg.itemSelectorSelection;
+
+		//Immediately use the selected inventory item
+//		if (player)
+		{
+			//			Cmd_UseInventory_f(player);
+		}
+	}
+	else if (cg.itemSelectorType == ST_QUICK_MENU) {
+		if (cg.itemSelectorSelection == 0) {
+			trap_SendConsoleCommand("save quick\n");
+			CG_CenterPrint("Quick Saved", 240, SMALLCHAR_WIDTH);
+		}
+		else if (cg.itemSelectorSelection == 1) {
+			trap_SendConsoleCommand("load quick\n");
+		}
+		else {
+			vr->move_speed = (++vr->move_speed) % 3;
+		}
+	}
+
+	//reset ready for next time
+	cg.itemSelectorSelection = ST_NONE;
+}
+
+
+void CG_DrawItemSelector(void)
+{
+	if (cg.predictedPlayerState.stats[STAT_HEALTH] <= 0)
+	{
+		return;
+	}
+
+	if (cg.itemSelectorTime == 0)
+	{
+		cg.itemSelectorTime = cg.time;
+
+		if (vr->item_selector == 2)
+		{
+			cg.itemSelectorType = ST_GADGET;
+			VectorCopy(vr->offhandposition[0], cg.itemSelectorOrigin);
+			VectorCopy(vr->offhandoffset, cg.itemSelectorOffset);
+		}
+		else {
+			cg.itemSelectorType = ST_WEAPON;
+			VectorCopy(vr->weaponposition, cg.itemSelectorOrigin);
+			VectorCopy(vr->weaponoffset, cg.itemSelectorOffset);
+			CG_WeaponIndex(cg.weaponSelect, &cg.itemSelectorWeaponBank, &cg.itemSelectorWeaponCycle);
+		}
+	}
+
+	float dist = 10.0f;
+	float radius = 4.4f;
+	float scale = 0.05f;
+
+	float frac = (cg.time - cg.itemSelectorTime) / 20.0f;
+	if (frac > 1.0f)
+	{
+		frac = 1.0f;
+	}
+	trap_Cvar_Set("timescale", "0.3");
+
+	vec3_t controllerOrigin, controllerAngles, controllerOffset, selectorOrigin;
+	if (cg.itemSelectorType >= ST_GADGET)
+	{
+		BG_CalculateVROffHandPosition(cg.refdefViewAngles[YAW], cg.refdef.vieworg, cg_heightAdjust.value, cg_worldScale.value, controllerOrigin, controllerAngles);
+		VectorSubtract(vr->offhandposition[0], cg.itemSelectorOrigin, controllerOffset);
+	}
+	else
+	{
+		BG_CalculateVRWeaponPosition(cg.refdefViewAngles[YAW], cg.refdef.vieworg, cg_heightAdjust.value, cg_worldScale.value, controllerOrigin, controllerAngles);
+		VectorSubtract(vr->weaponposition, cg.itemSelectorOrigin, controllerOffset);
+	}
+
+	vec3_t wheelAngles, wheelOrigin, beamOrigin, wheelForward, wheelRight, wheelUp;
+	vec3_t angles;
+	VectorClear(angles);
+	angles[YAW] = vr->hmdorientation[YAW];
+	BG_CalculateVRPositionInWorld(cg.refdefViewAngles[YAW], cg.refdef.vieworg, cg_heightAdjust.value, cg_worldScale.value,
+		cg.itemSelectorOrigin, cg.itemSelectorOffset, angles, wheelOrigin, wheelAngles);
+
+	AngleVectors(wheelAngles, wheelForward, wheelRight, wheelUp);
+	VectorCopy(controllerOrigin, wheelOrigin);
+
+	VectorCopy(wheelOrigin, beamOrigin);
+	VectorMA(wheelOrigin, (dist * frac), wheelForward, wheelOrigin);
+	VectorCopy(wheelOrigin, selectorOrigin);
+
+	vec3_t pos;
+	memset(&pos, 0, sizeof pos);
+	{
+		pos[0] = (sinf(DEG2RAD(wheelAngles[YAW] - controllerAngles[YAW])) / sinf(DEG2RAD(22.5f)));
+		pos[1] = ((wheelAngles[PITCH] - controllerAngles[PITCH]) / 22.5f);
+
+		float len = VectorLength(pos);
+		if (len > 1.0f)
+		{
+			pos[0] *= (1.0f / len);
+			pos[1] *= (1.0f / len);
+		}
+	}
+
+	VectorMA(selectorOrigin, radius * pos[0], wheelRight, selectorOrigin);
+	VectorMA(selectorOrigin, radius * pos[1], wheelUp, selectorOrigin);
+
+	centity_t* cent = &cg_entities[cg.snap->ps.clientNum];
+
+	vec3_t sRGB;
+	int count;
+	switch (cg.itemSelectorType)
+	{
+	case ST_WEAPON: //weapons
+		count = MAX_WEAPS_IN_BANK;
+		sRGB[0] = 1.0f;
+		sRGB[1] = 0.8f;
+		sRGB[2] = 0.2f;
+		break;
+	case ST_GADGET: //gadgets
+		count = HI_NUM_HOLDABLE;
+		sRGB[0] = 0.0f;
+		sRGB[1] = 1.0f;
+		sRGB[2] = 0.0f;
+		break;
+	case ST_QUICK_MENU:
+		count = 3;
+		sRGB[0] = 1.0f;
+		sRGB[1] = 1.0f;
+		sRGB[2] = 1.0f;
+		break;
+	}
+
+	// create the render entity
+	refEntity_t ent;
+	memset(&ent, 0, sizeof(ent));
+	VectorCopy(beamOrigin, ent.origin);
+	VectorCopy(selectorOrigin, ent.oldorigin);
+	AxisClear(ent.axis);
+	ent.reType = RT_BEAM;
+	ent.renderfx = RF_NOSHADOW;
+	// add to refresh list
+	trap_R_AddRefEntityToScene(&ent);
+
+
+	if (cg.itemSelectorType == ST_WEAPON) // weapons
+	{
+		if (cg.weaponSelect != WP_NONE) {
+			refEntity_t sprite;
+			memset(&sprite, 0, sizeof(sprite));
+			VectorCopy(wheelOrigin, sprite.origin);
+			sprite.reType = RT_SPRITE;
+			sprite.customShader = cg_weapons[cg.weaponSelect].weaponIcon[1];
+			sprite.radius = 1.8f;
+			memset(sprite.shaderRGBA, 0xff, 4);
+			trap_R_AddRefEntityToScene(&sprite);
+		}
+	}
+
+	for (int s = -1; s < 2; s += 2) {
+		refEntity_t sprite;
+		memset(&sprite, 0, sizeof(sprite));
+		vec3_t right;
+		AngleVectors(wheelAngles, NULL, right, NULL);
+		float offset = ((float)s * 6.0f) + (((float)s * 0.3f) *
+			sinf(DEG2RAD(AngleNormalize360(cg.time - cg.itemSelectorTime))));
+		VectorMA(wheelOrigin, offset, right, sprite.origin);
+		sprite.reType = RT_SPRITE;
+		sprite.customShader = cgs.media.energyMarkShader;
+		sprite.radius = 0.6f;
+		sprite.rotation = 180.0f * ((s - 1.0f) / 2.0f);
+		memset(sprite.shaderRGBA, 0xff, 4);
+		trap_R_AddRefEntityToScene(&sprite);
+	}
+
+	qboolean selected = qfalse;
+	for (int index = 0; index < count; ++index)
+	{
+		int itemId = index;
+		if (cg.itemSelectorType == ST_WEAPON) {
+			CG_RegisterWeapon(itemId, qfalse);
+		}
+
+		{
+			qboolean selectable;
+			switch (cg.itemSelectorType)
+			{
+			case ST_WEAPON: //weapons
+				selectable = CG_WeaponSelectable(weapBanks[cg.itemSelectorWeaponBank][itemId]);
+				break;
+			case ST_GADGET: //gadgets
+				selectable = cg.predictedPlayerState.holdable[itemId];
+			case ST_QUICK_MENU:
+				selectable = qtrue;
+				break;
+			}
+
+			if (selectable) {
+				//first calculate wheel slot position
+				vec3_t angles, iconOrigin, iconBackground, iconForeground;
+				VectorClear(angles);
+				angles[YAW] = wheelAngles[YAW];
+				angles[PITCH] = wheelAngles[PITCH];
+				angles[ROLL] = (float)(360 / count) * index;
+				vec3_t forward, up;
+				AngleVectors(angles, forward, NULL, up);
+
+				VectorMA(wheelOrigin, (radius * frac), up, iconOrigin);
+				VectorMA(iconOrigin, 0.2f, forward, iconBackground);
+				VectorMA(iconOrigin, -0.2f, forward, iconForeground);
+
+				{
+					vec3_t diff;
+					VectorSubtract(selectorOrigin, iconOrigin, diff);
+					float length = VectorLength(diff);
+					if (length <= 1.0f &&
+						frac == 1.0f &&
+						selectable) {
+						if (cg.itemSelectorSelection != itemId) {
+							cg.itemSelectorSelection = itemId;
+
+							//cgi_HapticEvent("selector_icon", 0, vr->right_handed ?
+							//	((cg.itemSelectorType >= ST_FORCE_POWER) ? 2 : 1) : ((cg.itemSelectorType >= ST_FORCE_POWER) ? 1 : 2), 100, 0, 0);
+						}
+
+						selected = qtrue;
+					}
+				}
+
+				if (cg.itemSelectorSelection == itemId) {
+					refEntity_t sprite;
+					memset(&sprite, 0, sizeof(sprite));
+					VectorCopy(iconOrigin, sprite.origin);
+					sprite.origin[2] += 2.5f + (0.5f * sinf(DEG2RAD(
+						AngleNormalize360(cg.time - cg.itemSelectorTime))));
+					sprite.reType = RT_SPRITE;
+					sprite.customShader = cgs.media.bloodCloudShader;
+					sprite.radius = 0.6f;
+					sprite.rotation = -90.0f;
+					sprite.shaderRGBA[0] = 255;
+					sprite.shaderRGBA[1] = 255;
+					sprite.shaderRGBA[2] = 255;
+					sprite.shaderRGBA[3] = 255;
+					trap_R_AddRefEntityToScene(&sprite);
+				}
+
+				{
+					refEntity_t sprite;
+					memset(&sprite, 0, sizeof(sprite));
+
+					float sRadius = 1.3f;
+
+					VectorCopy(iconOrigin, sprite.origin);
+					sprite.reType = RT_SPRITE;
+					switch (cg.itemSelectorType)
+					{
+					case ST_WEAPON: //weapons
+						sprite.customShader = cg_weapons[weapBanks[cg.itemSelectorWeaponBank][itemId]].weaponIcon[0];
+						break;
+					case ST_GADGET: //gadgets
+						gitem_t* item = BG_FindItemForHoldable(cg.holdableSelect);
+						int value = cg.predictedPlayerState.holdable[itemId];
+						sprite.customShader = cg_items[item - bg_itemlist].icons[2 - (value - 1)];
+						break;
+					}
+
+					sprite.radius =
+						sRadius * (cg.itemSelectorSelection == itemId ? 1.3f : 0.6f);
+					sprite.shaderRGBA[0] = 255;
+					sprite.shaderRGBA[1] = 255;
+					sprite.shaderRGBA[2] = 255;
+					sprite.shaderRGBA[3] = 255;
+					trap_R_AddRefEntityToScene(&sprite);
+				}
+			}
+		}
+	}
+
+	if (!selected)
+	{
+		cg.itemSelectorSelection = ST_NONE;
+	}
 }
 
 /*

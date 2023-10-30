@@ -1645,7 +1645,14 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	}
 
 
-	CG_AddViewWeapon( &cg.predictedPlayerState );
+	if (vr->item_selector)
+	{
+		CG_DrawItemSelector();
+	}
+	else
+	{
+		CG_AddViewWeapon(&cg.predictedPlayerState);
+	}
 
 
 	DEBUGTIME

@@ -564,6 +564,10 @@ typedef struct {
 	void ( *function )( void );
 } consoleCommand_t;
 
+void CG_ItemSelectorSelect_f(void);
+void CG_ItemSelectorNext_f(void);
+void CG_ItemSelectorPrev_f(void);
+
 static consoleCommand_t commands[] = {
 	{ "testgun", CG_TestGun_f },
 	{ "testmodel", CG_TestModel_f },
@@ -601,6 +605,10 @@ static consoleCommand_t commands[] = {
 	{ "camera", CG_Camera_f },   // duffy
 	{ "fade", CG_Fade_f },   // duffy
 	{ "loadweapons", CG_LoadWeapons_f },
+
+	{ "itemselectorselect", CG_ItemSelectorSelect_f },
+	{ "itemselectornext", CG_ItemSelectorNext_f },
+	{ "itemselectorprev", CG_ItemSelectorPrev_f },
 
 	// NERVE - SMF
 	{ "mp_QuickMessage", CG_QuickMessage_f },

@@ -952,6 +952,14 @@ typedef struct {
 	int weaponAnimation;
 	int weaponAnimationTime;
 
+	int 		itemSelectorType; // 0 - weapons
+	int			itemSelectorWeaponBank;
+	int			itemSelectorWeaponCycle;
+	int			itemSelectorSelection;
+	int 		itemSelectorTime;
+	vec3_t		itemSelectorOrigin;
+	vec3_t		itemSelectorOffset;
+
     refdef_t *refdef_current;                       ///< Handling of some drawing elements for MV (not only MV!) RealRTCW
 
 	// blend blobs
@@ -2123,6 +2131,8 @@ void CG_AddViewWeapon( playerState_t *ps );
 void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent );
 void CG_DrawWeaponSelect( void );
 void CG_DrawHoldableSelect( void );
+
+void CG_DrawItemSelector(void);
 
 void CG_OutOfAmmoChange( void );
 void CG_HoldableUsedupChange( void ); //----(SA)	added

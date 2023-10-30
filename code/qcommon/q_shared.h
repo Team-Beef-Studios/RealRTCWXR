@@ -44,7 +44,7 @@ If you have questions concerning this license or the applicable additional terms
 #define PRODUCT_VERSION "4.0" // iortcw 1.51
 #endif
 
-#define REALRTCWXR_VERSION		"0.2.2" 
+#define REALRTCWXR_VERSION		"0.2.3" 
 #define REALRTCWXR_NAME		"(RealRTCW XR " REALRTCWXR_VERSION ")" 
 
 #ifdef STANDALONE
@@ -1043,6 +1043,18 @@ SAVE
 #define RELOAD_NEXTMAP_WAITING  0x04
 #define RELOAD_FAILED           0x08
 #define RELOAD_ENDGAME          0x10
+
+
+
+
+typedef enum
+{
+	ST_NONE = -1, // Used to indicate no active selection (rather than type)
+
+	ST_WEAPON,
+	ST_GADGET,
+	ST_QUICK_MENU
+} selectorType_t;
 
 
 /*

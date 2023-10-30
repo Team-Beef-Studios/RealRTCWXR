@@ -980,7 +980,7 @@ static float CG_DrawFPS( stereoFrame_t stereoFrame, float y ) {
 		s = va("%ifps", fps);
 		w = CG_DrawStrlen(s) * BIGCHAR_WIDTH;
 		CG_DrawBigString(UPPERRIGHT_X - w, y + 2, s, 1.0F);
-		return;
+		return y + BIGCHAR_HEIGHT + 4;;
 	}
 
 	// don't use serverTime, because that will be drifting to
