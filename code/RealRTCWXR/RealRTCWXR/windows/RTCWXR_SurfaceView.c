@@ -260,12 +260,6 @@ qboolean VR_GetVRProjection(float zNear, float zFar, float gameFovX, float gameF
 		return qfalse;
 	}
 
-	//Just use game-calculated FOV when showing the quad screen
-	if (vr.using_screen_layer)
-	{
-		return qfalse;
-	}
-
 	for (int eye = 0; eye < 2; ++eye)
 	{
 		XrFovf fov = gAppState.Views[eye].fov;

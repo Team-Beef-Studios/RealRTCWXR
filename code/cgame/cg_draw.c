@@ -2379,6 +2379,9 @@ static void CG_DrawCrosshair( void ) {
 		return;
 	}
 
+	//In VR we don't want to draw the fixed "center of the view" crosshair
+	return;
+
 	// set color based on health //RealRTCW disable for now
 	//if ( cg_crosshairHealth.integer ) {
 		//CG_ColorForHealth( hcolor );
@@ -3631,7 +3634,7 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 		return;
 	}
 
-	if (stereoView != STEREO_CENTER)
+	if (!vr->using_screen_layer)
 		CG_DrawCrosshair3D();
 
 	if (!cg.cameraMode)

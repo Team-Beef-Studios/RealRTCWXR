@@ -2469,10 +2469,12 @@ void Com_Init( char *commandLine ) {
 
 	CL_StartHunkUsers( qfalse );
 
+	/*
 	if ( !com_recommendedSet->integer ) {
 		Com_SetRecommended( qtrue );
 		Cvar_Set( "com_recommendedSet", "1" );
 	}
+	*/
 
 	com_fullyInitialized = qtrue;
 

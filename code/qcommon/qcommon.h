@@ -642,7 +642,7 @@ issues.
 #ifdef DEDICATED
 #	define Q3CONFIG_CFG "wolfconfig_server.cfg"
 #else
-#	define Q3CONFIG_CFG "realrtcwconfig.cfg"
+#	define Q3CONFIG_CFG "realrtcwxr.cfg"
 #endif
 
 qboolean FS_Initialized( void );
