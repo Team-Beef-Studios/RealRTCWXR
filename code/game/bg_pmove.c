@@ -3025,7 +3025,7 @@ static void PM_Weapon( void ) {
 
 
 	// check for item using
-	if ( pm->cmd.buttons & BUTTON_USE_HOLDABLE ) {
+	if ( pm->cmd.buttons & BUTTON_USE_HOLDABLE) {
 		if ( !( pm->ps->pm_flags & PMF_USE_ITEM_HELD ) ) {
 			gitem_t *item;
 
@@ -3050,6 +3050,7 @@ static void PM_Weapon( void ) {
 			}
 			return;
 		}
+		vr->use_item = qfalse;
 	} else {
 		pm->ps->pm_flags &= ~PMF_USE_ITEM_HELD;
 	}

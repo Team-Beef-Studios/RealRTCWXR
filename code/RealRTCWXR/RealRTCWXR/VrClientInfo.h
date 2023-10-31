@@ -89,6 +89,7 @@ typedef struct {
     vec3_t muzzlebounce;
 
     int item_selector; // 1 - weapons 2 - Holdable Items
+    qboolean use_item;
 
     qboolean velocitytriggered;
     qboolean velocitytriggeractive;

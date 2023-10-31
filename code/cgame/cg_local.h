@@ -1225,6 +1225,7 @@ typedef struct {
 	qhandle_t dishFlashModel;
 	qhandle_t lightningExplosionModel;
 
+
 	qhandle_t zombieLoogie;
 	qhandle_t flamebarrel;
 	qhandle_t mg42muzzleflash;

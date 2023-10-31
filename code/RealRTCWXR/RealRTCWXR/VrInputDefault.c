@@ -334,6 +334,13 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
             }
         }
 
+        static qboolean use_item = false;
+        if (use_item != vr.use_item)
+        {
+            sendButtonAction("+useitem", vr.use_item);
+            use_item = vr.use_item;
+        }
+
         static int cinCameraTimestamp = -1;
         if (vr.cin_camera && cinCameraTimestamp == -1) {
             cinCameraTimestamp = Sys_Milliseconds();

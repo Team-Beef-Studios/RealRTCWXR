@@ -44,7 +44,7 @@ If you have questions concerning this license or the applicable additional terms
 #define PRODUCT_VERSION "4.0" // iortcw 1.51
 #endif
 
-#define REALRTCWXR_VERSION		"0.2.3" 
+#define REALRTCWXR_VERSION		"0.3.0" 
 #define REALRTCWXR_NAME		"(RealRTCW XR " REALRTCWXR_VERSION ")" 
 
 #ifdef STANDALONE

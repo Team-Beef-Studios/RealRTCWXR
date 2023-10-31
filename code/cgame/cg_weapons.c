@@ -4327,6 +4327,37 @@ static int getPrevBankWeap( int bank, int cycle, qboolean sameBankPosition ) {
 		}
 }
 
+/*
+==========================
+CG_LaserSight
+==========================
+*/
+void CG_LaserSight(vec3_t start, vec3_t end, byte colour[4], float width) {
+	refEntity_t     re;
+	memset(&re, 0, sizeof(re));
+
+	//Ensure shader is loaded
+	cgs.media.railCoreShader = trap_R_RegisterShader("railCore");
+
+	re.reType = RT_RAIL_CORE;
+	re.customShader = cgs.media.railCoreShader;
+
+	VectorCopy(start, re.origin);
+	VectorCopy(end, re.oldorigin);
+
+	//radius is used to store width info
+	re.radius = width;
+
+	AxisClear(re.axis);
+
+	re.shaderRGBA[0] = colour[0];
+	re.shaderRGBA[1] = colour[1];
+	re.shaderRGBA[2] = colour[2];
+	re.shaderRGBA[3] = colour[3];
+
+	trap_R_AddRefEntityToScene(&re);
+}
+
 void CG_ItemSelectorNext_f(void)
 {
 	centity_t* cent = &cg_entities[cg.snap->ps.clientNum];
@@ -4347,7 +4378,6 @@ void CG_ItemSelectorPrev_f(void)
 		cg.itemSelectorTime = cg.time;
 	}
 }
-
 
 
 //Selects the currently selected thing (if one _is_ selected)
@@ -4371,7 +4401,7 @@ void CG_ItemSelectorSelect_f(void)
 			}
 
 			cg.weaponSelectTime = cg.time;
-			cg.weaponSelect = cg.itemSelectorSelection;
+			cg.weaponSelect = weapBanks[cg.itemSelectorWeaponBank][cg.itemSelectorSelection];
 		}
 	}
 	else if (cg.itemSelectorType == ST_GADGET) // gadgets
@@ -4379,11 +4409,10 @@ void CG_ItemSelectorSelect_f(void)
 		cg.holdableSelectTime = cg.time;
 		cg.holdableSelect = cg.itemSelectorSelection;
 
+		trap_SetUserCmdValue(cg.weaponSelect, cg.holdableSelect, cg.zoomSensitivity, cg.cld);
 		//Immediately use the selected inventory item
-//		if (player)
-		{
-			//			Cmd_UseInventory_f(player);
-		}
+		centity_t* cent = &cg_entities[cg.snap->ps.clientNum];
+		vr->use_item = qtrue; //HACK! Use this to fake a button push
 	}
 	else if (cg.itemSelectorType == ST_QUICK_MENU) {
 		if (cg.itemSelectorSelection == 0) {
@@ -4430,7 +4459,7 @@ void CG_DrawItemSelector(void)
 
 	float dist = 10.0f;
 	float radius = 4.4f;
-	float scale = 0.05f;
+	float scale = 0.12f;
 
 	float frac = (cg.time - cg.itemSelectorTime) / 20.0f;
 	if (frac > 1.0f)
@@ -4495,29 +4524,25 @@ void CG_DrawItemSelector(void)
 		sRGB[2] = 0.2f;
 		break;
 	case ST_GADGET: //gadgets
-		count = HI_NUM_HOLDABLE;
+		count = HI_11;
 		sRGB[0] = 0.0f;
 		sRGB[1] = 1.0f;
 		sRGB[2] = 0.0f;
 		break;
 	case ST_QUICK_MENU:
-		count = 3;
+		count = 2;
 		sRGB[0] = 1.0f;
 		sRGB[1] = 1.0f;
 		sRGB[2] = 1.0f;
 		break;
 	}
 
-	// create the render entity
-	refEntity_t ent;
-	memset(&ent, 0, sizeof(ent));
-	VectorCopy(beamOrigin, ent.origin);
-	VectorCopy(selectorOrigin, ent.oldorigin);
-	AxisClear(ent.axis);
-	ent.reType = RT_BEAM;
-	ent.renderfx = RF_NOSHADOW;
-	// add to refresh list
-	trap_R_AddRefEntityToScene(&ent);
+	byte colour[4];
+	colour[0] = 0x00;
+	colour[1] = 0x00;
+	colour[2] = 0x80;
+	colour[3] = 0x40;
+	CG_LaserSight(beamOrigin, selectorOrigin, colour, 0.075f);
 
 
 	if (cg.itemSelectorType == ST_WEAPON) // weapons
@@ -4527,7 +4552,8 @@ void CG_DrawItemSelector(void)
 			memset(&sprite, 0, sizeof(sprite));
 			VectorCopy(wheelOrigin, sprite.origin);
 			sprite.reType = RT_SPRITE;
-			sprite.customShader = cg_weapons[cg.weaponSelect].weaponIcon[1];
+			//Use the first weapon in the bank to indicate what sort of weapons are in the bank
+			sprite.customShader = cg_weapons[weapBanks[cg.itemSelectorWeaponBank][0]].weaponIcon[1];
 			sprite.radius = 1.8f;
 			memset(sprite.shaderRGBA, 0xff, 4);
 			trap_R_AddRefEntityToScene(&sprite);
@@ -4566,7 +4592,16 @@ void CG_DrawItemSelector(void)
 				selectable = CG_WeaponSelectable(weapBanks[cg.itemSelectorWeaponBank][itemId]);
 				break;
 			case ST_GADGET: //gadgets
-				selectable = cg.predictedPlayerState.holdable[itemId];
+				if (itemId == 0)
+				{
+					selectable = cg.predictedPlayerState.stats[STAT_KEYS] & (1 << INV_BINOCS);
+				}
+				else
+				{
+					gitem_t* item = BG_FindItemForHoldable(itemId);
+					selectable = cg.predictedPlayerState.holdable[itemId] && item;
+				}
+				break;
 			case ST_QUICK_MENU:
 				selectable = qtrue;
 				break;
@@ -4604,50 +4639,100 @@ void CG_DrawItemSelector(void)
 					}
 				}
 
-				if (cg.itemSelectorSelection == itemId) {
-					refEntity_t sprite;
-					memset(&sprite, 0, sizeof(sprite));
-					VectorCopy(iconOrigin, sprite.origin);
-					sprite.origin[2] += 2.5f + (0.5f * sinf(DEG2RAD(
-						AngleNormalize360(cg.time - cg.itemSelectorTime))));
-					sprite.reType = RT_SPRITE;
-					sprite.customShader = cgs.media.bloodCloudShader;
-					sprite.radius = 0.6f;
-					sprite.rotation = -90.0f;
-					sprite.shaderRGBA[0] = 255;
-					sprite.shaderRGBA[1] = 255;
-					sprite.shaderRGBA[2] = 255;
-					sprite.shaderRGBA[3] = 255;
-					trap_R_AddRefEntityToScene(&sprite);
-				}
-
+				if (cg.itemSelectorType == ST_WEAPON)
 				{
-					refEntity_t sprite;
-					memset(&sprite, 0, sizeof(sprite));
+					refEntity_t ent;
+					memset(&ent, 0, sizeof(ent));
+					VectorCopy(iconOrigin, ent.origin);
 
-					float sRadius = 1.3f;
+					//Shift model a bit
+					VectorMA(ent.origin, 0.3f, wheelForward, ent.origin);
+					VectorMA(ent.origin, -0.2f, wheelRight, ent.origin);
+					VectorMA(ent.origin, 0.1f, wheelUp, ent.origin);
 
-					VectorCopy(iconOrigin, sprite.origin);
-					sprite.reType = RT_SPRITE;
-					switch (cg.itemSelectorType)
+					vec3_t iconAngles;
+					VectorCopy(wheelAngles, iconAngles);
+					iconAngles[PITCH] = 30;
+					iconAngles[YAW] -= 145.0f;
+
+					float weaponScale = (scale * frac) +
+						(cg.itemSelectorSelection == itemId ? 0.08f : 0);
+
+					AnglesToAxis(iconAngles, ent.axis);
+					VectorScale(ent.axis[0], weaponScale, ent.axis[0]);
+					VectorScale(ent.axis[1], weaponScale, ent.axis[1]);
+					VectorScale(ent.axis[2], weaponScale, ent.axis[2]);
+					ent.nonNormalizedAxes = qtrue;
+
+					ent.hModel = cg_weapons[weapBanks[cg.itemSelectorWeaponBank][itemId]].weaponModel[W_TP_MODEL].model;
+					trap_R_AddRefEntityToScene(&ent);
+
+					if (cg_weapons[weapBanks[cg.itemSelectorWeaponBank][itemId]].partModels[W_TP_MODEL][W_PART_1].model)
 					{
-					case ST_WEAPON: //weapons
-						sprite.customShader = cg_weapons[weapBanks[cg.itemSelectorWeaponBank][itemId]].weaponIcon[0];
-						break;
-					case ST_GADGET: //gadgets
-						gitem_t* item = BG_FindItemForHoldable(cg.holdableSelect);
-						int value = cg.predictedPlayerState.holdable[itemId];
-						sprite.customShader = cg_items[item - bg_itemlist].icons[2 - (value - 1)];
-						break;
+						refEntity_t barrel;
+						memset(&barrel, 0, sizeof(barrel));
+						barrel.hModel = cg_weapons[weapBanks[cg.itemSelectorWeaponBank][itemId]].partModels[W_TP_MODEL][W_PART_1].model;
+						vec3_t barrelAngles;
+						VectorClear(barrelAngles);
+						barrelAngles[ROLL] = AngleNormalize360((cg.time - cg.itemSelectorTime) * 1.5f);
+						AnglesToAxis(barrelAngles, barrel.axis);
+						CG_PositionRotatedEntityOnTag(&barrel, &ent, "tag_barrel");
+						trap_R_AddRefEntityToScene(&barrel);
 					}
+				}
+				else if (cg.itemSelectorType == ST_GADGET)
+				{
+					if (itemId == 0)
+					{
+						refEntity_t ent;
+						memset(&ent, 0, sizeof(ent));
+						VectorCopy(iconOrigin, ent.origin);
 
-					sprite.radius =
-						sRadius * (cg.itemSelectorSelection == itemId ? 1.3f : 0.6f);
-					sprite.shaderRGBA[0] = 255;
-					sprite.shaderRGBA[1] = 255;
-					sprite.shaderRGBA[2] = 255;
-					sprite.shaderRGBA[3] = 255;
-					trap_R_AddRefEntityToScene(&sprite);
+						//Shift model a bit
+						VectorMA(ent.origin, 0.3f, wheelForward, ent.origin);
+						VectorMA(ent.origin, -0.2f, wheelRight, ent.origin);
+						VectorMA(ent.origin, 0.1f, wheelUp, ent.origin);
+
+						vec3_t iconAngles;
+						VectorCopy(wheelAngles, iconAngles);
+						iconAngles[PITCH] = 10;
+						iconAngles[YAW] -= 145.0f;
+
+						float weaponScale = (scale * frac) +
+							(cg.itemSelectorSelection == itemId ? 0.08f : 0);
+
+						AnglesToAxis(iconAngles, ent.axis);
+						VectorScale(ent.axis[0], weaponScale, ent.axis[0]);
+						VectorScale(ent.axis[1], weaponScale, ent.axis[1]);
+						VectorScale(ent.axis[2], weaponScale, ent.axis[2]);
+						ent.nonNormalizedAxes = qtrue;
+
+						ent.hModel = cgs.media.thirdPersonBinocModel;
+						trap_R_AddRefEntityToScene(&ent);						
+					}
+					else
+					{
+						refEntity_t sprite;
+						memset(&sprite, 0, sizeof(sprite));
+
+						float sRadius = 1.3f;
+
+						VectorCopy(iconOrigin, sprite.origin);
+						sprite.reType = RT_SPRITE;
+
+						gitem_t* item = BG_FindItemForHoldable(itemId);
+						CG_RegisterItemVisuals(item - bg_itemlist);
+						int value = cg.predictedPlayerState.holdable[itemId];
+						sprite.customShader = cg_items[item - bg_itemlist].icons[0];
+
+						sprite.radius =
+							sRadius * (cg.itemSelectorSelection == itemId ? 1.3f : 0.6f);
+						sprite.shaderRGBA[0] = 255;
+						sprite.shaderRGBA[1] = 255;
+						sprite.shaderRGBA[2] = 255;
+						sprite.shaderRGBA[3] = 255;
+						trap_R_AddRefEntityToScene(&sprite);
+					}
 				}
 			}
 		}
