@@ -1051,7 +1051,8 @@ typedef enum
 {
 	ST_NONE = -1, // Used to indicate no active selection (rather than type)
 
-	ST_WEAPON,
+	ST_WEAPON_BANKS,
+	ST_WEAPON_ALL,
 	ST_GADGET,
 	ST_QUICK_MENU
 } selectorType_t;
