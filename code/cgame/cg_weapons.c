@@ -4363,20 +4363,69 @@ void CG_ItemSelectorNext_f(void)
 	centity_t* cent = &cg_entities[cg.snap->ps.clientNum];
 	if (cg.itemSelectorType == ST_WEAPON)
 	{
-		int weap = getNextBankWeap(cg.itemSelectorWeaponBank, cg.itemSelectorWeaponCycle, qfalse);
-		CG_WeaponIndex(weap, &cg.itemSelectorWeaponBank, &cg.itemSelectorWeaponCycle);
-		cg.itemSelectorTime = cg.time;
+		int currentBank = cg.itemSelectorWeaponBank;
+		
+		qboolean hasSelectableWeapon;
+		do {
+			int weap = getNextBankWeap(cg.itemSelectorWeaponBank, 0, qfalse);
+			CG_WeaponIndex(weap, &cg.itemSelectorWeaponBank, &cg.itemSelectorWeaponCycle);
+
+			hasSelectableWeapon = qfalse;
+			for (int c = 0; c < maxWeapsInBank; ++c)
+			{
+				if (CG_WeaponSelectable(weapBanks[cg.itemSelectorWeaponBank][c]))
+				{
+					hasSelectableWeapon = qtrue;
+					break;
+				}
+			}
+		} while (!hasSelectableWeapon && currentBank != cg.itemSelectorWeaponBank);
 	}
+	else if (cg.itemSelectorType == ST_GADGET)
+	{
+		cg.itemSelectorType = ST_QUICK_MENU;
+	}
+	else if (cg.itemSelectorType == ST_QUICK_MENU)
+	{
+		cg.itemSelectorType = ST_GADGET;
+	}
+
+	cg.itemSelectorTime = cg.time;
 }
 
 void CG_ItemSelectorPrev_f(void)
 {
 	if (cg.itemSelectorType == ST_WEAPON)
 	{
-		int weap = getPrevBankWeap(cg.itemSelectorWeaponBank, cg.itemSelectorWeaponCycle, qfalse);
-		CG_WeaponIndex(weap, &cg.itemSelectorWeaponBank, &cg.itemSelectorWeaponCycle);
-		cg.itemSelectorTime = cg.time;
+
+		int currentBank = cg.itemSelectorWeaponBank;
+
+		qboolean hasSelectableWeapon;
+		do {
+			int weap = getPrevBankWeap(cg.itemSelectorWeaponBank, 0, qfalse);
+			CG_WeaponIndex(weap, &cg.itemSelectorWeaponBank, &cg.itemSelectorWeaponCycle);
+
+			hasSelectableWeapon = qfalse;
+			for (int c = 0; c < maxWeapsInBank; ++c)
+			{
+				if (CG_WeaponSelectable(weapBanks[cg.itemSelectorWeaponBank][c]))
+				{
+					hasSelectableWeapon = qtrue;
+					break;
+				}
+			}
+		} while (!hasSelectableWeapon && currentBank != cg.itemSelectorWeaponBank);
 	}
+	else if (cg.itemSelectorType == ST_GADGET)
+	{
+		cg.itemSelectorType = ST_QUICK_MENU;
+	}
+	else if (cg.itemSelectorType == ST_QUICK_MENU)
+	{
+		cg.itemSelectorType = ST_GADGET;
+	}
+
+	cg.itemSelectorTime = cg.time;
 }
 
 
@@ -4415,15 +4464,15 @@ void CG_ItemSelectorSelect_f(void)
 		vr->use_item = qtrue; //HACK! Use this to fake a button push
 	}
 	else if (cg.itemSelectorType == ST_QUICK_MENU) {
-		if (cg.itemSelectorSelection == 0) {
-			trap_SendConsoleCommand("save quick\n");
+		if (cg.itemSelectorSelection == 1) {
+			trap_SendConsoleCommand("savegame quicksave\n");
 			CG_CenterPrint("Quick Saved", 240, SMALLCHAR_WIDTH);
 		}
-		else if (cg.itemSelectorSelection == 1) {
-			trap_SendConsoleCommand("load quick\n");
+		else if (cg.itemSelectorSelection == 2) {
+			trap_SendConsoleCommand("loadgame quicksave\n");
 		}
 		else {
-			vr->move_speed = (++vr->move_speed) % 3;
+			trap_SendConsoleCommand("togglemenu\n");
 		}
 	}
 
@@ -4513,27 +4562,17 @@ void CG_DrawItemSelector(void)
 
 	centity_t* cent = &cg_entities[cg.snap->ps.clientNum];
 
-	vec3_t sRGB;
 	int count;
 	switch (cg.itemSelectorType)
 	{
 	case ST_WEAPON: //weapons
 		count = MAX_WEAPS_IN_BANK;
-		sRGB[0] = 1.0f;
-		sRGB[1] = 0.8f;
-		sRGB[2] = 0.2f;
 		break;
 	case ST_GADGET: //gadgets
 		count = HI_11;
-		sRGB[0] = 0.0f;
-		sRGB[1] = 1.0f;
-		sRGB[2] = 0.0f;
 		break;
 	case ST_QUICK_MENU:
-		count = 2;
-		sRGB[0] = 1.0f;
-		sRGB[1] = 1.0f;
-		sRGB[2] = 1.0f;
+		count = 3;
 		break;
 	}
 
@@ -4565,12 +4604,12 @@ void CG_DrawItemSelector(void)
 		memset(&sprite, 0, sizeof(sprite));
 		vec3_t right;
 		AngleVectors(wheelAngles, NULL, right, NULL);
-		float offset = ((float)s * 6.0f) + (((float)s * 0.3f) *
+		float offset = ((float)s * 8.0f) + (((float)s * 0.3f) *
 			sinf(DEG2RAD(AngleNormalize360(cg.time - cg.itemSelectorTime))));
 		VectorMA(wheelOrigin, offset, right, sprite.origin);
 		sprite.reType = RT_SPRITE;
-		sprite.customShader = cgs.media.energyMarkShader;
-		sprite.radius = 0.6f;
+		sprite.customShader = cgs.media.rightArrowShader;
+		sprite.radius = 0.5f;
 		sprite.rotation = 180.0f * ((s - 1.0f) / 2.0f);
 		memset(sprite.shaderRGBA, 0xff, 4);
 		trap_R_AddRefEntityToScene(&sprite);
@@ -4733,6 +4772,36 @@ void CG_DrawItemSelector(void)
 						sprite.shaderRGBA[3] = 255;
 						trap_R_AddRefEntityToScene(&sprite);
 					}
+				}
+				else if (cg.itemSelectorType == ST_QUICK_MENU)
+				{
+					refEntity_t sprite;
+					memset(&sprite, 0, sizeof(sprite));
+
+					float sRadius = 1.3f;
+
+					VectorCopy(iconOrigin, sprite.origin);
+					sprite.reType = RT_SPRITE;
+					switch (itemId)
+					{
+					case 0:
+						sprite.customShader = cgs.media.iconExit;
+						break;
+					case 1:
+						sprite.customShader = cgs.media.iconSave;
+						break;
+					case 2:
+						sprite.customShader = cgs.media.iconLoad;
+						break;
+					}
+
+					sprite.radius =
+						sRadius * (cg.itemSelectorSelection == itemId ? 1.3f : 0.6f);
+					sprite.shaderRGBA[0] = 255;
+					sprite.shaderRGBA[1] = 255;
+					sprite.shaderRGBA[2] = 255;
+					sprite.shaderRGBA[3] = 255;
+					trap_R_AddRefEntityToScene(&sprite);
 				}
 			}
 		}

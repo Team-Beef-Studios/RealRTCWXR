@@ -1543,6 +1543,13 @@ static void CG_RegisterGraphics( void ) {
 	cgs.media.bulletParticleTrailShader = trap_R_RegisterShader( "bulletParticleTrail" );
 	cgs.media.smokeParticleShader = trap_R_RegisterShader( "smokeParticle" );
 
+	//Item Selector Side Arrow
+	cgs.media.rightArrowShader = trap_R_RegisterShaderNoMip("ui/assets/scrollbar_arrow_right.tga");
+
+	cgs.media.iconSave = trap_R_RegisterShaderNoMip("gfx/icon_save");
+	cgs.media.iconLoad = trap_R_RegisterShaderNoMip("gfx/icon_load");
+	cgs.media.iconExit = trap_R_RegisterShaderNoMip("gfx/icon_exit");
+
 	// DHM - Nerve :: bullet hitting dirt
 	cgs.media.dirtParticle1Shader = trap_R_RegisterShader( "dirt_splash" );
 	cgs.media.dirtParticle2Shader = trap_R_RegisterShader( "water_splash" );

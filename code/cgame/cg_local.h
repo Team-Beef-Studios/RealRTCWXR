@@ -1291,6 +1291,12 @@ typedef struct {
 	qhandle_t bulletParticleTrailShader;
 	qhandle_t smokeParticleShader;
 
+	qhandle_t rightArrowShader;
+
+	qhandle_t 	iconSave;
+	qhandle_t 	iconLoad;
+	qhandle_t 	iconExit;
+
 	// DHM - Nerve :: bullet hitting dirt
 	qhandle_t dirtParticle1Shader;
 	qhandle_t dirtParticle2Shader;
