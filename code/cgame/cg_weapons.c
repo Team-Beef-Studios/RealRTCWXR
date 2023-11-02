@@ -3949,6 +3949,15 @@ void CG_DrawWeaponSelect( void ) {
 
 	}
 
+	if (cg_weapons[curweap].item && cg_weapons[curweap].item->classname)
+	{
+		gitem_t* item = BG_FindItemForWeapon(curweap);
+		if (item && item->pickup_name)
+		{
+			CG_CenterPrint(item->pickup_name, 240, SMALLCHAR_WIDTH);
+		}
+	}
+
 	y = WP_DRAW_Y;
 
 	for ( i = 0; i < maxWeapsInBank; i++ ) {
@@ -4493,15 +4502,12 @@ void CG_ItemSelectorSelect_f(void)
 		vr->use_item = qtrue; //HACK! Use this to fake a button push
 	}
 	else if (cg.itemSelectorType == ST_QUICK_MENU) {
-		if (cg.itemSelectorSelection == 1) {
+		if (cg.itemSelectorSelection == 0) {
 			trap_SendConsoleCommand("savegame quicksave\n");
 			CG_CenterPrint("Quick Saved", 240, SMALLCHAR_WIDTH);
 		}
-		else if (cg.itemSelectorSelection == 2) {
+		else if (cg.itemSelectorSelection == 1) {
 			trap_SendConsoleCommand("loadgame quicksave\n");
-		}
-		else {
-			trap_SendConsoleCommand("togglemenu\n");
 		}
 	}
 
@@ -4632,7 +4638,7 @@ void CG_DrawItemSelector(void)
 		count = HI_11;
 		break;
 	case ST_QUICK_MENU:
-		count = 3;
+		count = 2;
 		break;
 	}
 
@@ -4780,14 +4786,24 @@ void CG_DrawItemSelector(void)
 					VectorScale(ent.axis[2], weaponScale, ent.axis[2]);
 					ent.nonNormalizedAxes = qtrue;
 
-					weaponInfo_t* weaponInfo;
+					weapon_t weapon = WP_NONE;
 					if (cg.itemSelectorType == ST_WEAPON_BANKS)
 					{
-						weaponInfo = &cg_weapons[weapBanks[cg.itemSelectorWeaponBank][itemId]];
+						weapon = weapBanks[cg.itemSelectorWeaponBank][itemId];
 					}
 					else
 					{
-						weaponInfo = &cg_weapons[weapons[itemId]];
+						weapon = weapons[itemId];
+					}
+					weaponInfo_t* weaponInfo = &cg_weapons[weapon];
+
+					if (cg.itemSelectorSelection == itemId)
+					{
+						gitem_t* item = BG_FindItemForWeapon(weapon);
+						if (item && item->classname)
+						{
+							CG_CenterPrint(item->pickup_name, 240, SMALLCHAR_WIDTH);
+						}
 					}
 
 					ent.hModel = weaponInfo->weaponModel[W_TP_MODEL].model;
@@ -4834,7 +4850,12 @@ void CG_DrawItemSelector(void)
 						ent.nonNormalizedAxes = qtrue;
 
 						ent.hModel = cgs.media.thirdPersonBinocModel;
-						trap_R_AddRefEntityToScene(&ent);						
+						trap_R_AddRefEntityToScene(&ent);
+
+						if (cg.itemSelectorSelection == itemId)
+						{
+							CG_CenterPrint("Binoculars", 240, SMALLCHAR_WIDTH);
+						}
 					}
 					else
 					{
@@ -4858,6 +4879,15 @@ void CG_DrawItemSelector(void)
 						sprite.shaderRGBA[2] = 255;
 						sprite.shaderRGBA[3] = 255;
 						trap_R_AddRefEntityToScene(&sprite);
+
+						if (cg.itemSelectorSelection == itemId)
+						{
+							gitem_t* item = BG_FindItemForHoldable(itemId);
+							if (item && item->classname)
+							{
+								CG_CenterPrint(item->pickup_name, 240, SMALLCHAR_WIDTH);
+							}
+						}
 					}
 				}
 				else if (cg.itemSelectorType == ST_QUICK_MENU)
@@ -4872,12 +4902,9 @@ void CG_DrawItemSelector(void)
 					switch (itemId)
 					{
 					case 0:
-						sprite.customShader = cgs.media.iconExit;
-						break;
-					case 1:
 						sprite.customShader = cgs.media.iconSave;
 						break;
-					case 2:
+					case 1:
 						sprite.customShader = cgs.media.iconLoad;
 						break;
 					}
@@ -4897,6 +4924,7 @@ void CG_DrawItemSelector(void)
 	if (!selected)
 	{
 		cg.itemSelectorSelection = ST_NONE;
+		CG_CenterPrint("", 240, SMALLCHAR_WIDTH);
 	}
 }
 
