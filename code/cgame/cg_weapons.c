@@ -3759,6 +3759,39 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 		fovOffset[2] = -0.2 * ( cg_fov.integer - 90 );
  	}
 
+	if (vr->binocularsHeld)
+	{
+		centity_t* cent = &cg_entities[cg.snap->ps.clientNum];
+
+		// don't draw any weapons when the binocs are up
+		qboolean usingBinocs = (cent->currentState.eFlags & EF_ZOOMING) && 
+			(cent->currentState.clientNum == cg.snap->ps.clientNum) && (!cg.renderingThirdPerson);
+		if (!usingBinocs) {
+			refEntity_t binoc_hand;
+			vec3_t binoc_angles;
+			memset(&binoc_hand, 0, sizeof(binoc_hand));
+			BG_CalculateVROffHandPosition(cg.refdefViewAngles[YAW], cg.refdef.vieworg, cg_heightAdjust.value, cg_worldScale.value, binoc_hand.origin, binoc_angles);
+			AnglesToAxis(binoc_angles, binoc_hand.axis);
+
+			vec3_t axis[3];
+			AnglesToAxis(binoc_angles, axis);
+			VectorCopy(axis[0], binoc_hand.axis[0]);
+			VectorSubtract(vec3_origin, axis[1], binoc_hand.axis[1]);
+			VectorCopy(axis[2], binoc_hand.axis[2]);
+
+
+			VectorMA(binoc_hand.origin, -4, binoc_hand.axis[0], binoc_hand.origin);
+			VectorMA(binoc_hand.origin, 0, binoc_hand.axis[1], binoc_hand.origin);
+			VectorMA(binoc_hand.origin, 4, binoc_hand.axis[2], binoc_hand.origin);
+
+			VectorCopy(binoc_hand.origin, binoc_hand.lightingOrigin);
+			binoc_hand.renderfx = RF_DEPTHHACK | RF_FIRST_PERSON | RF_MINLIGHT;
+			binoc_hand.hModel = cgs.media.thirdPersonBinocModel;
+			CG_AddWeaponWithPowerups(&binoc_hand, 0, ps, cent);
+		}
+	}
+
+
 	memset( &hand, 0, sizeof( hand ) );
 
 	if ( ps->weapon > WP_NONE ) {
@@ -4493,13 +4526,20 @@ void CG_ItemSelectorSelect_f(void)
 	}
 	else if (cg.itemSelectorType == ST_GADGET) // gadgets
 	{
-		cg.holdableSelectTime = cg.time;
-		cg.holdableSelect = cg.itemSelectorSelection;
+		if (cg.itemSelectorSelection == 0)
+		{
+			vr->binocularsHeld = qtrue;
+		}
+		else
+		{
+			cg.holdableSelectTime = cg.time;
+			cg.holdableSelect = cg.itemSelectorSelection;
 
-		trap_SetUserCmdValue(cg.weaponSelect, cg.holdableSelect, cg.zoomSensitivity, cg.cld);
-		//Immediately use the selected inventory item
-		centity_t* cent = &cg_entities[cg.snap->ps.clientNum];
-		vr->use_item = qtrue; //HACK! Use this to fake a button push
+			trap_SetUserCmdValue(cg.weaponSelect, cg.holdableSelect, cg.zoomSensitivity, cg.cld);
+			//Immediately use the selected inventory item
+			centity_t* cent = &cg_entities[cg.snap->ps.clientNum];
+			vr->use_item = qtrue; //HACK! Use this to fake a button push
+		}
 	}
 	else if (cg.itemSelectorType == ST_QUICK_MENU) {
 		if (cg.itemSelectorSelection == 0) {
@@ -4530,6 +4570,7 @@ void CG_DrawItemSelector(void)
 		if (vr->item_selector == 2)
 		{
 			cg.itemSelectorType = ST_GADGET;
+			vr->binocularsHeld = qfalse;
 			VectorCopy(vr->offhandposition[0], cg.itemSelectorOrigin);
 			VectorCopy(vr->offhandoffset, cg.itemSelectorOffset);
 		}

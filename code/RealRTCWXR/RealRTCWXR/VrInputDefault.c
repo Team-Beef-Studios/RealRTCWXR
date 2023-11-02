@@ -368,7 +368,7 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
                 pOffTrackedRemoteOld->Buttons |= xrButton_Trigger;
             }
         }
-        else if (vr.misc_camera && !vr.remote_droid)
+        else if (vr.misc_camera)
         {
             if (between(-0.2f, primaryJoystickX, 0.2f)) {
                 sendButtonAction("+use", pPrimaryJoystick->y < -0.8f || pPrimaryJoystick->y > 0.8f);
@@ -404,6 +404,16 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
             {
                 sendButtonActionSimple("cg_thirdPerson 0");
             }
+        }
+
+        static qboolean binocularstate = qfalse;
+        qboolean binocularsactive = (vr.binocularsHeld &&
+            (distanceToHMDOff < BINOCULAR_ENGAGE_DISTANCE));
+        if (binocularstate != binocularsactive)
+        {
+            //Engage scope if conditions are right
+            binocularstate = binocularsactive;
+            sendButtonAction("+zoom", binocularstate);
         }
 
         //dominant hand stuff first

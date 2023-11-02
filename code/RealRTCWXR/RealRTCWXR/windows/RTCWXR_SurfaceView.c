@@ -41,7 +41,7 @@ void VR_SetHMDOrientation(float pitch, float yaw, float roll)
 	//Keep this for our records
 	VectorCopy(vr.hmdorientation, vr.hmdorientation_last);
 
-	if (!vr.third_person && !vr.remote_npc && !vr.remote_turret
+	if (!vr.third_person && !vr.remote_turret
 	)
 	{
 		VectorCopy(vr.hmdorientation, vr.hmdorientation_first);
@@ -139,16 +139,6 @@ void VR_GetMove(float *forward, float *side, float *pos_forward, float *pos_side
 		*yaw = vr.snapTurn;
 		*pitch = vr.weaponangles[ANGLES_ADJUSTED][PITCH];
 		*roll = 0.0f;//vr.hmdorientation[ROLL];
-	}
-	else if (vr.remote_npc) {
-		*forward = remote_movementForward;
-		*pos_forward = 0.0f;
-		*up = 0.0f;
-		*side = remote_movementSideways;
-		*pos_side = 0.0f;
-		*yaw = vr.hmdorientation[YAW] + vr.snapTurn;
-		*pitch = vr.hmdorientation[PITCH];
-		*roll = 0.0f;
 	}
 	else if (!vr.third_person) {
 		*forward = remote_movementForward;

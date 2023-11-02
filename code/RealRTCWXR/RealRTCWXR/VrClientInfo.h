@@ -25,13 +25,12 @@ typedef struct {
     qboolean misc_camera; // looking through a misc camera view entity
     qboolean remote_turret; // controlling a remote turret
     qboolean emplaced_gun; // controlling an emplaced gun
-    qboolean remote_droid; // controlling a remote droid
-    qboolean remote_npc; // controlling a remote NPC (will also be true when controlling a droid)
     qboolean in_vehicle; // controlling a vehicle
     int vehicle_type;
     vec3_t remote_angles; // The view angles of the remote thing we are controlling
     float remote_snapTurn; // how much turn has been applied to the yaw by joystick for a remote controlled entity
     int remote_cooldown;
+    qboolean binocularsHeld; // True when the user has selected binoculars from the gadget selector
 
     qboolean using_screen_layer;
     qboolean third_person;
@@ -51,8 +50,6 @@ typedef struct {
     qboolean crouched;
     int cgzoommode;
     int cgzoomdir;
-    int saberBlockDebounce; // Amount of time after player is blocked that the saber position is fixed
-    short saberBounceMove;
 
     int forceid;
 
