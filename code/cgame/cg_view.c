@@ -1647,10 +1647,12 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 
 	if (vr->item_selector)
 	{
+		trap_Cvar_Set("timescale", "0.3");
 		CG_DrawItemSelector();
 	}
 	else
 	{
+		trap_Cvar_Set("timescale", "1.0");
 		CG_AddViewWeapon(&cg.predictedPlayerState);
 	}
 

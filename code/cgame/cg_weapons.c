@@ -3759,36 +3759,28 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 		fovOffset[2] = -0.2 * ( cg_fov.integer - 90 );
  	}
 
-	if (vr->binocularsHeld)
+	centity_t* cent = &cg_entities[cg.snap->ps.clientNum];
+	// don't draw any weapons when the binocs are up
+	qboolean usingBinocs = (cent->currentState.eFlags & EF_ZOOMING) &&
+		(cent->currentState.clientNum == cg.snap->ps.clientNum) && (!cg.renderingThirdPerson);
+	if (vr->binocularsHeld && !usingBinocs)
 	{
-		centity_t* cent = &cg_entities[cg.snap->ps.clientNum];
+		refEntity_t binoc_hand;
+		vec3_t binoc_angles;
+		memset(&binoc_hand, 0, sizeof(binoc_hand));
+		BG_CalculateVROffHandPosition(cg.refdefViewAngles[YAW], cg.refdef.vieworg, cg_heightAdjust.value, cg_worldScale.value, binoc_hand.origin, binoc_angles);
+		AnglesToAxis(binoc_angles, binoc_hand.axis);
 
-		// don't draw any weapons when the binocs are up
-		qboolean usingBinocs = (cent->currentState.eFlags & EF_ZOOMING) && 
-			(cent->currentState.clientNum == cg.snap->ps.clientNum) && (!cg.renderingThirdPerson);
-		if (!usingBinocs) {
-			refEntity_t binoc_hand;
-			vec3_t binoc_angles;
-			memset(&binoc_hand, 0, sizeof(binoc_hand));
-			BG_CalculateVROffHandPosition(cg.refdefViewAngles[YAW], cg.refdef.vieworg, cg_heightAdjust.value, cg_worldScale.value, binoc_hand.origin, binoc_angles);
-			AnglesToAxis(binoc_angles, binoc_hand.axis);
-
-			vec3_t axis[3];
-			AnglesToAxis(binoc_angles, axis);
-			VectorCopy(axis[0], binoc_hand.axis[0]);
-			VectorSubtract(vec3_origin, axis[1], binoc_hand.axis[1]);
-			VectorCopy(axis[2], binoc_hand.axis[2]);
-
-
-			VectorMA(binoc_hand.origin, -4, binoc_hand.axis[0], binoc_hand.origin);
-			VectorMA(binoc_hand.origin, 0, binoc_hand.axis[1], binoc_hand.origin);
-			VectorMA(binoc_hand.origin, 4, binoc_hand.axis[2], binoc_hand.origin);
-
-			VectorCopy(binoc_hand.origin, binoc_hand.lightingOrigin);
-			binoc_hand.renderfx = RF_DEPTHHACK | RF_FIRST_PERSON | RF_MINLIGHT;
-			binoc_hand.hModel = cgs.media.thirdPersonBinocModel;
-			CG_AddWeaponWithPowerups(&binoc_hand, 0, ps, cent);
-		}
+		vec3_t axis[3];
+		AnglesToAxis(binoc_angles, axis);
+		VectorSubtract(vec3_origin, axis[0], binoc_hand.axis[1]);
+		VectorCopy(axis[1], binoc_hand.axis[0]);
+		VectorCopy(axis[2], binoc_hand.axis[2]);
+		VectorMA(binoc_hand.origin, -5, binoc_hand.axis[0], binoc_hand.origin);
+		VectorCopy(binoc_hand.origin, binoc_hand.lightingOrigin);
+		binoc_hand.renderfx = RF_DEPTHHACK | RF_FIRST_PERSON | RF_MINLIGHT;
+		binoc_hand.hModel = cgs.media.thirdPersonBinocModel;
+		CG_AddWeaponWithPowerups(&binoc_hand, 0, ps, cent);		
 	}
 
 
@@ -4484,7 +4476,6 @@ void CG_ItemSelectorPrev_f(void)
 void CG_ItemSelectorSelect_f(void)
 {
 	cg.itemSelectorTime = 0;
-	trap_Cvar_Set("timescale", "1.0");
 
 	if (cg.itemSelectorSelection == ST_NONE)
 	{
@@ -4619,7 +4610,6 @@ void CG_DrawItemSelector(void)
 	{
 		frac = 1.0f;
 	}
-	trap_Cvar_Set("timescale", "0.3");
 
 	vec3_t controllerOrigin, controllerAngles, controllerOffset, selectorOrigin;
 	if (cg.itemSelectorType >= ST_GADGET)
