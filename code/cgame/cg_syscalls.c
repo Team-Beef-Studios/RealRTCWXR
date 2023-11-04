@@ -46,8 +46,8 @@ void CG_AdjustForVRStereo(float* x, float* y, float* w, float* h) {
 		&& !cg.coverView
 		&& (cgs.scrFadeAlphaCurrent == 0.0))
 	{
-		float screenXScale = 1.0f / 3.0f;
-		float screenYScale = 1.0f / 3.0f;
+		float screenXScale = 1.0f / 1.8f;
+		float screenYScale = 1.0f / 1.8f;
 
 		*x *= screenXScale;
 		*y *= screenYScale;

@@ -4576,7 +4576,7 @@ void CG_DrawItemSelector(void)
 					selectableWeapons++;
 				}
 			}
-			if (selectableWeapons <= 12)
+			if (selectableWeapons <= 8)
 			{
 				cg.itemSelectorType = ST_WEAPON_ALL;
 			}
@@ -4837,20 +4837,34 @@ void CG_DrawItemSelector(void)
 						}
 					}
 
-					ent.hModel = weaponInfo->weaponModel[W_TP_MODEL].model;
+					int modelIndex = W_TP_MODEL;
+					if (weapon == WP_TESLA)
+					{
+						modelIndex = W_FP_MODEL;
+					}
+
+					ent.hModel = weaponInfo->weaponModel[modelIndex].model;
+
 					trap_R_AddRefEntityToScene(&ent);
 
-					if (weaponInfo->partModels[W_TP_MODEL][W_PART_1].model)
+					for (int part = W_PART_1; part < W_MAX_PARTS; ++part)
 					{
-						refEntity_t barrel;
-						memset(&barrel, 0, sizeof(barrel));
-						barrel.hModel = weaponInfo->partModels[W_TP_MODEL][W_PART_1].model;
-						vec3_t barrelAngles;
-						VectorClear(barrelAngles);
-						barrelAngles[ROLL] = AngleNormalize360((cg.time - cg.itemSelectorTime) * 1.5f);
-						AnglesToAxis(barrelAngles, barrel.axis);
-						CG_PositionRotatedEntityOnTag(&barrel, &ent, "tag_barrel");
-						trap_R_AddRefEntityToScene(&barrel);
+						if (weaponInfo->partModels[modelIndex][part].model)
+						{
+							refEntity_t barrel;
+							memset(&barrel, 0, sizeof(barrel));
+							barrel.hModel = weaponInfo->partModels[modelIndex][part].model;
+							vec3_t barrelAngles;
+							VectorClear(barrelAngles);
+							barrelAngles[ROLL] = AngleNormalize360((cg.time - cg.itemSelectorTime) * 1.5f);
+							AnglesToAxis(barrelAngles, barrel.axis);
+							CG_PositionRotatedEntityOnTag(&barrel, &ent, "tag_barrel");
+							trap_R_AddRefEntityToScene(&barrel);
+						}
+						else
+						{
+							break;
+						}
 					}
 				}
 				else if (cg.itemSelectorType == ST_GADGET)
@@ -4934,9 +4948,17 @@ void CG_DrawItemSelector(void)
 					{
 					case 0:
 						sprite.customShader = cgs.media.iconSave;
+						if (cg.itemSelectorSelection == itemId)
+						{
+							CG_CenterPrint("Quick Save", 240, SMALLCHAR_WIDTH);
+						}
 						break;
 					case 1:
 						sprite.customShader = cgs.media.iconLoad;
+						if (cg.itemSelectorSelection == itemId)
+						{
+							CG_CenterPrint("Quick Load", 240, SMALLCHAR_WIDTH);
+						}
 						break;
 					}
 
