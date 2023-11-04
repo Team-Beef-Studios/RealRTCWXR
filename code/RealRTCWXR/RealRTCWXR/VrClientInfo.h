@@ -31,6 +31,7 @@ typedef struct {
     float remote_snapTurn; // how much turn has been applied to the yaw by joystick for a remote controlled entity
     int remote_cooldown;
     qboolean binocularsHeld; // True when the user has selected binoculars from the gadget selector
+    qboolean binocularsActive; // True when the user is using binoculars
 
     qboolean using_screen_layer;
     qboolean third_person;
@@ -48,8 +49,9 @@ typedef struct {
     qboolean player_moving;
     int move_speed; // 0 (default) = Comfortable (75%) , 1 = Full (100%), 2 = Walk (50%)
     qboolean crouched;
-    int cgzoommode;
+    qboolean cgzoommode;
     int cgzoomdir;
+    qboolean scopedweapon;
 
     int forceid;
 

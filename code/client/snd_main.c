@@ -308,7 +308,7 @@ S_Update
 */
 void S_Update( void )
 {
-	if(s_muted->integer)
+/*	if (s_muted->integer)
 	{
 		if(!(s_muteWhenMinimized->integer && com_minimized->integer) &&
 		   !(s_muteWhenUnfocused->integer && com_unfocused->integer))
@@ -326,7 +326,7 @@ void S_Update( void )
 			s_muted->modified = qtrue;
 		}
 	}
-	
+*/
 	if( si.Update ) {
 		si.Update( );
 	}

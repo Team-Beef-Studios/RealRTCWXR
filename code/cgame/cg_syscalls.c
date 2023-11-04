@@ -37,10 +37,17 @@ If you have questions concerning this license or the applicable additional terms
 
 
 void CG_AdjustForVRStereo(float* x, float* y, float* w, float* h) {
-	if ((!vr->cin_camera || vr->immersive_cinematics) && !vr->using_screen_layer)
+	if ((!vr->cin_camera || vr->immersive_cinematics)
+		&& !vr->using_screen_layer 
+		&& !cg.zoomedBinoc
+		&& !cg.zoomval
+		&& cg.viewFade == 0.0
+		&& !cg.fadeRate
+		&& !cg.coverView
+		&& (cgs.scrFadeAlphaCurrent == 0.0))
 	{
-		float screenXScale = 1.0f / (!vr->using_screen_layer ? 2.5f : 1.0f);
-		float screenYScale = 1.0f / (!vr->using_screen_layer ? 2.5f : 1.0f);
+		float screenXScale = 1.0f / 3.0f;
+		float screenYScale = 1.0f / 3.0f;
 
 		*x *= screenXScale;
 		*y *= screenYScale;

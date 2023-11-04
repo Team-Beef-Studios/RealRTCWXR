@@ -374,45 +374,14 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
                 sendButtonAction("+use", pPrimaryJoystick->y < -0.8f || pPrimaryJoystick->y > 0.8f);
             }
         }
-        else if (vr.cgzoommode)
-        {
-            if (between(-0.2f, primaryJoystickX, 0.2f)) {
-                if (vr.cgzoommode == 2)
-                { // We are in disruptor scope
-                    if (pPrimaryJoystick->y > 0.8f) {
-                        vr.cgzoomdir = -1; // zooming in
-                        sendButtonAction("+altattack", true);
-                    } else if (pPrimaryJoystick->y < -0.8f) {
-                        vr.cgzoomdir = 1; // zooming out
-                        sendButtonAction("+altattack", true);
-                    } else {
-                        sendButtonAction("+altattack", false);
-                    }
-                }
-                else if (vr.cgzoommode == 1)
-                { // We are in binoculars scope - zoom in or out
-                  sendButtonAction("+attack", pPrimaryJoystick->y > 0.8f);
-                  sendButtonAction("+altattack", pPrimaryJoystick->y < -0.8f);
-                }
-                // No function of thumbstick for nightvision (3) or blaster scope (4)
-            }
-        }
-        else
-        {
-            int mode = (int)Cvar_VariableValue("cg_thirdPerson");
-            if (mode != 0)
-            {
-                sendButtonActionSimple("cg_thirdPerson 0");
-            }
-        }
 
         static qboolean binocularstate = qfalse;
-        qboolean binocularsactive = (vr.binocularsHeld &&
-            (distanceToHMDOff < BINOCULAR_ENGAGE_DISTANCE));
-        if (binocularstate != binocularsactive)
+        qboolean binocularsCanBeActivate = (vr.binocularsHeld &&
+            (distanceToHMDOff < SCOPE_ENGAGE_DISTANCE));
+        if (binocularstate != binocularsCanBeActivate)
         {
             //Engage scope if conditions are right
-            binocularstate = binocularsactive;
+            binocularstate = binocularsCanBeActivate;
             sendButtonAction("+zoom", binocularstate);
         }
 
@@ -472,23 +441,23 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
                 sendButtonAction("+attack", vr.primaryVelocityTriggeredAttack);
             }
 
-            //Should we trigger the disruptor scope?
-            if ((cl.snap.ps.weapon == WP_FG42) &&
-                cl.snap.ps.stats[STAT_HEALTH] > 0)
-            {
-                if (vr.weapon_stabilised &&
-                    VectorLength(vr.weaponoffset) < 0.24f &&
-                    vr.cgzoommode == 0) {
-                    sendButtonAction("enterscope", true);
-                } else if ((VectorLength(vr.weaponoffset) > 0.26f || !vr.weapon_stabilised) &&
-                           (vr.cgzoommode == 2 || vr.cgzoommode == 4)) {
-                    sendButtonActionSimple("exitscope");
+            //Engage scope / virtual stock if conditions are right
+            qboolean scopeready = vr.weapon_stabilised && (distanceToHMD < SCOPE_ENGAGE_DISTANCE);
+            static qboolean lastScopeReady = qfalse;
+            if (scopeready != lastScopeReady) {
+                if (vr.scopedweapon || vr.cgzoommode) {
+                    if (!vr.cgzoommode && scopeready) {
+                        ALOGV("**WEAPON EVENT**  trigger scope mode");
+                        sendButtonActionSimple("weapalt");
+                    }
+                    else if (vr.cgzoommode && !scopeready) {
+                        ALOGV("**WEAPON EVENT**  disable scope mode");
+                        sendButtonActionSimple("weapalt");
+                    }
+                    lastScopeReady = scopeready;
                 }
-            } else if (vr.cgzoommode == 2 || vr.cgzoommode == 4) {
-                // In case we were using weapon scope and weapon
-                // was changed due to out of ammo, exit scope
-                sendButtonActionSimple("exitscope");
             }
+
 
             vec3_t offhandPositionAverage;
             VectorClear(offhandPositionAverage);
@@ -498,7 +467,7 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
             }
             VectorScale(offhandPositionAverage, 0.2f, offhandPositionAverage);
             if (vr.weapon_stabilised) {
-                if (vr.cgzoommode == 2 || vr.cgzoommode == 4)
+                if (vr.cgzoommode)
                 {
                     //If scope is engaged, lift muzzle slightly so that it aligns with the headset
                     float x = offhandPositionAverage[0] - (vr.hmdposition[0]);
@@ -604,23 +573,9 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
                 sendButtonAction("+moveup", (primaryButtonsNew & primaryButton1));
             }
 
-            //B Button
+            //B Button - currently exit scope
             if (primaryButton2New != primaryButton2Old) {
-                if (vr.cgzoommode == 1 || vr.cgzoommode == 3)
-                {   // Exit scope only when using binoculars or nightvision
-                    sendButtonActionSimple("exitscope");
-                }
-                else if (cl.snap.ps.weapon == WP_KNIFE && vr.velocitytriggered)
-                {
-                    //B button toggles saber on/off in first person
-                    if (primaryButton2New && !primaryButton2Old) {
-                        sendButtonActionSimple("togglesaber");
-                    }
-                }
-                else
-                {
-                    sendButtonActionSimple("weapalt");
-                }
+                sendButtonActionSimple("weapalt");
             }
 
 

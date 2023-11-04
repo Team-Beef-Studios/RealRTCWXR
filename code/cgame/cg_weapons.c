@@ -3761,9 +3761,9 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 
 	centity_t* cent = &cg_entities[cg.snap->ps.clientNum];
 	// don't draw any weapons when the binocs are up
-	qboolean usingBinocs = (cent->currentState.eFlags & EF_ZOOMING) &&
+	vr->binocularsActive = (cent->currentState.eFlags & EF_ZOOMING) &&
 		(cent->currentState.clientNum == cg.snap->ps.clientNum) && (!cg.renderingThirdPerson);
-	if (vr->binocularsHeld && !usingBinocs)
+	if (vr->binocularsHeld && !vr->binocularsActive)
 	{
 		refEntity_t binoc_hand;
 		vec3_t binoc_angles;

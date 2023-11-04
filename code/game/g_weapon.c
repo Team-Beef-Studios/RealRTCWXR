@@ -2004,7 +2004,7 @@ void CalcMuzzlePoints( gentity_t *ent, int weapon ) {
 
 	if (!(ent->r.svFlags & SVF_CASTAI)) {
 		VectorCopy(vr->weaponangles[ANGLES_ADJUSTED], viewang);
-		viewang[YAW] = ent->client->ps.viewangles[YAW] + (vr->weaponangles[ANGLES_ADJUSTED][YAW] - vr->hmdorientation[YAW]);
+		viewang[YAW] = ent->client->ps.viewangles[YAW] + (vr->weaponangles[ANGLES_ADJUSTED][YAW] - getHMDYawForCalc());
 	}
 
 	// set aiming directions

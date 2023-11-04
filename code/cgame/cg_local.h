@@ -832,6 +832,7 @@ typedef struct {
 	refdef_t refdef;
 	vec3_t refdefViewAngles;	// will be converted to refdef.viewaxis
 	float fov;			// either range checked cg_fov or forced value
+	qboolean coverView; // ensures that fades etc cover the entire visible screen (not just the scaled HUD area
 
 	// zoom key
 	qboolean zoomed;

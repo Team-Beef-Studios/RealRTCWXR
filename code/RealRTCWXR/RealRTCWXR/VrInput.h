@@ -5,7 +5,7 @@
 #include "VrCommon.h"
 
 #define STABILISATION_DISTANCE   0.35
-#define BINOCULAR_ENGAGE_DISTANCE   0.25
+#define SCOPE_ENGAGE_DISTANCE   0.25
 
 
 extern ovrInputStateTrackedRemote leftTrackedRemoteState_old;

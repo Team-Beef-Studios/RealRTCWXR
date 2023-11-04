@@ -2942,6 +2942,8 @@ static void CG_DrawFlashZoomTransition( void ) {
 
 	frac = cg.time - cg.zoomTime;
 
+	cg.coverView = qtrue;
+
 	if ( frac < fadeTime ) {
 		frac = frac / (float)fadeTime;
 
@@ -2962,6 +2964,8 @@ static void CG_DrawFlashZoomTransition( void ) {
 			CG_FillRect( -10, -10, 650, 490, color );
 		}
 	}
+
+	cg.coverView = qfalse;
 }
 
 
@@ -3000,6 +3004,7 @@ static void CG_DrawFlashDamage( void ) {
 		VectorSet( col, 0.2, 0, 0 );
 		col[3] =  0.7 * ( redFlash / 5.0 );
 
+		cg.coverView = qtrue;
 		if ( cg_fixedAspect.integer ) {
 			CG_SetScreenPlacement(PLACE_STRETCH, PLACE_STRETCH);
 			CG_FillRect( -10, -10, 650, 490, col );
@@ -3007,6 +3012,7 @@ static void CG_DrawFlashDamage( void ) {
 		} else {
 			CG_FillRect( -10, -10, 650, 490, col );
 		}
+		cg.coverView = qfalse;
 	}
 }
 
@@ -3640,14 +3646,22 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 	if (!vr->using_screen_layer)
 		CG_DrawCrosshair3D();
 
-	if (!cg.cameraMode)
+	if (cg.weaponSelect == WP_FG42SCOPE || cg.weaponSelect == WP_SNOOPERSCOPE || cg.weaponSelect == WP_SNIPERRIFLE || cg.weaponSelect == WP_DELISLESCOPE)
+	{
+		cg.refdef.viewangles[ROLL] = vr->hmdorientation[ROLL];
+		cg.refdef.viewangles[PITCH] = vr->weaponangles[ANGLES_ADJUSTED][PITCH];
+		cg.refdef.viewangles[YAW] = vr->clientviewangles[YAW]
+			+ vr->weaponangles[ANGLES_ADJUSTED][YAW] + SHORT2ANGLE(cg.snap->ps.delta_angles[YAW]);
+		AnglesToAxis(cg.refdef.viewangles, cg.refdef.viewaxis);
+	}
+	else if (!cg.cameraMode)
 	{
 		VectorCopy(vr->hmdorientation, cg.refdef.viewangles);
 		cg.refdef.viewangles[YAW] = vr->clientviewangles[YAW] +
 			SHORT2ANGLE(cg.snap->ps.delta_angles[YAW]);
 		AnglesToAxis(cg.refdef.viewangles, cg.refdef.viewaxis);
 	}
-	else
+	else 
 	{
 		VectorCopy(vr->hmdorientation, cg.refdef.viewangles);
 		cg.refdef.viewangles[YAW] = cg.camereModeYaw + vr->clientviewangles[YAW];

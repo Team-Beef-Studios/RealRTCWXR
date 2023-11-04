@@ -1497,6 +1497,12 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	cg.demoPlayback = demoPlayback;
 	cg.stereoView = stereoView;
 
+	//Set the scoped weapon flag for the vr code
+	vr->cgzoommode = cg.zoomedBinoc || cg.zoomval;
+	vr->scopedweapon = (cg.weaponSelect == WP_GARAND ||
+		cg.weaponSelect == WP_FG42 || 
+		cg.weaponSelect == WP_MAUSER);
+
 	// update cvars
 	CG_UpdateCvars();
 

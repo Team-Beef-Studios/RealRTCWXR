@@ -98,6 +98,7 @@ void PM_AddEvent( int newEvent );
 qboolean    PM_SlideMove( qboolean gravity );
 void        PM_StepSlideMove( qboolean gravity );
 
+float getHMDYawForCalc();
 void rotateAboutOrigin(float x, float y, float rotation, vec2_t out);
 void BG_CalculateVRWeaponPosition(float refdefViewAnglesYaw, const vec3_t refdefViewOrigin, float heightAdjust, float worldScale, vec3_t origin, vec3_t angles);
 void BG_CalculateVRKnifePosition(float refdefViewAnglesYaw, const vec3_t refdefViewOrigin, float heightAdjust, float worldScale, vec3_t origin, vec3_t angles);

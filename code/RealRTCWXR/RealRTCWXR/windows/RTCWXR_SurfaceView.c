@@ -129,7 +129,7 @@ void VR_GetMove(float *forward, float *side, float *pos_forward, float *pos_side
 		*pitch = vr.weaponangles[ANGLES_ADJUSTED][PITCH];
 		*roll = 0.0f;
 	}
-	else if (vr.cgzoommode == 2 || vr.cgzoommode == 4)
+	else if (vr.cgzoommode && !vr.binocularsActive)
 	{
 		*forward = 0.0f;
 		*pos_forward = 0.0f;

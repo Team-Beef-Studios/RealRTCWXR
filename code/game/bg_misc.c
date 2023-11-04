@@ -5752,7 +5752,8 @@ float getHMDYawForCalc()
 		return vr->hmdorientation_first[YAW];
 	}
 
-	if (vr->cgzoommode != 2 && vr->cgzoommode != 4) {
+	if (!vr->cgzoommode) 
+	{
 		return vr->hmdorientation[YAW];
 	}
 

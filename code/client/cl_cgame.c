@@ -394,6 +394,9 @@ Just adds default parameters that cgame doesn't need to know about
 void CL_CM_LoadMap( const char *mapname ) {
 	int checksum;
 
+	//reset snap turn
+	vr.snapTurn = 0;
+
 	CM_LoadMap( mapname, qtrue, &checksum );
 }
 
