@@ -259,7 +259,7 @@ Sys_InitPIDFile
 */
 void Sys_InitPIDFile( const char *gamedir ) {
 	if( Sys_WritePIDFile( gamedir ) ) {
-#ifndef _DEBUG
+#if 0
 		char message[1024];
 		char modName[MAX_OSPATH];
 

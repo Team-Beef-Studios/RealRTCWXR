@@ -296,6 +296,12 @@ static void RB_Hyperspace( void ) {
 static void SetViewportAndScissor( void ) {
 	GL_SetProjectionMatrix( backEnd.viewParms.projectionMatrix );
 
+	const auto xOffsetL = vr->cgzoommode ? (vr->off_center_fov_x[0] * glConfig.vidWidth) : 0;
+	const auto yOffsetL = vr->cgzoommode ? (-vr->off_center_fov_y[0] * glConfig.vidHeight) : 0;
+	const auto xOffsetR = vr->cgzoommode ? (vr->off_center_fov_x[1] * glConfig.vidWidth) : 0;
+	const auto yOffsetR = vr->cgzoommode ? (-vr->off_center_fov_y[1] * glConfig.vidHeight) : 0;
+
+
 	// set the window clipping
 	qglViewport(    backEnd.viewParms.viewportX,
 					backEnd.viewParms.viewportY,

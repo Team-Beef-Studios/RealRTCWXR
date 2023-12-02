@@ -247,7 +247,7 @@ void ovrFramebuffer_Resolve(ovrFramebuffer* frameBuffer) {
 	const GLuint colorTexture = frameBuffer->ColorSwapChainImage[frameBuffer->TextureSwapChainIndex].image;
 
 	int width, height, aspect;
-	cvar_t* r_mode = Cvar_Get("r_mode", "3", CVAR_ARCHIVE | CVAR_LATCH);
+	cvar_t* r_mode = Cvar_Get("r_mode", "20", CVAR_ARCHIVE | CVAR_LATCH);
 	re.GetModeInfo(&width, &height, &aspect, r_mode->integer);
 
 	//Create a framebuffer solely for the purpose of binding the color texture to as a single texture layer in order to blit from
@@ -259,7 +259,7 @@ void ovrFramebuffer_Resolve(ovrFramebuffer* frameBuffer) {
 	}
 
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, fb);
-	glFramebufferTextureLayer(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, colorTexture, 0, 0); // the magic line!
+	glFramebufferTextureLayer(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, colorTexture, 0, 1); // the magic line!
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 	glBlitFramebuffer(0, 0, gAppState.Width, gAppState.Height,
 		0, 0, width, height,
@@ -1260,7 +1260,7 @@ void TBXR_submitFrame()
 		quad_layer.layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT;
 		quad_layer.space = gAppState.StageSpace;
 		quad_layer.eyeVisibility =XR_EYE_VISIBILITY_BOTH;
-		quad_layer.subImage.imageArrayIndex = 0;
+		quad_layer.subImage.imageArrayIndex = 1;
 		quad_layer.subImage.swapchain = gAppState.Renderer.FrameBuffer.ColorSwapChain.Handle;
 		quad_layer.subImage.imageRect.extent.width = gAppState.Renderer.FrameBuffer.ColorSwapChain.Width;
 		quad_layer.subImage.imageRect.extent.height = gAppState.Renderer.FrameBuffer.ColorSwapChain.Height;

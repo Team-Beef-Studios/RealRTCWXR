@@ -1105,7 +1105,7 @@ static void GLimp_InitExtensions( qboolean fixedFunction )
 	}
 }
 
-#define R_MODE_FALLBACK 3 // 640 * 480
+#define R_MODE_FALLBACK 20 // 1280x800
 
 /*
 ===============

@@ -18,6 +18,7 @@ bool VR_UseScreenLayer()
 			(bool)((vr.cin_camera && !vr.immersive_cinematics) ||
 			vr.misc_camera ||
 			clc.demoplaying ||
+            (clc.state == CA_DISCONNECTED) ||
             (clc.state == CA_CINEMATIC) ||
             (clc.state == CA_LOADING) ||
             ( Key_GetCatcher( ) & KEYCATCH_UI ) ||

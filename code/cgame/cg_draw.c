@@ -2382,6 +2382,7 @@ static void CG_DrawCrosshair( void ) {
 		return;
 	}
 
+
 	//In VR we don't want to draw the fixed "center of the view" crosshair
 	return;
 
@@ -3486,6 +3487,19 @@ if ( !cg_oldWolfUI.integer ) {
 			CG_DrawPickupItem();
 			CG_DrawReward();
 		}
+	}
+
+
+	if (vr->cgzoommode)
+	{
+		const auto xOffset = (vr->off_center_fov_x[0] * 640) + 10;
+		const auto yOffset = (vr->off_center_fov_y[0] * 480);
+
+		vec4_t color = { 0, 0, 0, 1 };
+		CG_FillRect(-xOffset, -yOffset, xOffset, 480 + (2*yOffset), color);
+		CG_FillRect(640, -yOffset, xOffset, 480 + (2*yOffset), color);
+		CG_FillRect(0, -yOffset, 640, yOffset, color);
+		CG_FillRect(0, 480, 640, yOffset, color);
 	}
 
 	CG_DrawVote();

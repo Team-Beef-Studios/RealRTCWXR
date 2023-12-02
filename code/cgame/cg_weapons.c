@@ -2305,7 +2305,7 @@ static void CG_FlamethrowerFlame( centity_t *cent, vec3_t origin ) {
 		vec3_t forward, up;
 		AngleVectors(angles, forward, NULL, up);
 		VectorMA(origin, 14.0f, forward, origin);
-		VectorMA(origin, -1.6f, up, origin);
+		//VectorMA(origin, -1.6f, up, origin);
 
 		CG_FireFlameChunks(cent, origin, angles, 1.0, qtrue, 1);
 
