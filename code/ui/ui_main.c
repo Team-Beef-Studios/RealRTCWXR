@@ -7564,7 +7564,7 @@ cvarTable_t cvarTable[] = {
 
 	{ &ui_savegameName, "ui_savegameName", "", CVAR_ROM},
 	
-	{ &cg_autoReload, "cg_autoReload", "1", CVAR_ARCHIVE },
+	{ &cg_autoReload, "cg_autoReload", "0", CVAR_ARCHIVE },
 
 	{ NULL, "g_localTeamPref", "", 0 },
 };

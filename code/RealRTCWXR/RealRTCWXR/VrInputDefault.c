@@ -625,26 +625,32 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
             }
 
 
-            //Weapon Chooser
-            static qboolean itemSwitched = false;
-            if (between(-0.2f, pPrimaryJoystick->x, 0.2f) &&
-                (between(0.8f, pPrimaryJoystick->y, 1.0f) ||
-                    between(-1.0f, pPrimaryJoystick->y, -0.8f)))
+            bool forwardPushed = false;
+            bool backPushed = false;
+            if (between(-0.2f, pPrimaryJoystick->x, 0.2f))
             {
-                if (!itemSwitched) {
-                    if (between(0.8f, pPrimaryJoystick->y, 1.0f))
-                    {
-                        sendButtonActionSimple("weapprev");
-                    }
-                    else
-                    {
-                        sendButtonActionSimple("weapnext");
-                    }
-                    itemSwitched = true;
+                if (between(0.8f, pPrimaryJoystick->y, 1.0f))
+                {
+                    forwardPushed = true;
+                }
+                else if (between(-1.0f, pPrimaryJoystick->y, -0.8f))
+                {
+                    backPushed = true;
                 }
             }
-            else {
-                itemSwitched = false;
+
+            static  bool prevForwardPushed = false;
+            if (forwardPushed != prevForwardPushed)
+            {
+                sendButtonAction("+kick", forwardPushed);
+                prevForwardPushed = forwardPushed;
+            }
+
+            static  bool prevBackPushed = false;
+            if (backPushed != prevBackPushed)
+            {
+                sendButtonAction("+reload", backPushed);
+                prevBackPushed = backPushed;
             }
         }
 

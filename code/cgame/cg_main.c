@@ -484,7 +484,7 @@ cvarTable_t cvarTable[] = {
 	{ &cg_lowAtmosphericEffects, "cg_lowAtmosphericEffects", "1", 0 },		/// added by Berserker
 	{ &cg_forceAtmosphericEffects, "cg_forceAtmosphericEffects", "0", CVAR_LATCH },		/// added by Berserker
 
-	{ &cg_autoReload, "cg_autoReload", "1", CVAR_ARCHIVE },
+	{ &cg_autoReload, "cg_autoReload", "0", CVAR_ARCHIVE },
 	{ &cg_uinfo, "cg_uinfo", "0", CVAR_ROM | CVAR_USERINFO },
 	{ &int_cl_maxpackets, "cl_maxpackets", "30", CVAR_ARCHIVE },
 	{ &int_cl_timenudge, "cl_timenudge", "0", CVAR_ARCHIVE },

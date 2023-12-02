@@ -3659,14 +3659,16 @@ void CG_AddPlayerFoot( refEntity_t *parent, playerState_t *ps, centity_t *cent )
 
 	VectorCopy( cg.refdef.vieworg, wolfkick.origin );
 	//----(SA)	allow offsets for testing boot model
-	if ( cg_gun_x.value ) {
-		VectorMA( wolfkick.origin, cg_gun_x.value,  cg.refdef.viewaxis[0], wolfkick.origin );
+	//if ( cg_gun_x.value ) 
+	{
+		VectorMA( wolfkick.origin, -4.0f,  cg.refdef.viewaxis[0], wolfkick.origin );
 	}
 	if ( cg_gun_y.value ) {
 		VectorMA( wolfkick.origin, cg_gun_y.value,  cg.refdef.viewaxis[1], wolfkick.origin );
 	}
-	if ( cg_gun_z.value ) {
-		VectorMA( wolfkick.origin, cg_gun_z.value,  cg.refdef.viewaxis[2], wolfkick.origin );
+	//if ( cg_gun_z.value ) 
+	{
+		VectorMA( wolfkick.origin, -4.0f,  cg.refdef.viewaxis[2], wolfkick.origin );
 	}
 	//----(SA)	end
 
@@ -3676,6 +3678,10 @@ void CG_AddPlayerFoot( refEntity_t *parent, playerState_t *ps, centity_t *cent )
 		kickangle[0] = 0;                       //----(SA)	avoid "Rockette" syndrome :)
 	}
 	AnglesToAxis( kickangle, wolfkick.axis );
+
+	for (int i = 0; i < 3; i++) {
+		VectorScale(wolfkick.axis[i], 0.8f, wolfkick.axis[i]);
+	}
 
 
 	frame = cg.snap->ps.persistant[PERS_WOLFKICK];
