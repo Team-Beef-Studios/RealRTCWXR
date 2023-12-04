@@ -1485,6 +1485,11 @@ static void CG_RegisterGraphics( void ) {
 	cgs.media.panzerfaustBrassModel = trap_R_RegisterModel( "models/weapons/shells/pf_shell.md3" );
 	cgs.media.smallgunBrassModel = trap_R_RegisterModel( "models/weapons/shells/sm_shell.md3" );
 
+	// VR Left Hand Models
+	cgs.media.handModel_fist = trap_R_RegisterModel( "models/weapons/vrhands/v_offhand.md3" );
+	cgs.media.handModel_relaxed = trap_R_RegisterModel( "models/weapons/vrhands/v_offhand.md3" );
+	cgs.media.handModel_grab = trap_R_RegisterModel( "models/weapons/vrhands/v_offhand_grab.md3" );
+
 	//----(SA) wolf debris
 	cgs.media.debBlock[0] = trap_R_RegisterModel( "models/mapobjects/debris/brick1.md3" );
 	cgs.media.debBlock[1] = trap_R_RegisterModel( "models/mapobjects/debris/brick2.md3" );

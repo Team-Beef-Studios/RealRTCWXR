@@ -1444,6 +1444,15 @@ void CG_DrawSkyBoxPortal( void ) {
 
 	cg.refdef.time = cg.time;
 
+	if (cg.weaponSelect == WP_FG42SCOPE || cg.weaponSelect == WP_SNOOPERSCOPE || cg.weaponSelect == WP_SNIPERRIFLE || cg.weaponSelect == WP_DELISLESCOPE)
+	{
+		cg.refdef.viewangles[ROLL] = vr->hmdorientation[ROLL];
+		cg.refdef.viewangles[PITCH] = vr->weaponangles[ANGLES_ADJUSTED][PITCH];
+		cg.refdef.viewangles[YAW] = vr->clientviewangles[YAW]
+			+ vr->weaponangles[ANGLES_ADJUSTED][YAW] + SHORT2ANGLE(cg.snap->ps.delta_angles[YAW]);
+		AnglesToAxis(cg.refdef.viewangles, cg.refdef.viewaxis);
+	}
+	else
 	{
 		VectorCopy(vr->hmdorientation, cg.refdef.viewangles);
 		cg.refdef.viewangles[YAW] = vr->clientviewangles[YAW] +

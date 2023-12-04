@@ -1092,6 +1092,11 @@ typedef struct {
 	// Rafael
 	qhandle_t smallgunBrassModel;
 
+	qhandle_t handModel_fist;
+	qhandle_t handModel_relaxed;
+	qhandle_t handModel_grab;
+
+
 	qhandle_t shotgunBrassModel;
 
 	qhandle_t railRingsShader;

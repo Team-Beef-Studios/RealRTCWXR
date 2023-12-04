@@ -532,7 +532,11 @@ typedef enum {
 	WP_GAUNTLET,            
 	WP_SNIPER,              
 	WP_MORTAR,             
-	VERYBIGEXPLOSION,       	
+	VERYBIGEXPLOSION,     
+
+	//Extra bonus VR content!
+	WP_MELEE,
+
 	WP_NUM_WEAPONS 
 } weapon_t;
 

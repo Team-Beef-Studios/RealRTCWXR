@@ -43,7 +43,7 @@ typedef struct {
     float tempWeaponVelocity;
 
     qboolean immersive_cinematics;
-    qboolean weapon_stabilised;
+    int weapon_stabilised;
     qboolean right_handed;
     qboolean menu_right_handed;
     qboolean player_moving;

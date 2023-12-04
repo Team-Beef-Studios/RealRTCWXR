@@ -72,6 +72,8 @@ If you have questions concerning this license or the applicable additional terms
 
 #define RDF_DRAWSKYBOX      0x0010      // the above marks a scene as being a 'portal sky'.  this flag says to draw it or not
 
+#define RF_VRVIEWMODEL     0x1000000 // specifically drawing a VR hand/weapon model
+
 //----(SA)
 #define RDF_UNDERWATER      ( 1 << 4 )  // so the renderer knows to use underwater fog when the player is underwater
 #define RDF_DRAWINGSKY      ( 1 << 5 )

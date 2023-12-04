@@ -113,7 +113,8 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
 
             //Load the adjustment values
             char cvar_name[64];
-            Com_sprintf(cvar_name, sizeof(cvar_name), "vr_weapon_adjustment_%i", cl.snap.ps.weapon);
+            char* cvar_pattern = vr_align_weapons->value == 1 ? "vr_weapon_adjustment_%i" : (vr.right_handed ? "vr_weapon_hand_adjustment_%i" : "vr_weapon_lhand_adjustment_%i");
+            Com_sprintf(cvar_name, sizeof(cvar_name), cvar_pattern, cl.snap.ps.weapon);
 
             cvar_t* cvar = Cvar_Get(cvar_name, cvar_name, CVAR_ARCHIVE);
 
@@ -225,10 +226,46 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
             if (!vr.weapon_stabilised && vr.item_selector == 0 &&
                 !vr.misc_camera && !vr.cgzoommode)
             {
-                if (distance < STABILISATION_DISTANCE &&
+                if (cl.snap.ps.weapon == WP_KNIFE ||
+                    cl.snap.ps.weapon == WP_DAGGER ||
+                    cl.snap.ps.weapon == WP_LUGER ||
+                    cl.snap.ps.weapon == WP_SILENCER ||
+                    cl.snap.ps.weapon == WP_COLT ||
+                    cl.snap.ps.weapon == WP_TT33 ||
+                    cl.snap.ps.weapon == WP_REVOLVER ||
+                    cl.snap.ps.weapon == WP_TESLA)
+                {
+                    if (distance < CLOSE_GRIP_STABILISATION_DISTANCE &&
                         vr_two_handed_weapons->integer) {
-                    vr.weapon_stabilised = true;
-                } else {
+                        vr.weapon_stabilised = 2;
+                    }
+                }
+                if (cl.snap.ps.weapon == WP_M7 ||
+                    (cl.snap.ps.weapon >= WP_MP40 &&
+                    cl.snap.ps.weapon <= WP_VENOM))
+                {
+                    vec3_t dir, weaponposition, offhandposition;
+                    VectorSet(weaponposition, pWeapon->Pose.position.z, pWeapon->Pose.position.x, pWeapon->Pose.position.y);
+                    VectorSet(offhandposition, pOff->Pose.position.z, pOff->Pose.position.x, pOff->Pose.position.y);
+                    VectorSubtract(weaponposition, offhandposition, dir);
+                    VectorNormalize(dir);
+
+                    vec3_t weaponangles, weaponForward, rotation = { 0 };
+                    rotation[PITCH] = vr_weapon_pitchadjust->value;
+                    QuatToYawPitchRoll(pWeapon->Pose.orientation, rotation, weaponangles);
+                    AngleVectors(weaponangles, weaponForward, NULL, NULL);
+                    VectorNormalize(weaponForward);
+
+                    float dot = DotProduct(weaponForward, dir);
+
+                    if (dot > 0.8f &&
+                        vr_two_handed_weapons->integer) {
+                        vr.weapon_stabilised = 1;
+                    }
+                }
+                
+                if (!vr.weapon_stabilised)
+                {
                     vr.item_selector = 2;
                 }
             }
@@ -240,7 +277,7 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
         }
         else
         {
-            vr.weapon_stabilised = false;
+            vr.weapon_stabilised = 0;
         }
 
         dominantGripPushed = (pDominantTrackedRemoteNew->Buttons &
@@ -466,7 +503,7 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
                 VectorAdd(offhandPositionAverage, vr.offhandposition[i], offhandPositionAverage);
             }
             VectorScale(offhandPositionAverage, 0.2f, offhandPositionAverage);
-            if (vr.weapon_stabilised) {
+            if (vr.weapon_stabilised == 1) {
                 if (vr.cgzoommode)
                 {
                     //If scope is engaged, lift muzzle slightly so that it aligns with the headset
@@ -617,40 +654,49 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
                 vr.maxHeight = 0;
             }
 
-            //Use
+            static int action = -1;
             if ((primaryButtonsNew & primaryThumb) !=
-                (primaryButtonsOld & primaryThumb)) {
-
-                sendButtonAction("+activate", (primaryButtonsNew & primaryThumb));
-            }
-
-
-            bool forwardPushed = false;
-            bool backPushed = false;
-            if (between(-0.2f, pPrimaryJoystick->x, 0.2f))
+                (primaryButtonsOld & primaryThumb))
             {
-                if (between(0.8f, pPrimaryJoystick->y, 1.0f))
+                if (primaryButtonsNew & primaryThumb)
                 {
-                    forwardPushed = true;
+                    //Clicked
+                    if (between(-0.2f, pPrimaryJoystick->x, 0.2f))
+                    {
+                        if (between(0.6f, pPrimaryJoystick->y, 1.0f))
+                        {
+                            action = 0;
+                            sendButtonActionSimple("+kick");
+                        }
+                        else if (between(-1.0f, pPrimaryJoystick->y, -0.6f))
+                        {
+                            action = 1;
+                            sendButtonActionSimple("+reload");
+                        }
+                        else
+                        {
+                            action = 2;
+                            sendButtonActionSimple("+activate");
+                        }
+                    }
                 }
-                else if (between(-1.0f, pPrimaryJoystick->y, -0.8f))
+                else
                 {
-                    backPushed = true;
+                    //Unclicked
+                    switch (action)
+                    {
+                    case 0:
+                        sendButtonActionSimple("-kick");
+                        break;
+                    case 1:
+                        sendButtonActionSimple("-reload");
+                        break;
+                    case 2:
+                        sendButtonActionSimple("-activate");
+                        break;
+                    }
+                    action = -1;
                 }
-            }
-
-            static  bool prevForwardPushed = false;
-            if (forwardPushed != prevForwardPushed)
-            {
-                sendButtonAction("+kick", forwardPushed);
-                prevForwardPushed = forwardPushed;
-            }
-
-            static  bool prevBackPushed = false;
-            if (backPushed != prevBackPushed)
-            {
-                sendButtonAction("+reload", backPushed);
-                prevBackPushed = backPushed;
             }
         }
 

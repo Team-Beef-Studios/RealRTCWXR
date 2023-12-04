@@ -2062,7 +2062,7 @@ static void CG_CalculateVRWeaponPosition(int weaponNum, vec3_t origin, vec3_t an
 CG_CalculateWeaponPositionAndScale
 ==============
 */
-static float CG_CalculateWeaponPositionAndScale(playerState_t* ps, vec3_t origin, vec3_t angles) {
+static float CG_CalculateWeaponPositionAndScale(qboolean isWeapon, playerState_t* ps, vec3_t origin, vec3_t angles) {
 	CG_CalculateVRWeaponPosition(0, origin, angles);
 
 	vec3_t offset;
@@ -2071,8 +2071,13 @@ static float CG_CalculateWeaponPositionAndScale(playerState_t* ps, vec3_t origin
 	//Weapon offset debugging
 	float scale = 1.0f;
 	char vr_control_scheme[256];
+	char vr_align_weapons[256];
 	trap_Cvar_VariableStringBuffer("vr_control_scheme", vr_control_scheme, 256);
-	if (atoi(vr_control_scheme) == 99) {
+	trap_Cvar_VariableStringBuffer("vr_align_weapons", vr_align_weapons, 256);
+	if (atoi(vr_control_scheme) == 99 &&
+		(((atoi(vr_align_weapons) == 1) && isWeapon) ||
+			((atoi(vr_align_weapons) == 2) && !isWeapon))
+		) {
 		scale = vr->test_scale;
 
 		//Adjust angles for weapon models that aren't aligned very well
@@ -2089,29 +2094,11 @@ static float CG_CalculateWeaponPositionAndScale(playerState_t* ps, vec3_t origin
 		CG_CenterPrint(vr->test_name, SCREEN_HEIGHT * 0.45, SMALLCHAR_WIDTH);
 	}
 	else {
-		/*
-		if (vr->backpackitemactive == 3)
-		{
-			scale = 0.5f;
-			VectorSet(offset, 1, -3, 0);
-			vec3_t adjust;
-			VectorSet(adjust, 20, 140, 0);
-
-			//Adjust angles for weapon models that aren't aligned very well
-			matrix4x4 m1, m2, m3;
-			vec3_t zero;
-			VectorClear(zero);
-			Matrix4x4_CreateFromEntity(m1, angles, zero, 1.0);
-			Matrix4x4_CreateFromEntity(m2, adjust, zero, 1.0);
-			Matrix4x4_Concat(m3, m1, m2);
-			Matrix4x4_ConvertToEntity(m3, angles, zero);
-		}
-		//Now adjust weapon:  scale, right, up, forward
-		else  */
 		if (ps->weapon != 0)
 		{
+			char* cvar_pattern = isWeapon ? "vr_weapon_adjustment_%i" : (vr->right_handed ? "vr_weapon_hand_adjustment_%i" : "vr_weapon_lhand_adjustment_%i");
 			char cvar_name[64];
-			Com_sprintf(cvar_name, sizeof(cvar_name), "vr_weapon_adjustment_%i", ps->weapon);
+			Com_sprintf(cvar_name, sizeof(cvar_name), cvar_pattern, ps->weapon);
 
 			char weapon_adjustment[256];
 			trap_Cvar_VariableStringBuffer(cvar_name, weapon_adjustment, 256);
@@ -3650,7 +3637,7 @@ void CG_AddPlayerFoot( refEntity_t *parent, playerState_t *ps, centity_t *cent )
 	wolfkick.shadowPlane = parent->shadowPlane;
 
 	// note to self we want this to lerp and advance frame
-	wolfkick.renderfx = RF_DEPTHHACK | RF_FIRST_PERSON;;
+	wolfkick.renderfx = RF_DEPTHHACK | RF_FIRST_PERSON | RF_VRVIEWMODEL;;
 	wolfkick.hModel = wolfkickModel; // eugeny
 
 	if ( wolfkickSkin ) {
@@ -3661,14 +3648,14 @@ void CG_AddPlayerFoot( refEntity_t *parent, playerState_t *ps, centity_t *cent )
 	//----(SA)	allow offsets for testing boot model
 	//if ( cg_gun_x.value ) 
 	{
-		VectorMA( wolfkick.origin, -4.0f,  cg.refdef.viewaxis[0], wolfkick.origin );
+		VectorMA( wolfkick.origin, -6.0f,  cg.refdef.viewaxis[0], wolfkick.origin );
 	}
 	if ( cg_gun_y.value ) {
 		VectorMA( wolfkick.origin, cg_gun_y.value,  cg.refdef.viewaxis[1], wolfkick.origin );
 	}
-	//if ( cg_gun_z.value ) 
+	if ( cg_gun_z.value ) 
 	{
-		VectorMA( wolfkick.origin, -4.0f,  cg.refdef.viewaxis[2], wolfkick.origin );
+		VectorMA( wolfkick.origin, -8.0f,  cg.refdef.viewaxis[2], wolfkick.origin );
 	}
 	//----(SA)	end
 
@@ -3680,7 +3667,7 @@ void CG_AddPlayerFoot( refEntity_t *parent, playerState_t *ps, centity_t *cent )
 	AnglesToAxis( kickangle, wolfkick.axis );
 
 	for (int i = 0; i < 3; i++) {
-		VectorScale(wolfkick.axis[i], 0.8f, wolfkick.axis[i]);
+		VectorScale(wolfkick.axis[i], (vr->right_handed && i ==1) ? -0.7f : 0.7f, wolfkick.axis[i]);
 	}
 
 
@@ -3783,8 +3770,10 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 		VectorCopy(axis[1], binoc_hand.axis[0]);
 		VectorCopy(axis[2], binoc_hand.axis[2]);
 		VectorMA(binoc_hand.origin, -5, binoc_hand.axis[0], binoc_hand.origin);
+		float right = vr->right_handed ? -3.5f : 5.0f;
+		VectorMA(binoc_hand.origin, right, binoc_hand.axis[0], binoc_hand.origin);
 		VectorCopy(binoc_hand.origin, binoc_hand.lightingOrigin);
-		binoc_hand.renderfx = RF_DEPTHHACK | RF_FIRST_PERSON | RF_MINLIGHT;
+		binoc_hand.renderfx = RF_DEPTHHACK | RF_FIRST_PERSON | RF_MINLIGHT | RF_VRVIEWMODEL;
 		binoc_hand.hModel = cgs.media.thirdPersonBinocModel;
 		CG_AddWeaponWithPowerups(&binoc_hand, 0, ps, cent);		
 	}
@@ -3798,7 +3787,7 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 			weapon = &cg_weapons[ ps->weapon ];
 
 		// set up gun position
-			float scale = CG_CalculateWeaponPositionAndScale( ps, hand.origin, angles );
+			float scale = CG_CalculateWeaponPositionAndScale( qtrue, ps, hand.origin, angles );
             
 /*			// RealRTCW gun position is defined in .weap files if CVAR is active.
             if ( cg_gunPosLock.integer == 1 ) 
@@ -3847,11 +3836,11 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 		//Weapon offset debugging
 		if (weaponDebugging)
 		{
-			hand.renderfx = RF_FIRST_PERSON | RF_MINLIGHT /* | RF_VIEWWEAPON */; //No depth hack for weapon adjusting mode
+			hand.renderfx = RF_FIRST_PERSON | RF_MINLIGHT | RF_VRVIEWMODEL /* | RF_VIEWWEAPON */; //No depth hack for weapon adjusting mode
 		}
 		else
 		{
-			hand.renderfx = RF_DEPTHHACK | RF_FIRST_PERSON | RF_MINLIGHT /* | RF_VIEWWEAPON */;   //----(SA)
+			hand.renderfx = RF_DEPTHHACK | RF_FIRST_PERSON | RF_MINLIGHT  | RF_VRVIEWMODEL/* | RF_VIEWWEAPON */;   //----(SA)
 		}
 
 		//scale the whole model (hand and weapon)
@@ -3869,6 +3858,89 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 	// Rafael
 	// add the foot
 	CG_AddPlayerFoot( &hand, ps, &cg.predictedPlayerEntity );
+
+
+	// Render hand models when appropriate
+	if (cg.snap->ps.clientNum == 0
+		&& !cg.renderingThirdPerson
+		&& cg.predictedPlayerState.stats[STAT_HEALTH] > 0
+		&& !vr->cgzoommode)
+	{
+		vec3_t end, forward, angles;
+		refEntity_t handEnt;
+		memset(&handEnt, 0, sizeof(refEntity_t));
+
+		float scale = 0.45f;
+		char vr_align_weapons[256];
+		trap_Cvar_VariableStringBuffer("vr_align_weapons", vr_align_weapons, 256);
+		if (vr->weapon_stabilised || atoi(vr_align_weapons) == 2)
+		{
+			scale = CG_CalculateWeaponPositionAndScale(qfalse, &cg.snap->ps, handEnt.origin, angles);
+		}
+		else
+		{
+			BG_CalculateVRDefaultPosition(cg.refdefViewAngles[YAW], cg.refdef.vieworg, cg_heightAdjust.value, cg_worldScale.value, 1, handEnt.origin, angles);
+
+			//Move it back a bit?
+			AngleVectors(angles, forward, NULL, NULL);
+			VectorMA(handEnt.origin, -3.0f, forward, handEnt.origin);
+		}
+
+		AnglesToAxis(angles, handEnt.axis);
+		for (int i = 0; i < 3; i++) {
+			VectorScale(handEnt.axis[i], (vr->right_handed  || i != 1) ? scale : -scale, handEnt.axis[i]);
+		}
+
+		VectorCopy(handEnt.origin, handEnt.oldorigin);
+
+		handEnt.renderfx = RF_DEPTHHACK | RF_FIRST_PERSON | RF_MINLIGHT | RF_VRVIEWMODEL;
+
+		if (vr->weapon_stabilised || atoi(vr_align_weapons) == 2)
+		{
+			handEnt.hModel = cgs.media.handModel_grab;
+		}
+		else if (cg.snap->ps.weapon == WP_MELEE)
+		{
+			handEnt.hModel = cgs.media.handModel_fist;
+		}
+		else
+		{
+			handEnt.hModel = cgs.media.handModel_relaxed;
+		}
+
+		centity_t* cent = &cg_entities[0];
+		CG_AddWeaponWithPowerups(&handEnt, cent->currentState.powerups, &cg.snap->ps, cent);
+
+
+		//Domniant hand if not holding a weapon
+		if (cg.snap->ps.weapon == WP_NONE ||
+			cg.snap->ps.weapon == WP_MELEE)
+		{
+			BG_CalculateVRDefaultPosition(cg.refdefViewAngles[YAW], cg.refdef.vieworg, cg_heightAdjust.value, cg_worldScale.value, 0, handEnt.origin, angles);
+
+			if (cg.snap->ps.weapon == WP_MELEE)
+			{
+				handEnt.hModel = cgs.media.handModel_fist;
+			}
+			else
+			{
+				handEnt.hModel = cgs.media.handModel_relaxed;
+			}
+
+			//Move it back a bit?
+			AngleVectors(angles, forward, NULL, NULL);
+			VectorMA(handEnt.origin, -3.0f, forward, handEnt.origin);
+			VectorCopy(handEnt.origin, handEnt.oldorigin);
+
+			vec3_t axis[3];
+			AnglesToAxis(angles, handEnt.axis);
+			for (int i = 0; i < 3; i++) {
+				VectorScale(handEnt.axis[i], (!vr->right_handed || i != 1) ? scale : -scale, handEnt.axis[i]);
+			}
+
+			CG_AddWeaponWithPowerups(&handEnt, cent->currentState.powerups, &cg.snap->ps, cent);
+		}
+	}
 
 
 	//Weapon offset debugging

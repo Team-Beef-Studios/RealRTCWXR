@@ -1620,6 +1620,7 @@ typedef struct {
 	orientationr_t  or;
 	backEndCounters_t pc;
 	qboolean isHyperspace;
+	qboolean	overrideCullFace; //If true then forcibly set face drawing to both sides - used for VR weapon/hand models
 	trRefEntity_t   *currentEntity;
 	qboolean skyRenderedThisView;       // flag for drawing sun
 

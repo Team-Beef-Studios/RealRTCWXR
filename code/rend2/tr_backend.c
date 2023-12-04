@@ -71,13 +71,14 @@ void GL_BindToTMU( image_t *image, int tmu )
 ** GL_Cull
 */
 void GL_Cull( int cullType ) {
-	if ( glState.faceCulling == cullType ) {
+	if ( glState.faceCulling == cullType && !backEnd.overrideCullFace) {
 		return;
 	}
 
-	if ( cullType == CT_TWO_SIDED )
+	if ( cullType == CT_TWO_SIDED || backEnd.overrideCullFace)
 	{
 		qglDisable( GL_CULL_FACE );
+		glState.faceCulling = CT_TWO_SIDED;
 	}
 	else
 	{
@@ -295,12 +296,6 @@ static void RB_Hyperspace( void ) {
 
 static void SetViewportAndScissor( void ) {
 	GL_SetProjectionMatrix( backEnd.viewParms.projectionMatrix );
-
-	const auto xOffsetL = vr->cgzoommode ? (vr->off_center_fov_x[0] * glConfig.vidWidth) : 0;
-	const auto yOffsetL = vr->cgzoommode ? (-vr->off_center_fov_y[0] * glConfig.vidHeight) : 0;
-	const auto xOffsetR = vr->cgzoommode ? (vr->off_center_fov_x[1] * glConfig.vidWidth) : 0;
-	const auto yOffsetR = vr->cgzoommode ? (-vr->off_center_fov_y[1] * glConfig.vidHeight) : 0;
-
 
 	// set the window clipping
 	qglViewport(    backEnd.viewParms.viewportX,
@@ -818,6 +813,8 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	double originalTime;
 	FBO_t*			fbo = NULL;
 
+	backEnd.overrideCullFace = qfalse;
+
 	int oldNumVerts, oldNumIndex;
 	//GR - tessellation flag
 	int atiTess = 0, oldAtiTess;
@@ -886,6 +883,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 			}
 			RB_BeginSurface( shader, fogNum, cubemapIndex );
 			backEnd.pc.c_surfBatches++;
+			backEnd.overrideCullFace = qfalse;
 			oldShader = shader;
 			oldFogNum = fogNum;
 			oldDlighted = dlighted;
@@ -928,6 +926,10 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 
 					if(backEnd.currentEntity->e.renderfx & RF_CROSSHAIR)
 						isCrosshair = qtrue;
+				}
+
+				if (backEnd.currentEntity->e.renderfx & RF_VRVIEWMODEL) {
+					backEnd.overrideCullFace = qtrue;
 				}
 			} else {
 				backEnd.currentEntity = &tr.worldEntity;

@@ -23,17 +23,6 @@ void HandleInput_WeaponAlign(ovrInputStateTrackedRemote* pDominantTrackedRemoteN
 
     static qboolean dominantGripPushed = false;
 
-    /*
-    char cvar_name[64];
-    Com_sprintf(cvar_name, sizeof(cvar_name), "vr_weapon_adjustment_%i", vr.weaponid);
-    char weapon_adjustment[256];
-    Cvar_VariableStringBuffer(cvar_name, weapon_adjustment, 256);
-    sscanf(weapon_adjustment, "%f,%f,%f,%f,%f,%f,%f", &vr.test_scale,
-           &(vr.test_offset[0]), &(vr.test_offset[1]), &(vr.test_offset[2]),
-           &(vr.test_angles[PITCH]), &(vr.test_angles[YAW]), &(vr.test_angles[ROLL]));
-    VectorScale(vr.test_offset, vr.test_scale, vr.test_offset);
-    */
-
     //Allow weapon alignment mode toggle on x
     if (vr_align_weapons->value)
     {
@@ -239,7 +228,8 @@ void HandleInput_WeaponAlign(ovrInputStateTrackedRemote* pDominantTrackedRemoteN
         Com_sprintf(vr.test_name, sizeof(vr.test_name), "ID: %i, %s: %.3f", cl.snap.ps.weapon, item_names[item_index], *(items[item_index]));
 
         char cvar_name[64];
-        Com_sprintf(cvar_name, sizeof(cvar_name), "vr_weapon_adjustment_%i", cl.snap.ps.weapon);
+        char* cvar_pattern = vr_align_weapons->value == 1 ? "vr_weapon_adjustment_%i" : (vr.right_handed ? "vr_weapon_hand_adjustment_%i" : "vr_weapon_lhand_adjustment_%i");
+        Com_sprintf(cvar_name, sizeof(cvar_name), cvar_pattern, cl.snap.ps.weapon);
 
         char buffer[256];
         Com_sprintf(buffer, sizeof(buffer), "%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f", vr.test_scale, (vr.test_offset[0] / vr.test_scale), (vr.test_offset[1] / vr.test_scale), (vr.test_offset[2] / vr.test_scale),
