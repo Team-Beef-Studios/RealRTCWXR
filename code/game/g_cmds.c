@@ -27,6 +27,9 @@ If you have questions concerning this license or the applicable additional terms
 */
 
 #include "g_local.h"
+#include "bg_local.h"
+
+#include <VrClientInfo.h>
 
 /*
 ==================
@@ -1587,7 +1590,10 @@ int Cmd_WolfKick_f( gentity_t *ent ) {
 
 	AngleVectors( ent->client->ps.viewangles, forward, right, up );
 
-	CalcMuzzlePointForActivate( ent, forward, right, up, offset );
+//	CalcMuzzlePointForActivate( ent, forward, right, up, offset );
+	//Use view angles for kick
+	VectorCopy(ent->s.pos.trBase, offset);
+	offset[2] += ent->client->ps.viewheight;
 
 	// note to self: we need to determine the usable distance for wolf
 	VectorMA( offset, WOLFKICKDISTANCE, forward, end );
@@ -1727,6 +1733,216 @@ int Cmd_WolfKick_f( gentity_t *ent ) {
 	return ( 1 );
 }
 // done
+
+
+static float Cvar_VariableFloatValue(char* name)
+{
+	char buffer[256];
+	trap_Cvar_VariableStringBuffer(name, buffer, 256);
+	return (float)atof(buffer);
+}
+
+//===================
+//	Cmd_WolfPunch
+//===================
+
+#define WOLFPUNCHDISTANCE    24
+int Cmd_WolfPunch_f(gentity_t* ent, qboolean left) {
+	trace_t tr;
+	vec3_t end;
+	gentity_t* traceEnt;
+	vec3_t forward, right, up, offset;
+	gentity_t* tent;
+	static int oldpunchtime[2] = { 0 };
+	int punchtime = level.time;
+	qboolean solidPunch = qfalse;    // don't play "hit" sound on a trigger unless it's an func_invisible_user
+
+	int damage = 15;
+
+	if (ent->client->ps.leanf) {
+		return 0;   // no kick when leaning
+
+	}
+	if (oldpunchtime[left] > punchtime) {
+		return (0);
+	}
+	else {
+		oldpunchtime[left] = punchtime + 300;
+	}
+
+	float worldscale = Cvar_VariableFloatValue("cg_worldScale");
+	float heightAdjust = Cvar_VariableFloatValue("cg_heightAdjust");
+
+	vec3_t angles;
+	if (left)
+	{
+		VectorCopy(vr->offhandangles[ANGLES_ADJUSTED], angles);
+		angles[YAW] = ent->client->ps.viewangles[YAW] + (vr->offhandangles[ANGLES_ADJUSTED][YAW] - getHMDYawForCalc());
+		BG_ConvertFromVR(ent->client->ps.viewangles[YAW], worldscale, vr->offhandoffset, ent->r.currentOrigin, offset);
+	}
+	else
+	{
+		VectorCopy(vr->weaponangles[ANGLES_ADJUSTED], angles);
+		angles[YAW] = ent->client->ps.viewangles[YAW] + (vr->weaponangles[ANGLES_ADJUSTED][YAW] - getHMDYawForCalc());
+		BG_ConvertFromVR(ent->client->ps.viewangles[YAW], worldscale, vr->weaponoffset, ent->r.currentOrigin, offset);
+	}
+
+	offset[2] += (ent->client->ps.viewheight - DEFAULT_PLAYER_HEIGHT);
+	offset[2] += (vr->hmdposition[1] + heightAdjust) * worldscale;
+
+	//CalcMuzzlePointForActivate(ent, forward, right, up, offset);
+	AngleVectors(angles, forward, right, up);
+
+	// note to self: we need to determine the usable distance for wolf
+	VectorMA(offset, WOLFPUNCHDISTANCE, forward, end);
+
+	trap_Trace(&tr, offset, NULL, NULL, end, ent->s.number, (CONTENTS_SOLID | CONTENTS_BODY | CONTENTS_CORPSE | CONTENTS_TRIGGER));
+
+	if (g_debugBullets.integer & 1) {
+		tent = G_TempEntity(offset, EV_RAILTRAIL);
+		VectorCopy(tr.endpos, tent->s.origin2);
+		tent->s.otherEntityNum2 = ent->s.number;
+	}
+
+	if (tr.surfaceFlags & SURF_NOIMPACT || tr.fraction == 1.0) {
+		tent = G_TempEntity(tr.endpos, EV_WOLFKICK_MISS);
+		tent->s.eventParm = ent->s.number;
+		return (1);
+	}
+
+	traceEnt = &g_entities[tr.entityNum];
+
+	if (!ent->melee) { // because we dont want you to open a door with a prop
+		if ((Q_stricmp(traceEnt->classname, "func_door_rotating") == 0)
+			&& (traceEnt->s.apos.trType == TR_STATIONARY && traceEnt->s.pos.trType == TR_STATIONARY)
+			&& traceEnt->active == qfalse) {
+			//			if(traceEnt->key < 0) {	// door force locked
+			if (traceEnt->key >= KEY_LOCKED_TARGET) {    // door force locked
+
+				//----(SA)	play kick "hit" sound
+				tent = G_TempEntity(tr.endpos, EV_WOLFKICK_HIT_WALL);
+				tent->s.otherEntityNum = ent->s.number;	\
+					//----(SA)	end
+
+					AICast_AudibleEvent(ent->s.clientNum, tr.endpos, HEAR_RANGE_DOOR_KICKLOCKED); // "someone punched a locked door near me!"
+
+				G_AddEvent(traceEnt, EV_GENERAL_SOUND, traceEnt->soundPos3);
+
+				return 1;   //----(SA)	changed.  shows boot for locked doors
+			}
+
+			//			if(traceEnt->key > 0) {	// door requires key
+			if (traceEnt->key > KEY_NONE && traceEnt->key < KEY_NUM_KEYS) {
+				gitem_t* item = BG_FindItemForKey(traceEnt->key, 0);
+				if (!(ent->client->ps.stats[STAT_KEYS] & (1 << item->giTag))) {
+					//----(SA)	play kick "hit" sound
+					tent = G_TempEntity(tr.endpos, EV_WOLFKICK_HIT_WALL);
+					tent->s.otherEntityNum = ent->s.number;	\
+						//----(SA)	end
+
+						AICast_AudibleEvent(ent->s.clientNum, tr.endpos, HEAR_RANGE_DOOR_KICKLOCKED); // "someone punched a locked door near me!"
+
+					// player does not have key
+					G_AddEvent(traceEnt, EV_GENERAL_SOUND, traceEnt->soundPos3);
+
+					return 1;   //----(SA)	changed.  shows boot animation for locked doors
+				}
+			}
+
+			if (traceEnt->teammaster && traceEnt->team && traceEnt != traceEnt->teammaster) {
+				traceEnt->teammaster->active = qtrue;
+				traceEnt->teammaster->flags |= FL_KICKACTIVATE;
+				Use_BinaryMover(traceEnt->teammaster, ent, ent);
+				G_UseTargets(traceEnt->teammaster, ent);
+			}
+			else
+			{
+				traceEnt->active = qtrue;
+				traceEnt->flags |= FL_KICKACTIVATE;
+				Use_BinaryMover(traceEnt, ent, ent);
+				G_UseTargets(traceEnt, ent);
+			}
+		}
+		else if ((Q_stricmp(traceEnt->classname, "func_button") == 0)
+			&& (traceEnt->s.apos.trType == TR_STATIONARY && traceEnt->s.pos.trType == TR_STATIONARY)
+			&& traceEnt->active == qfalse) {
+			Use_BinaryMover(traceEnt, ent, ent);
+			traceEnt->active = qtrue;
+
+		}
+		else if (!Q_stricmp(traceEnt->classname, "func_invisible_user")) {
+			traceEnt->flags |= FL_KICKACTIVATE;     // so cell doors know they were kicked
+			// It doesn't hurt to pass this along since only ent use() funcs who care about it will check.
+			// However, it may become handy to put a "KICKABLE" or "NOTKICKABLE" flag on the invisible_user
+			traceEnt->use(traceEnt, ent, ent);
+			traceEnt->flags &= ~FL_KICKACTIVATE;    // reset
+
+			solidPunch = qtrue;  //----(SA)
+		}
+		else if (!Q_stricmp(traceEnt->classname, "props_flippy_table") && traceEnt->use) {
+			traceEnt->use(traceEnt, ent, ent);
+		}
+		else if (!Q_stricmp(traceEnt->classname, "misc_mg42")) {
+			solidPunch = qtrue;  //----(SA)	play kick hit sound
+		}
+	}
+
+	// snap the endpos to integers, but nudged towards the line
+	SnapVectorTowards(tr.endpos, offset);
+
+	// send bullet impact
+	if (traceEnt->takedamage && traceEnt->client) {
+		tent = G_TempEntity(tr.endpos, EV_WOLFKICK_HIT_FLESH);
+		tent->s.eventParm = traceEnt->s.number;
+		if (LogAccuracyHit(traceEnt, ent)) {
+			ent->client->ps.persistant[PERS_ACCURACY_HITS]++;
+		}
+	}
+	else {
+		// Ridah, bullet impact should reflect off surface
+		vec3_t reflect;
+		float dot;
+
+		if (traceEnt->r.contents >= 0 && (traceEnt->r.contents & CONTENTS_TRIGGER) && !solidPunch) {
+			tent = G_TempEntity(tr.endpos, EV_WOLFKICK_MISS); // (SA) don't play the "hit" sound if you kick most triggers
+		}
+		else {
+			tent = G_TempEntity(tr.endpos, EV_WOLFKICK_HIT_WALL);
+		}
+
+
+		dot = DotProduct(forward, tr.plane.normal);
+		VectorMA(forward, -2 * dot, tr.plane.normal, reflect);
+		VectorNormalize(reflect);
+
+		tent->s.eventParm = DirToByte(reflect);
+		// done.
+
+		// (SA) should break...
+		if (ent->melee) {
+			ent->active = qfalse;
+			ent->melee->health = 0;
+			ent->client->ps.eFlags &= ~EF_MELEE_ACTIVE; // whoops, missed this one
+		}
+	}
+
+	tent->s.otherEntityNum = ent->s.number;
+
+	// try to swing chair
+	if (traceEnt->takedamage) {
+
+		if (ent->melee) {
+			ent->active = qfalse;
+			ent->melee->health = 0;
+			ent->client->ps.eFlags &= ~EF_MELEE_ACTIVE;
+
+		}
+
+		G_Damage(traceEnt, ent, ent, forward, tr.endpos, damage, 0, MOD_KICKED);   //----(SA)	modified
+	}
+
+	return (1);
+}
 
 /*
 ============

@@ -1062,6 +1062,8 @@ void Cmd_Activate_f( gentity_t *ent );
 int Cmd_WolfKick_f( gentity_t *ent );
 // Ridah
 
+int Cmd_WolfPunch_f( gentity_t *ent, qboolean left);
+
 // g_save.c
 qboolean G_SaveGame( char *username );
 void G_LoadGame( char *username );

@@ -570,6 +570,8 @@ typedef enum {
 	KB_WBUTTONS7,
 	KB_MLOOK,
 	KB_KICK,
+	KB_LPUNCH,
+	KB_RPUNCH,
 	NUM_BUTTONS
 } kbuttons_t;
 

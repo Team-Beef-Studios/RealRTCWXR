@@ -2096,7 +2096,7 @@ static float CG_CalculateWeaponPositionAndScale(qboolean isWeapon, playerState_t
 	else {
 		if (ps->weapon != 0)
 		{
-			char* cvar_pattern = isWeapon ? "vr_weapon_adjustment_%i" : (vr->right_handed ? "vr_weapon_hand_adjustment_%i" : "vr_weapon_lhand_adjustment_%i");
+			char* cvar_pattern = isWeapon ? "vr_weapon_adjustment_%i" : "vr_weapon_hand_adjustment_%i";
 			char cvar_name[64];
 			Com_sprintf(cvar_name, sizeof(cvar_name), cvar_pattern, ps->weapon);
 
@@ -2118,6 +2118,7 @@ static float CG_CalculateWeaponPositionAndScale(qboolean isWeapon, playerState_t
 				{
 					//yaw needs to go in the other direction as left handed model is reversed
 					adjust[YAW] *= -1.0f;
+					adjust[ROLL] *= -1.0f;
 				}
 
 				//Adjust angles for weapon models that aren't aligned very well
@@ -3637,7 +3638,7 @@ void CG_AddPlayerFoot( refEntity_t *parent, playerState_t *ps, centity_t *cent )
 	wolfkick.shadowPlane = parent->shadowPlane;
 
 	// note to self we want this to lerp and advance frame
-	wolfkick.renderfx = RF_DEPTHHACK | RF_FIRST_PERSON | RF_VRVIEWMODEL;;
+	wolfkick.renderfx = RF_DEPTHHACK | RF_FIRST_PERSON | RF_VRVIEWMODEL;
 	wolfkick.hModel = wolfkickModel; // eugeny
 
 	if ( wolfkickSkin ) {
@@ -3646,14 +3647,14 @@ void CG_AddPlayerFoot( refEntity_t *parent, playerState_t *ps, centity_t *cent )
 
 	VectorCopy( cg.refdef.vieworg, wolfkick.origin );
 	//----(SA)	allow offsets for testing boot model
-	//if ( cg_gun_x.value ) 
+	if ( cg_gun_x.value ) 
 	{
 		VectorMA( wolfkick.origin, -6.0f,  cg.refdef.viewaxis[0], wolfkick.origin );
 	}
 	if ( cg_gun_y.value ) {
 		VectorMA( wolfkick.origin, cg_gun_y.value,  cg.refdef.viewaxis[1], wolfkick.origin );
 	}
-	if ( cg_gun_z.value ) 
+	//if ( cg_gun_z.value ) 
 	{
 		VectorMA( wolfkick.origin, -8.0f,  cg.refdef.viewaxis[2], wolfkick.origin );
 	}

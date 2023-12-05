@@ -275,6 +275,12 @@ void IN_KickDown( void ) {IN_KeyDown( &kb[KB_KICK] );}
 void IN_KickUp( void ) {IN_KeyUp( &kb[KB_KICK] );}
 // done.
 
+void IN_LPunchDown( void ) {IN_KeyDown( &kb[KB_LPUNCH] );}
+void IN_LPunchUp( void ) {IN_KeyUp( &kb[KB_LPUNCH] );}
+
+void IN_RPunchDown( void ) {IN_KeyDown( &kb[KB_RPUNCH] );}
+void IN_RPunchUp( void ) {IN_KeyUp( &kb[KB_RPUNCH] );}
+
 void IN_SprintDown( void ) {IN_KeyDown( &kb[KB_BUTTONS5] );}
 void IN_SprintUp( void ) {IN_KeyUp( &kb[KB_BUTTONS5] );}
 
@@ -358,6 +364,8 @@ void CL_KeyMove( usercmd_t *cmd ) {
 	// Rafael Kick
 	int kick;
 	// done
+	int lpunch;
+	int rpunch;
 
 	//
 	// adjust for speed key / running
@@ -404,6 +412,8 @@ void CL_KeyMove( usercmd_t *cmd ) {
 	// Rafael Kick
 	kick = CL_KeyState( &kb[KB_KICK] );
 	// done
+	lpunch = CL_KeyState( &kb[KB_LPUNCH] );
+	rpunch = CL_KeyState( &kb[KB_RPUNCH] );
 
 	if ( !( cl.snap.ps.persistant[PERS_HWEAPON_USE] ) ) {
 		cmd->forwardmove = ClampChar( forward );
@@ -412,6 +422,8 @@ void CL_KeyMove( usercmd_t *cmd ) {
 
 		// Rafael - Kick
 		cmd->wolfkick = ClampChar( kick );
+		cmd->lpunch = ClampChar(lpunch);
+		cmd->rpunch = ClampChar(rpunch);
 		// done
 
 	}
@@ -1078,6 +1090,16 @@ void CL_InitInput( void ) {
 	// Rafael Kick
 	Cmd_AddCommand( "+kick", IN_KickDown );
 	Cmd_AddCommand( "-kick", IN_KickUp );
+	// done
+
+	// Rafael Kick
+	Cmd_AddCommand( "+lpunch", IN_LPunchDown );
+	Cmd_AddCommand( "-lpunch", IN_LPunchUp );
+	// done
+
+	// Rafael Kick
+	Cmd_AddCommand( "+rpunch", IN_RPunchDown);
+	Cmd_AddCommand( "-rpunch", IN_RPunchUp);
 	// done
 
 	Cmd_AddCommand( "+sprint", IN_SprintDown );

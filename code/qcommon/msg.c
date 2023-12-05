@@ -657,6 +657,8 @@ void MSG_WriteDeltaUsercmdKey( msg_t *msg, int key, usercmd_t *from, usercmd_t *
 		 from->weapon == to->weapon &&
 		 from->holdable == to->holdable &&
 		 from->wolfkick == to->wolfkick &&
+		 from->lpunch == to->lpunch &&
+		 from->rpunch == to->rpunch &&
 		 from->cld == to->cld ) {                   // NERVE - SMF
 		MSG_WriteBits( msg, 0, 1 );                 // no change
 		oldsize += 7;
@@ -675,6 +677,8 @@ void MSG_WriteDeltaUsercmdKey( msg_t *msg, int key, usercmd_t *from, usercmd_t *
 	MSG_WriteDeltaKey( msg, key, from->weapon, to->weapon, 8 );
 	MSG_WriteDeltaKey( msg, key, from->holdable, to->holdable, 8 );
 	MSG_WriteDeltaKey( msg, key, from->wolfkick, to->wolfkick, 8 );
+	MSG_WriteDeltaKey( msg, key, from->lpunch, to->lpunch, 8 );
+	MSG_WriteDeltaKey( msg, key, from->rpunch, to->rpunch, 8 );
 
 	MSG_WriteDeltaKey( msg, key, from->cld, to->cld, 16 );      // NERVE - SMF - for multiplayer clientDamage
 }
@@ -710,6 +714,8 @@ void MSG_ReadDeltaUsercmdKey( msg_t *msg, int key, usercmd_t *from, usercmd_t *t
 		to->weapon = MSG_ReadDeltaKey( msg, key, from->weapon, 8 );
 		to->holdable = MSG_ReadDeltaKey( msg, key, from->holdable, 8 );
 		to->wolfkick = MSG_ReadDeltaKey( msg, key, from->wolfkick, 8 );
+		to->lpunch = MSG_ReadDeltaKey( msg, key, from->lpunch, 8 );
+		to->rpunch = MSG_ReadDeltaKey( msg, key, from->rpunch, 8 );
 
 		to->cld = MSG_ReadDeltaKey( msg, key, from->cld, 16 );           // NERVE - SMF - for multiplayer clientDamage
 	} else {
@@ -724,6 +730,8 @@ void MSG_ReadDeltaUsercmdKey( msg_t *msg, int key, usercmd_t *from, usercmd_t *t
 		to->weapon = from->weapon;
 		to->holdable = from->holdable;
 		to->wolfkick = from->wolfkick;
+		to->lpunch = from->lpunch;
+		to->rpunch = from->rpunch;
 
 		to->cld = from->cld;                    // NERVE - SMF
 	}

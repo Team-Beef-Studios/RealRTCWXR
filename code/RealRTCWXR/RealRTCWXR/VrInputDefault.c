@@ -113,7 +113,7 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
 
             //Load the adjustment values
             char cvar_name[64];
-            char* cvar_pattern = vr_align_weapons->value == 1 ? "vr_weapon_adjustment_%i" : (vr.right_handed ? "vr_weapon_hand_adjustment_%i" : "vr_weapon_lhand_adjustment_%i");
+            char* cvar_pattern = vr_align_weapons->value == 1 ? "vr_weapon_adjustment_%i" : "vr_weapon_lhand_adjustment_%i";
             Com_sprintf(cvar_name, sizeof(cvar_name), cvar_pattern, cl.snap.ps.weapon);
 
             cvar_t* cvar = Cvar_Get(cvar_name, cvar_name, CVAR_ARCHIVE);
@@ -478,6 +478,38 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
                 sendButtonAction("+attack", vr.primaryVelocityTriggeredAttack);
             }
 
+            //Dominant hand punch (or hit with weapon)
+            if (cl.snap.ps.weapon != WP_KNIFE && cl.snap.ps.weapon != WP_DAGGER)
+            {
+                static bool fired = false;
+
+                qboolean primaryVelocityTriggeredAttack = (vr.primaryswingvelocity >
+                    vr_weapon_velocity_trigger->value);
+
+                if (fired != primaryVelocityTriggeredAttack)
+                {
+                    //normal attack is a punch with the left hand
+                    sendButtonAction(vr.right_handed ? "+rpunch" : "+lpunch", primaryVelocityTriggeredAttack);
+                    fired = primaryVelocityTriggeredAttack;
+                }
+            }
+
+            //Off hand punch
+            {
+                static bool fired = false;
+
+                qboolean secondaryVelocityTriggeredAttack = (vr.secondaryswingvelocity >
+                    vr_weapon_velocity_trigger->value);
+
+                if (fired != secondaryVelocityTriggeredAttack)
+                {
+                    //normal attack is a punch with the left hand
+                    sendButtonAction(vr.right_handed ? "+lpunch" : "+rpunch", secondaryVelocityTriggeredAttack);
+                    fired = secondaryVelocityTriggeredAttack;
+                }
+            }
+
+
             //Engage scope / virtual stock if conditions are right
             qboolean scopeready = vr.weapon_stabilised && (distanceToHMD < SCOPE_ENGAGE_DISTANCE);
             static qboolean lastScopeReady = qfalse;
@@ -610,8 +642,8 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
                 sendButtonAction("+moveup", (primaryButtonsNew & primaryButton1));
             }
 
-            //B Button - currently exit scope
-            if (primaryButton2New != primaryButton2Old) {
+            //B Button - Weapon alt mode (unless it is a scoped weapon
+            if (!vr.scopedweapon && (primaryButton2New != primaryButton2Old)) {
                 sendButtonActionSimple("weapalt");
             }
 

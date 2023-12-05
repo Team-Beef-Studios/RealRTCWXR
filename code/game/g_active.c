@@ -774,6 +774,12 @@ void ClientThink_real( gentity_t *ent ) {
 	int validkick;
 	static int wolfkicktimer = 0;
 
+	int validlpunch;
+	static int wolflpunchtimer = 0;
+
+	int validrpunch;
+	static int wolfrpunchtimer = 0;
+
 	client = ent->client;
 
 	// don't think if the client is not yet connected (and thus not yet spawned in)
@@ -920,6 +926,8 @@ void ClientThink_real( gentity_t *ent ) {
 			ucmd->upmove = 0;
 			ucmd->wbuttons = 0;
 			ucmd->wolfkick = 0;
+			ucmd->lpunch = 0;
+			ucmd->rpunch = 0;
 
 		} else {    // age their play time
 
@@ -936,6 +944,8 @@ void ClientThink_real( gentity_t *ent ) {
 		ucmd->upmove = 0;
 		ucmd->wbuttons = 0;
 		ucmd->wolfkick = 0;
+		ucmd->lpunch = 0;
+		ucmd->rpunch = 0;
 
 		// freeze player (RELOAD_FAILED still allowed to move/look)
 		if ( client->cameraPortal || ( g_reloading.integer & ( RELOAD_NEXTMAP_WAITING | RELOAD_ENDGAME ) ) ) {
@@ -1239,6 +1249,23 @@ void ClientThink_real( gentity_t *ent ) {
 	}
 
 	// done
+
+
+	if (ucmd->rpunch && ent->health > 0) {
+		validrpunch = Cmd_WolfPunch_f(ent, qfalse);
+
+		if (validrpunch) {
+			wolfrpunchtimer = level.time + 300;
+		}
+	}
+
+	if (ucmd->lpunch && ent->health > 0) {
+		validlpunch = Cmd_WolfPunch_f(ent, qtrue);
+
+		if (validlpunch) {
+			wolflpunchtimer = level.time + 300;
+		}
+	}
 
 	// Ridah, allow AI Cast's to evaluate results of their pmove's
 		extern void AICast_EvaluatePmove( int clientnum, pmove_t *pm );

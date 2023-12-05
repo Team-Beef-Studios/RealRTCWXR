@@ -1313,8 +1313,6 @@ gentity_t* weapon_grenadelauncher_fire_vr(gentity_t* ent, int grenType) {
 	vec3_t trajectory;
 
 	if (vr != NULL) {
-
-
 		//Caclulate speed between two controller position readings
 		float distance = VectorDistance(vr->weaponoffset_history[NEWEST_READING], vr->weaponoffset_history[OLDEST_READING]);
 		float t = vr->weaponoffset_history_timestamp[NEWEST_READING] - vr->weaponoffset_history_timestamp[OLDEST_READING];

@@ -44,7 +44,7 @@ If you have questions concerning this license or the applicable additional terms
 #define PRODUCT_VERSION "4.0" // iortcw 1.51
 #endif
 
-#define REALRTCWXR_VERSION		"0.3.1" 
+#define REALRTCWXR_VERSION		"0.4.0" 
 #define REALRTCWXR_NAME		"(RealRTCW XR " REALRTCWXR_VERSION ")" 
 
 #ifdef STANDALONE
@@ -1624,6 +1624,8 @@ typedef struct usercmd_s {
 
 	signed char forwardmove, rightmove, upmove;
 	signed char wolfkick;       // RF, we should move this over to a wbutton, this is a huge waste of bandwidth
+	signed char lpunch; 
+	signed char rpunch; 
 
 	unsigned short cld;         // NERVE - SMF - send client damage in usercmd instead of as a server command
 } usercmd_t;

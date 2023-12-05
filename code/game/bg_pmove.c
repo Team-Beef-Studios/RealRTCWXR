@@ -4492,6 +4492,8 @@ int Pmove( pmove_t *pmove ) {
 		pmove->cmd.buttons = 0;
 		pmove->cmd.wbuttons = 0;
 		pmove->cmd.wolfkick = 0;
+		pmove->cmd.lpunch = 0;
+		pmove->cmd.rpunch = 0;
 	}
 	// done.
 
