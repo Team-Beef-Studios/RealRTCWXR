@@ -665,6 +665,30 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
                 }
             }
 
+            // If zoomed, use forward and back to zoom in and out
+            if (vr.cgzoommode)
+            {
+                static qboolean itemSwitched = false;
+                if (between(-0.2f, pPrimaryJoystick->x, 0.2f) &&
+                    (between(0.8f, pPrimaryJoystick->y, 1.0f) ||
+                        between(-1.0f, pPrimaryJoystick->y, -0.8f)))
+                {
+                    if (!itemSwitched) {
+                        if (between(0.8f, pPrimaryJoystick->y, 1.0f))
+                        {
+                            sendButtonActionSimple("weapprev");
+                        }
+                        else
+                        {
+                            sendButtonActionSimple("weapnext");
+                        }
+                        itemSwitched = true;
+                    }
+                }
+                else {
+                    itemSwitched = false;
+                }
+            }
 
             //Duck - off hand joystick
             if ((secondaryButtonsNew & secondaryThumb) !=

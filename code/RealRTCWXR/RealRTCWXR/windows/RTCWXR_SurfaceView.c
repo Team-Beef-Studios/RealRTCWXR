@@ -14,7 +14,9 @@ JKXR Stuff
 
 bool VR_UseScreenLayer()
 {
+	static int frame = 0;
 	vr.using_screen_layer = 
+			(frame++ < 100) || //use screen for first 100 frames
 			(bool)((vr.cin_camera && !vr.immersive_cinematics) ||
 			vr.misc_camera ||
 			clc.demoplaying ||
