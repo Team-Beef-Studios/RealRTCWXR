@@ -804,8 +804,7 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
             }
 
             //Use smooth in 3rd person
-            bool usingSnapTurn = vr_turn_mode->integer == 0 ||
-                    (!vr.third_person && vr_turn_mode->integer == 1);
+            bool usingSnapTurn = vr_turn_mode->integer == 0;
 
             float previousSnap = vr.snapTurn;
             static int increaseSnap = true;
