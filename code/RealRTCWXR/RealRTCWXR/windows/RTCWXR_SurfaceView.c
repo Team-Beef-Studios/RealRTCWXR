@@ -16,7 +16,7 @@ bool VR_UseScreenLayer()
 {
 	static int frame = 0;
 	vr.using_screen_layer = 
-			(frame++ < 100) || //use screen for first 100 frames
+			(frame++ < 100) || //use screen for first 100 frames - stops splash screen giving a headache
 			(bool)((vr.cin_camera && !vr.immersive_cinematics) ||
 			vr.misc_camera ||
 			clc.demoplaying ||
@@ -78,12 +78,13 @@ void VR_SetHMDOrientation(float pitch, float yaw, float roll)
 void VR_SetHMDPosition(float x, float y, float z )
 {
 	static bool s_useScreen = qfalse;
+	static int frame = 0;
 
 	VectorSet(vr.hmdposition, x, y, z);
 
 	//Can be set elsewhere
 	vr.take_snap |= s_useScreen != VR_UseScreenLayer();
-	if (vr.take_snap)
+	if (vr.take_snap || (frame++ < 100))
     {
 		s_useScreen = VR_UseScreenLayer();
 
