@@ -258,7 +258,7 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
 
                     float dot = DotProduct(weaponForward, dir);
 
-                    if (dot > 0.8f &&
+                    if (dot > 0.6f &&
                         vr_two_handed_weapons->integer) {
                         vr.weapon_stabilised = 1;
                     }
