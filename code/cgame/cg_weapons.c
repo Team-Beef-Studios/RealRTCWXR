@@ -3865,7 +3865,8 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 	if (cg.snap->ps.clientNum == 0
 		&& !cg.renderingThirdPerson
 		&& cg.predictedPlayerState.stats[STAT_HEALTH] > 0
-		&& !vr->cgzoommode)
+		&& !vr->cgzoommode
+		&& !vr->cin_camera)
 	{
 		vec3_t end, forward, angles;
 		refEntity_t handEnt;
@@ -4580,6 +4581,17 @@ void CG_ItemSelectorSelect_f(void)
 		int index = 0;
 		for (int i = 0; i < WP_NUM_WEAPONS; ++i)
 		{
+			//Don't include scoped / silenced variants of weapons in the ALL selector
+			if (i == WP_SNOOPERSCOPE ||
+				i == WP_SNIPERRIFLE ||
+				i == WP_DELISLESCOPE ||
+				i == WP_FG42SCOPE ||
+				i == WP_SILENCER ||
+				i == WP_AKIMBO)
+			{
+				continue;
+			}
+
 			if (CG_WeaponSelectable(i))
 			{
 				weapons[index++] = i;
@@ -4672,6 +4684,17 @@ void CG_DrawItemSelector(void)
 	{
 		for (int i = 0; i < WP_NUM_WEAPONS; ++i)
 		{
+			//Don't include scoped / silenced variants of weapons in the ALL selector
+			if (i == WP_SNOOPERSCOPE ||
+				i == WP_SNIPERRIFLE ||
+				i == WP_DELISLESCOPE ||
+				i == WP_FG42SCOPE ||
+				i == WP_SILENCER ||
+				i == WP_AKIMBO)
+			{
+				continue;
+			}
+
 			if (CG_WeaponSelectable(i))
 			{
 				weapons[allWeaponCount++] = i;

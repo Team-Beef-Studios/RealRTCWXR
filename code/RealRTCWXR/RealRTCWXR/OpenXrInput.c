@@ -823,20 +823,38 @@ void TBXR_UpdateControllers( )
         if (GetActionStateBoolean(YTouchAction, SIDE_LEFT).currentState) leftTrackedRemoteState_new.Touches |= xrButton_Y;
     }
 
-    //INDEX we'll need to add force check so its not boolean    
+    //Defaults engage/disable at the same level
+    float enableLevel = 0.7f;
+    float disableLevel = 0.7f;
     if (gAppState.controllersPresent == VIVE_CONTROLLERS)
     {
         leftTrackedRemoteState_new.GripTrigger = GetActionStateBoolean(squeezeClickAction, SIDE_LEFT).currentState;
+        enableLevel = 1.0f;
+        disableLevel = 1.0f;
     }
     else if (gAppState.controllersPresent == INDEX_CONTROLLERS)
     {
-        leftTrackedRemoteState_new.GripTrigger = GetActionStateFloat(squeezeForceAction, SIDE_LEFT).currentState;        
+        leftTrackedRemoteState_new.GripTrigger = GetActionStateFloat(squeezeForceAction, SIDE_LEFT).currentState;    
+        // Use different release level for the Index Knuckles
+        enableLevel = 0.7f;
+        disableLevel = 0.5f;
     }
     else    
     {
         leftTrackedRemoteState_new.GripTrigger = GetActionStateFloat(squeezeAction, SIDE_LEFT).currentState;        
     }
-    if (leftTrackedRemoteState_new.GripTrigger > 0.7f)
+
+    static int leftGripEngaged = false;
+    if (leftTrackedRemoteState_new.GripTrigger >= enableLevel && !leftGripEngaged)
+    {
+        leftGripEngaged = true;
+    }
+    else if (leftTrackedRemoteState_new.GripTrigger < disableLevel && leftGripEngaged)
+    {
+        leftGripEngaged = false;
+    }
+
+    if (leftGripEngaged)
     {
         leftTrackedRemoteState_new.Buttons |= xrButton_GripTrigger;
     }
@@ -892,7 +910,9 @@ void TBXR_UpdateControllers( )
         if (GetActionStateBoolean(backAction, SIDE_RIGHT).currentState) rightTrackedRemoteState_new.Buttons |= xrButton_Enter;
     }
     
-    //INDEX we'll need to add force check so its not boolean    
+    //Defaults engage/disable at the same level
+    enableLevel = 0.7f;
+    disableLevel = 0.7f;
     if (gAppState.controllersPresent == VIVE_CONTROLLERS)
     {
         rightTrackedRemoteState_new.GripTrigger = GetActionStateBoolean(squeezeClickAction, SIDE_RIGHT).currentState;
@@ -900,12 +920,29 @@ void TBXR_UpdateControllers( )
     else if (gAppState.controllersPresent == INDEX_CONTROLLERS)
     {
         rightTrackedRemoteState_new.GripTrigger = GetActionStateFloat(squeezeForceAction, SIDE_RIGHT).currentState;
+        // Use different release level for the Index Knuckles
+        enableLevel = 0.7f;
+        disableLevel = 0.5f;
     }
     else
     {
         rightTrackedRemoteState_new.GripTrigger = GetActionStateFloat(squeezeAction, SIDE_RIGHT).currentState;
     }    
-    if (rightTrackedRemoteState_new.GripTrigger > 0.7f) rightTrackedRemoteState_new.Buttons |= xrButton_GripTrigger;
+
+    static int rightGripEngaged = false;
+    if (rightTrackedRemoteState_new.GripTrigger >= enableLevel && !rightGripEngaged)
+    {
+        rightGripEngaged = true;
+    }
+    else if (rightTrackedRemoteState_new.GripTrigger < disableLevel && rightGripEngaged)
+    {
+        rightGripEngaged = false;
+    }
+
+    if (rightGripEngaged)
+    {
+        rightTrackedRemoteState_new.Buttons |= xrButton_GripTrigger;
+    }
     
     if (GetActionStateBoolean(thumbstickClickAction, SIDE_RIGHT).currentState) rightTrackedRemoteState_new.Buttons |= xrButton_RThumb;
     if (GetActionStateBoolean(thumbstickClickAction, SIDE_RIGHT).currentState) rightTrackedRemoteState_new.Buttons |= xrButton_Joystick;

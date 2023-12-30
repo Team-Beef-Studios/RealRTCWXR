@@ -113,7 +113,7 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
 
             //Load the adjustment values
             char cvar_name[64];
-            char* cvar_pattern = vr_align_weapons->value == 1 ? "vr_weapon_adjustment_%i" : "vr_weapon_lhand_adjustment_%i";
+            char* cvar_pattern = vr_align_weapons->value == 1 ? "vr_weapon_adjustment_%i" : "vr_weapon_hand_adjustment_%i";
             Com_sprintf(cvar_name, sizeof(cvar_name), cvar_pattern, cl.snap.ps.weapon);
 
             cvar_t* cvar = Cvar_Get(cvar_name, cvar_name, CVAR_ARCHIVE);

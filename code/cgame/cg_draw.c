@@ -3656,7 +3656,8 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 		return;
 	}
 
-	if (!vr->using_screen_layer)
+	if (!vr->using_screen_layer &&
+		!vr->cin_camera)
 		CG_DrawCrosshair3D();
 
 	if (cg.weaponSelect == WP_FG42SCOPE || cg.weaponSelect == WP_SNOOPERSCOPE || cg.weaponSelect == WP_SNIPERRIFLE || cg.weaponSelect == WP_DELISLESCOPE)

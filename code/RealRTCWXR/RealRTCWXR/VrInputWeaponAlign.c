@@ -247,7 +247,7 @@ void HandleInput_WeaponAlign(ovrInputStateTrackedRemote* pDominantTrackedRemoteN
         Com_sprintf(vr.test_name, sizeof(vr.test_name), "ID: %i, %s: %.3f", cl.snap.ps.weapon, item_names[item_index], *(items[item_index]));
 
         char cvar_name[64];
-        char* cvar_pattern = vr_align_weapons->value == 1 ? "vr_weapon_adjustment_%i" : "vr_weapon_lhand_adjustment_%i";
+        char* cvar_pattern = vr_align_weapons->value == 1 ? "vr_weapon_adjustment_%i" : "vr_weapon_hand_adjustment_%i";
         Com_sprintf(cvar_name, sizeof(cvar_name), cvar_pattern, cl.snap.ps.weapon);
 
         char buffer[256];
