@@ -39,10 +39,29 @@ void HandleInput_WeaponAlign(ovrInputStateTrackedRemote* pDominantTrackedRemoteN
         QuatToYawPitchRoll(pDominantTracking->Pose.orientation, rotation, vr.weaponangles[ANGLES_DEFAULT]);
         QuatToYawPitchRoll(pOffTracking->Pose.orientation, rotation, vr.offhandangles[ANGLES_DEFAULT]);
 
+        rotation[PITCH] = vr_knife_pitchadjust->value;
+        //Individual Controller offsets (so that they match quest)
+        if (gAppState.controllersPresent == INDEX_CONTROLLERS)
+        {
+            rotation[PITCH] += 10.938125f;
+        }
+        else if (gAppState.controllersPresent == VIVE_CONTROLLERS)
+        {
+            rotation[PITCH] += 13.6725f;
+        }
+        else if (gAppState.controllersPresent == PICO_CONTROLLERS)
+        {
+            rotation[PITCH] += 12.500625f;
+        }
         QuatToYawPitchRoll(pDominantTracking->GripPose.orientation, rotation, vr.weaponangles[ANGLES_KNIFE]);
         QuatToYawPitchRoll(pOffTracking->GripPose.orientation, rotation, vr.offhandangles[ANGLES_KNIFE]);
 
+        //VIVE CONTROLLERS -> -33.6718750
         rotation[PITCH] = vr_weapon_pitchadjust->value;
+        if (gAppState.controllersPresent == VIVE_CONTROLLERS)
+        {
+            rotation[PITCH] -= 33.6718750f;
+        }
         QuatToYawPitchRoll(pDominantTracking->Pose.orientation, rotation, vr.weaponangles[ANGLES_ADJUSTED]);
         QuatToYawPitchRoll(pOffTracking->Pose.orientation, rotation, vr.offhandangles[ANGLES_ADJUSTED]);
 
