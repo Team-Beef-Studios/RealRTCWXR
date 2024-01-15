@@ -870,7 +870,8 @@ static int CG_CalcFov( void ) {
 			fov_x = cg.zoomval;
 			lastfov = fov_x;
 			cg.refdef.override_fov = qtrue;
-		} else {                    // binoc zooming out
+		} else if (!(cg.snap->ps.eFlags & EF_MG42_ACTIVE))
+		{                    // binoc zooming out
 			f = ( cg.time - cg.zoomTime ) / (float)ZOOM_TIME;
 			if ( f <= 1.0 ) {
 				fov_x = zoomFov + f * ( fov_x - zoomFov );
@@ -885,9 +886,9 @@ static int CG_CalcFov( void ) {
 		cg.refdef.rdflags &= ~RDF_SNOOPERVIEW;
 	}
 
-	if ( cg.snap->ps.persistant[PERS_HWEAPON_USE] ) {
+/*	if (cg.snap->ps.persistant[PERS_HWEAPON_USE]) {
 		fov_x = 55;
-	}
+	}*/
 
 #if 0
 	if ( cg_fixedAspect.integer ) {
@@ -1411,9 +1412,9 @@ void CG_DrawSkyBoxPortal( void ) {
 			cg.refdef.rdflags &= ~RDF_SNOOPERVIEW;
 		}
 
-		if ( cg.snap->ps.persistant[PERS_HWEAPON_USE] ) {
+		/*if (cg.snap->ps.persistant[PERS_HWEAPON_USE]) {
 			fov_x = 55;
-		}
+		}*/
 
 		if ( cg_fixedAspect.integer ) {
 			// Based on LordHavoc's code for Darkplaces

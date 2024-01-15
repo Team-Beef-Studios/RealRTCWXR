@@ -2273,11 +2273,14 @@ static void CG_DrawCrosshair( void ) {
 //		CG_FillRect (300, 240, 40, 2, hcolor);	// horizontal
 //		CG_FillRect (319, 242, 2, 16, hcolor);	// vertical
 
+
+		// Disable this particular crosshair for VR
+		/*
 		// option 2
 		CG_FillRect( 305, 240, 30, 2, hcolor );  // horizontal
 		CG_FillRect( 314, 256, 12, 2, hcolor );  // horizontal2
 		CG_FillRect( 319, 242, 2, 32, hcolor );  // vertical
-
+		*/
 		return;
 	}
 
@@ -2465,11 +2468,13 @@ static void CG_DrawCrosshair3D( void ) {
 //		CG_FillRect (300, 240, 40, 2, hcolor);	// horizontal
 //		CG_FillRect (319, 242, 2, 16, hcolor);	// vertical
 
+		// Disable for VR
+		/*
 		// option 2
 		CG_FillRect( 305, 240, 30, 2, hcolor );  // horizontal
 		CG_FillRect( 314, 256, 12, 2, hcolor );  // horizontal2
 		CG_FillRect( 319, 242, 2, 32, hcolor );  // vertical
-
+		*/
 		return;
 	}
 
@@ -2934,11 +2939,11 @@ static void CG_DrawFlashZoomTransition( void ) {
 		return;
 	}
 
-		if ( cg.zoomedScope ) {
-			fadeTime = cg.zoomedScope;  //----(SA)
-		} else {
-			fadeTime = 300;
-		}
+	if ( cg.zoomedScope ) {
+		fadeTime = cg.zoomedScope;  //----(SA)
+	} else {
+		fadeTime = 300;
+	}
 
 
 	frac = cg.time - cg.zoomTime;
@@ -3660,12 +3665,22 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 		!vr->cin_camera)
 		CG_DrawCrosshair3D();
 
+	vr->emplaced_gun = (cg.snap->ps.eFlags & EF_MG42_ACTIVE);
+
 	if (cg.weaponSelect == WP_FG42SCOPE || cg.weaponSelect == WP_SNOOPERSCOPE || cg.weaponSelect == WP_SNIPERRIFLE || cg.weaponSelect == WP_DELISLESCOPE)
 	{
 		cg.refdef.viewangles[ROLL] = vr->hmdorientation[ROLL];
 		cg.refdef.viewangles[PITCH] = vr->weaponangles[ANGLES_ADJUSTED][PITCH];
 		cg.refdef.viewangles[YAW] = vr->clientviewangles[YAW]
 			+ vr->weaponangles[ANGLES_ADJUSTED][YAW] + SHORT2ANGLE(cg.snap->ps.delta_angles[YAW]);
+		AnglesToAxis(cg.refdef.viewangles, cg.refdef.viewaxis);
+	}
+	else if (vr->emplaced_gun)
+	{
+		VectorCopy(vr->hmdorientation, cg.refdef.viewangles);
+		cg.refdef.viewangles[YAW] = vr->clientviewangles[YAW] +
+			(vr->hmdorientation[YAW] - vr->hmdorientation_first[YAW]) +
+			SHORT2ANGLE(cg.snap->ps.delta_angles[YAW]);
 		AnglesToAxis(cg.refdef.viewangles, cg.refdef.viewaxis);
 	}
 	else if (!cg.cameraMode)
@@ -3684,6 +3699,12 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 
 
 	cg.refdef.worldscale = cg_worldScale.value;
+
+	//Immersive cinematic sequence 6DoF
+	if (vr->emplaced_gun || cg.renderingThirdPerson)
+	{
+		BG_ConvertFromVR(cg.refdef.viewangles[YAW], cg.refdef.worldscale, vr->hmdposition_offset, cg.refdef.vieworg, cg.refdef.vieworg);
+	}
 
 	//Vertical Positional Movement
 	vec3_t prevOrigin;

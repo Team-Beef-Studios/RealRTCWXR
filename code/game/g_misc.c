@@ -36,6 +36,8 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "g_local.h"
 
+#include <VrClientInfo.h>
+
 extern void AimAtTarget( gentity_t * self );
 
 int sniper_sound;
@@ -1585,7 +1587,7 @@ int muzzleflashmodel;
 
 void mg42_muzzleflash( gentity_t *ent, vec3_t muzzlepos ) {  // cheezy, but lets me use this routine for finding the muzzle point for firing the actual bullet
 
-	vec3_t forward;
+	vec3_t forward, up;
 	vec3_t point;
 	gentity_t   *flash;
 
@@ -1598,7 +1600,7 @@ void mg42_muzzleflash( gentity_t *ent, vec3_t muzzlepos ) {  // cheezy, but lets
 		G_SetOrigin( flash, ent->s.pos.trBase );
 
 		VectorCopy( flash->s.origin, point );
-		AngleVectors( flash->s.angles, forward, NULL, NULL );
+		AngleVectors( flash->s.angles, forward, NULL, up );
 		VectorMA( point, 40, forward, point );
 
 		if ( muzzlepos ) {
@@ -1839,9 +1841,11 @@ void clamp_hweapontofirearc( gentity_t *self, gentity_t *other, vec3_t dang ) {
 
 
 	if ( other && clamped ) {
-		// we only do this to keep the input angles close to the weapon, this doesn't actually
-		// effect the view
-		SetClientViewAngle( other, dang );
+		if (other && other->r.svFlags & SVF_CASTAI) {
+			// we only do this to keep the input angles close to the weapon, this doesn't actually
+			// effect the view
+			SetClientViewAngle(other, dang);
+		}
 
 		//if they are an AI, they should dismount now
 		if ( other->r.svFlags & SVF_CASTAI ) {
@@ -1905,14 +1909,27 @@ void mg42_touch( gentity_t *self, gentity_t *other, trace_t *trace ) {
 		for ( i = 0; i < 3; i++ )
 			dang[i] = SHORT2ANGLE( other->client->pers.cmd.angles[i] );
 
+		if (!(self->r.svFlags & SVF_CASTAI)) {
+			dang[YAW] = other->client->ps.viewangles[YAW] + (vr->weaponangles[ANGLES_ADJUSTED][YAW] - getHMDYawForCalc() + vr->snapTurn);
+			dang[PITCH] = vr->weaponangles[ANGLES_ADJUSTED][PITCH];
+			if (dang[PITCH] < -30.f)
+				dang[PITCH] = -30.f;
+			if (dang[PITCH] > 30.f)
+				dang[PITCH] = 30.f;
+		}
+		else {
+			other->client->ps.viewlocked = 1;
+			other->client->ps.viewlocked_entNum = self->s.number;
+		}
+
 		// the gun should go to our current angles next time it thinks
 		VectorCopy( dang, self->TargetAngles );
 		//VectorCopy( other->client->ps.viewangles, self->TargetAngles );
 
 		// now tell the client to lock the view in the direction of the gun
 		//if (other->r.svFlags & SVF_CASTAI) {
-		other->client->ps.viewlocked = 1;
-		other->client->ps.viewlocked_entNum = self->s.number;
+		//other->client->ps.viewlocked = 1;
+		//other->client->ps.viewlocked_entNum = self->s.number;
 		//}
 
 		if ( self->s.frame ) {
@@ -1921,13 +1938,17 @@ void mg42_touch( gentity_t *self, gentity_t *other, trace_t *trace ) {
 			other->client->ps.gunfx = 0;
 		}
 
-		// clamp the mg42 to fire arc
-		VectorCopy( other->client->ps.viewangles, self->TargetAngles );
+		if (other->r.svFlags & SVF_CASTAI) {
+			// clamp the mg42 to fire arc
+			VectorCopy(other->client->ps.viewangles, self->TargetAngles);
+		}
 
 		clamp_hweapontofirearc( self, other, dang );
 
-		// clamp player behind the gun
-		clamp_playerbehindgun( self, other, dang );
+		if (other->r.svFlags & SVF_CASTAI) {
+			// clamp player behind the gun
+			clamp_playerbehindgun(self, other, dang);
+		}
 
 		VectorCopy( dang, self->TargetAngles );
 	}
@@ -1951,7 +1972,7 @@ void mg42_track( gentity_t *self, gentity_t *other ) {
 
 	if ( other->active ) {
 		if ( ( !( level.time % 100 ) ) && ( other->client ) && ( other->client->buttons & BUTTON_ATTACK ) ) {
-			other->client->ps.viewlocked = 1;
+			//other->client->ps.viewlocked = 1;
 
 			if ( self->s.frame && !is_flak ) {
 				// G_Printf ("gun: destroyed = %d\n", self->s.frame);
@@ -1959,12 +1980,23 @@ void mg42_track( gentity_t *self, gentity_t *other ) {
 				other->client->ps.gunfx = 1;
 			} else
 			{
-				AngleVectors( self->s.apos.trBase, forward, right, up );
+				if (!(self->r.svFlags & SVF_CASTAI)) {
+					vec3_t viewang;
+					VectorCopy(vr->weaponangles[ANGLES_ADJUSTED], viewang);
+					viewang[YAW] = other->client->ps.viewangles[YAW] + (vr->weaponangles[ANGLES_ADJUSTED][YAW] - getHMDYawForCalc());
+					AngleVectors(viewang, forward, right, up);
+				}
+				else
+				{
+					AngleVectors(self->s.apos.trBase, forward, right, up);
+				}
 				VectorCopy( self->s.pos.trBase, muzzle );
 
 				if ( !Q_stricmp( self->classname, "misc_mg42" ) ) {
 					VectorMA( muzzle, 16, forward, muzzle );
-					VectorMA( muzzle, 16, up, muzzle );
+					if (self->r.svFlags & SVF_CASTAI) {
+						VectorMA(muzzle, 16, up, muzzle);
+					}
 					validshot = qtrue;
 				} else if ( !Q_stricmp( self->classname, "misc_flak" ) )       {
 					if ( self->delay < level.time ) {
@@ -2023,7 +2055,9 @@ void mg42_track( gentity_t *self, gentity_t *other ) {
 					// play character anim
 					BG_AnimScriptEvent( &other->client->ps, ANIM_ET_FIREWEAPON, qfalse, qtrue );
 
-					other->client->ps.viewlocked = 2; // this enable screen jitter when firing
+					if (self->r.svFlags & SVF_CASTAI) {
+						other->client->ps.viewlocked = 2; // this enable screen jitter when firing
+					}
 				}
 			}
 		}
@@ -2131,9 +2165,11 @@ void mg42_think( gentity_t *self ) {
 			mg42_track( self, owner );
 			self->nextthink = level.time + 50;
 
+			/*
 			if ( !( owner->r.svFlags & SVF_CASTAI ) ) {
 				clamp_playerbehindgun( self, owner, vec3_origin );
 			}
+			*/
 
 //G_Printf ("len %5.2f\n", len);
 /*

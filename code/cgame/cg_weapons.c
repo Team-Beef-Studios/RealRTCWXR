@@ -3866,7 +3866,8 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 		&& !cg.renderingThirdPerson
 		&& cg.predictedPlayerState.stats[STAT_HEALTH] > 0
 		&& !vr->cgzoommode
-		&& !vr->cin_camera)
+		&& !vr->cin_camera
+		&& !(cent->currentState.eFlags & EF_MG42_ACTIVE))
 	{
 		vec3_t end, forward, angles;
 		refEntity_t handEnt;
@@ -7331,7 +7332,7 @@ void CG_SpawnTracer( int sourceEnt, vec3_t pstart, vec3_t pend ) {
 		// for visual purposes, find the actual tag_weapon for this client
 		// and offset the start and end accordingly
 		if ( cg_entities[sourceEnt].currentState.eFlags & EF_MG42_ACTIVE ) {   // mounted
-			start[2] -= 32; // (SA) hack to get the tracer down below the barrel FIXME: do properly
+			start[2] -= 48; // (SA) hack to get the tracer down below the barrel FIXME: do properly
 		} else {
 			if ( CG_GetWeaponTag( sourceEnt, "tag_flash", &or ) ) {
 				VectorSubtract( or.origin, start, ofs );

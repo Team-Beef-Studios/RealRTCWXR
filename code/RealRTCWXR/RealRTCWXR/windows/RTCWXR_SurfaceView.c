@@ -47,8 +47,7 @@ void VR_SetHMDOrientation(float pitch, float yaw, float roll)
 	//Keep this for our records
 	VectorCopy(vr.hmdorientation, vr.hmdorientation_last);
 
-	if (!vr.third_person && !vr.remote_turret
-	)
+	if (!vr.third_person && !vr.remote_turret && !vr.emplaced_gun)
 	{
 		VectorCopy(vr.hmdorientation, vr.hmdorientation_first);
 	}
@@ -124,16 +123,15 @@ void VR_GetMove(float *forward, float *side, float *pos_forward, float *pos_side
 		*pitch = 0.0f;
 		*roll = 0.0f;
 	}
-	else if (vr.remote_turret) 
+	else if (vr.emplaced_gun) 
 	{
 		*forward = 0.0f;
 		*pos_forward = 0.0f;
 		*up = 0.0f;
 		*side = 0.0f;
 		*pos_side = 0.0f;
-		*yaw = vr.snapTurn + vr.hmdorientation_first[YAW] +
-				vr.weaponangles[ANGLES_ADJUSTED][YAW] - vr.weaponangles_first[ANGLES_ADJUSTED][YAW];
-		*pitch = vr.weaponangles[ANGLES_ADJUSTED][PITCH];
+		*yaw = vr.snapTurn +vr.hmdorientation_first[YAW];
+		*pitch = 0.0f;
 		*roll = 0.0f;
 	}
 	else if (vr.cgzoommode && !vr.binocularsActive)

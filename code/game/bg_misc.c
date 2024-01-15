@@ -5747,7 +5747,7 @@ void rotateAboutOrigin(float x, float y, float rotation, vec2_t out)
 
 float getHMDYawForCalc()
 {
-	if (vr->in_vehicle || vr->third_person)
+	if (vr->in_vehicle || vr->third_person || vr->emplaced_gun)
 	{
 		return vr->hmdorientation_first[YAW];
 	}
