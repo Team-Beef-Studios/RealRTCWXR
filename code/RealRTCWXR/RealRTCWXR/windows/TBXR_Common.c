@@ -1074,7 +1074,7 @@ void TBXR_FrameSetup()
 	//Game specific frame setup stuff called here
 	VR_FrameSetup();
 
-	//Get controller state here
+	TBXR_updateProjections();
 	TBXR_GetHMDOrientation();
 	VR_HandleControllerInput();
 
@@ -1173,8 +1173,6 @@ void TBXR_submitFrame()
 	if (gAppState.SessionActive == GL_FALSE) {
 		return;
 	}
-
-	TBXR_updateProjections();
 
 	//Calculate the maximum extent fov for use in culling in the engine (we won't want to cull inside this fov)
 	vr.fov_x = (fabs(gAppState.Views[0].fov.angleLeft) + fabs(gAppState.Views[1].fov.angleRight)) * 180.0f / M_PI;
