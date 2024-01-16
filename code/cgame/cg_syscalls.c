@@ -593,6 +593,10 @@ qboolean trap_GetModelInfo( int clientNum, char *modelName, animModelInfo_t **mo
 	return syscall( CG_GETMODELINFO, clientNum, modelName, modelInfo );
 }
 
+int trap_Vibrate(int duration, int channel, float intensity, char* description, float yaw, float height) {
+	return syscall(CG_HAPTIC, duration, channel, PASSFLOAT(intensity), description, PASSFLOAT(yaw), PASSFLOAT(height));
+}
+
 // New in IORTCW
 void *trap_Alloc( int size ) {
 	return (void*)syscall( CG_ALLOC, size );

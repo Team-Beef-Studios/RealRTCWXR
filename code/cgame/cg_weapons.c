@@ -2297,11 +2297,11 @@ static void CG_FlamethrowerFlame( centity_t *cent, vec3_t origin ) {
 
 		CG_FireFlameChunks(cent, origin, angles, 1.0, qtrue, 1);
 
-		/*trap_Vibrate(-1, vr->right_handed ? 1 : 0, 0.6, "fire_flames", 0.0, 0.0);
-		if (cgVR->weapon_stabilised)
+		trap_Vibrate(-1, vr->right_handed ? 1 : 0, 0.6, "fire_flames", 0.0, 0.0);
+		if (vr->weapon_stabilised)
 		{
-			trap_Vibrate(-1, cgVR->right_handed ? 0 : 1, 0.5, "fire_flames", 0.0, 0.0);
-		}*/
+			trap_Vibrate(-1, vr->right_handed ? 0 : 1, 0.5, "fire_flames", 0.0, 0.0);
+		}
 	}
 }
 // done.
@@ -3093,6 +3093,12 @@ void CG_PlayerTeslaCoilFire( centity_t *cent, vec3_t flashorigin ) {
 		}
 	}
 
+	trap_Vibrate(-1, vr->right_handed ? 1 : 0, 0.8, "fire_tesla", 0.0, 0.0);
+	if (vr->weapon_stabilised)
+	{
+		trap_Vibrate(-1, vr->right_handed ? 0 : 1, 0.8, "fire_tesla", 0.0, 0.0);
+	}
+
 	// shake the camera a bit
 	CG_StartShakeCamera( 0.05, 200, cent->lerpOrigin, 100 );
 }
@@ -3598,7 +3604,9 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 
 	if ( ps || cg.renderingThirdPerson || !isPlayer ) {
 
+		static qboolean wasfiring = qfalse;
 		if ( firing ) {
+			wasfiring = qtrue;
 			// Ridah, Flamethrower effect
 			CG_FlamethrowerFlame( cent, flash.origin );
 
@@ -3618,6 +3626,16 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 				AxisToAngles( flash.axis, angles );
 				CG_FireFlameChunks( cent, flash.origin, angles, 1.0, qfalse, 0 );
 			
+			}
+
+			if (wasfiring) {
+				//Stop haptics
+				char* fire_command = (char*)malloc(8 * sizeof(char));
+				//sprintf(fire_command, "stop_firing_%i", weaponNum);
+				//trap_Vibrate(0, 0, 0.0, fire_command, 0.0, 0.0);
+				trap_Vibrate(0, 0, 0.0, "ignore", 0.0, 0.0);
+				trap_Vibrate(0, 1, 0.0, "ignore", 0.0, 0.0);
+				wasfiring = qfalse;
 			}
 		}
 	}

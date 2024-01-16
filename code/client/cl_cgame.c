@@ -48,6 +48,8 @@ extern qboolean getCameraInfo( int camNum, int time, vec3_t *origin, vec3_t *ang
 extern void SV_SendMoveSpeedsToGame( int entnum, char *text );
 extern qboolean SV_GetModelInfo( int clientNum, char *modelName, animModelInfo_t **modelInfo );
 
+void TBXR_Vibrate(int duration, int channel, float intensity);
+void VR_HapticEvent(const char* event, int position, int flags, int intensity, float angle, float yHeight);
 
 /*
 ====================
@@ -846,6 +848,19 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 			// file for itself. --zturtleman
 			return qfalse;
 		}
+
+	case CG_HAPTIC:
+		//args[1] = duration
+		//args[2] = Right or left channel (1 = Right / 0 = left)
+		//VMF(3) = Intensity
+		//VMA(4) = Description
+		//VMF(5) = Yaw
+		//VMF(6) = Height
+
+		TBXR_Vibrate(args[1], args[2], VMF(3));
+
+		//VR_HapticEvent(args[1], args[2], VMF(3), VMA(4), VMF(5), VMF(6));
+		return 0;
 
 	// New in IORTCW
 	case CG_ALLOC:

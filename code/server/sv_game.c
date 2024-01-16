@@ -34,6 +34,10 @@ If you have questions concerning this license or the applicable additional terms
 
 #include <VrCommon.h>
 
+void TBXR_Vibrate(int duration, int channel, float intensity);
+void VR_HapticEvent(const char* event, int position, int flags, int intensity, float angle, float yHeight);
+
+
 botlib_export_t *botlib_export;
 
 // these functions must be used instead of pointer arithmetic, because
@@ -446,6 +450,12 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return 0;
 	case G_GETTAG:
 		return SV_GetTag( args[1], VMA( 2 ), VMA( 3 ) );
+
+	case G_HAPTIC:
+		TBXR_Vibrate(args[1], args[2], VMF(3));
+
+		//VR_HapticEvent(args[1], args[2], VMF(3), VMA(4), VMF(5), VMF(6));
+		return 0;
 
 		//====================================
 

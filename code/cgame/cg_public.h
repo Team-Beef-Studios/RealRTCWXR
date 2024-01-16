@@ -218,6 +218,8 @@ typedef enum {
 
 	CG_GETMODELINFO,
 
+	CG_HAPTIC,
+
 	// New in IORTCW
 	CG_ALLOC = 900
 

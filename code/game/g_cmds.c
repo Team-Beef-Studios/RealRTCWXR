@@ -1813,6 +1813,7 @@ int Cmd_WolfPunch_f(gentity_t* ent, qboolean left) {
 	traceEnt = &g_entities[tr.entityNum];
 
 	if (!ent->melee) { // because we dont want you to open a door with a prop
+
 		if ((Q_stricmp(traceEnt->classname, "func_door_rotating") == 0)
 			&& (traceEnt->s.apos.trType == TR_STATIONARY && traceEnt->s.pos.trType == TR_STATIONARY)
 			&& traceEnt->active == qfalse) {
@@ -1940,6 +1941,8 @@ int Cmd_WolfPunch_f(gentity_t* ent, qboolean left) {
 
 		G_Damage(traceEnt, ent, ent, forward, tr.endpos, damage, 0, MOD_KICKED);   //----(SA)	modified
 	}
+
+	trap_Vibrate(100, left ? 0 : 1, 0.9, "knife_hit", 0.0, 0.0);
 
 	return (1);
 }

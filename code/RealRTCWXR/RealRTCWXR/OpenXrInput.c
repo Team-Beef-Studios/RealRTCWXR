@@ -993,17 +993,16 @@ void TBXR_Vibrate( int duration, int chan, float intensity )
 {
     for (int i = 0; i < 2; ++i)
     {
-        int channel = 1-i;
-        if ((i + 1) & chan)
+        if ((i + 1) & (chan+1))
         {
-            if (vibration_channel_duration[channel] > 0.0f)
+            if (vibration_channel_duration[chan] > 0.0f)
                 return;
 
-            if (vibration_channel_duration[channel] == -1.0f && duration != 0.0f)
+            if (vibration_channel_duration[chan] == -1.0f && duration != 0.0f)
                 return;
 
-            vibration_channel_duration[channel] = duration;
-            vibration_channel_intensity[channel] = intensity * vr_haptic_intensity->value;
+            vibration_channel_duration[chan] = duration;
+            vibration_channel_intensity[chan] = intensity * vr_haptic_intensity->value;
         }
     }
 }

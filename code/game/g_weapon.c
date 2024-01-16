@@ -122,6 +122,9 @@ void Weapon_Knife( gentity_t *ent ) {
 	tent->s.eventParm = DirToByte( tr.plane.normal );
 	tent->s.weapon = ent->s.weapon;
 
+	//we hit something
+	trap_Vibrate(100, vr->right_handed ? 1 : 0, 0.9, "knife_hit", 0.0, 0.0);
+
 	if ( tr.entityNum == ENTITYNUM_WORLD ) { // don't worry about doing any damage
 		return;
 	}
@@ -1019,6 +1022,26 @@ void Bullet_Fire( gentity_t *ent, float spread, int damage , qboolean distance_f
 	vec3_t end;
 
 	Bullet_Endpos( ent, spread, &end );
+
+	if (!ent->aiCharacter) {
+
+		qboolean right = vr->right_handed;
+		// Allocates storage
+		char* fire_command = (char*)malloc(8 * sizeof(char));
+		sprintf(fire_command, "fire_%i", ent->s.weapon);
+		if (ent->s.weapon == WP_AKIMBO)
+		{
+			right = BG_AkimboFireSequence(ent->s.weapon, ent->client->ps.ammoclip[WP_AKIMBO], ent->client->ps.ammoclip[WP_COLT]);
+			trap_Vibrate(100, right ? 1 : 0, 1.0, fire_command, 0.0, 0.0);
+		}
+		else {
+			trap_Vibrate(100, right ? 1 : 0, 1.0, fire_command, 0.0, 0.0);
+			if (vr->weapon_stabilised) {
+				trap_Vibrate(100, right ? 0 : 1, 0.7, fire_command, 0.0, 0.0);
+			}
+		}
+	}
+
 	Bullet_Fire_Extended( ent, ent, muzzleTrace, end, spread, damage, 0 , distance_falloff );
 }
 
@@ -2307,6 +2330,12 @@ void FireWeapon( gentity_t *ent ) {
 		break;
 	case WP_PANZERFAUST:
 		Weapon_RocketLauncher_Fire( ent, aimSpreadScale );
+		if (!ent->aiCharacter) {
+			trap_Vibrate(200, vr->right_handed ? 1 : 0, 1.0, "fire_rocket", 0.0, 0.0);
+			if (vr->weapon_stabilised) {
+				trap_Vibrate(200, vr->right_handed ? 0 : 1, 0.7, "fire_rocket", 0.0, 0.0);
+			}
+		}
 		break;
 	case WP_GRENADE_LAUNCHER:
 	case WP_GRENADE_PINEAPPLE:

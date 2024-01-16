@@ -36,6 +36,8 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "g_local.h"
 
+#include <VrClientInfo.h>
+
 char *hintStrings[] = {
 	"",                  // HINT_NONE
 	"HINT_NONE",     // actually HINT_FORCENONE, but since this is being specified in the ent, the designer actually means HINT_FORCENONE
@@ -2202,7 +2204,9 @@ void G_TryDoor( gentity_t *ent, gentity_t *other, gentity_t *activator ) {
 				ent->active = qtrue;
 				if ( walking ) {
 					ent->flags |= FL_SOFTACTIVATE;      // no noise
+					trap_Vibrate(1, vr->right_handed ? 0 : 1, 0.3f, "door_open", 0, 0); //I've reversed the hands as I presume you will open it with the hand your gun isn't in.
 				} else {
+					trap_Vibrate(1, vr->right_handed ? 0 : 1, 0.5f, "door_open", 0, 0); //I've reversed the hands as I presume you will open it with the hand your gun isn't in.
 					if ( activator ) {
 					}
 				}

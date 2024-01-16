@@ -3630,6 +3630,16 @@ CG_ApplyShakeCamera
 void CG_ApplyShakeCamera() {
 	VectorAdd( cg.refdefViewAngles, cg.cameraShakeAngles, cg.refdefViewAngles );
 	AnglesToAxis( cg.refdefViewAngles, cg.refdef.viewaxis );
+
+	if (VectorLength(cg.cameraShakeAngles) > 0.1f)
+	{
+		// up/down = cg.cameraShakeAngles[0]
+		// left/right = cg.cameraShakeAngles[1];
+		// roll cg.cameraShakeAngles[2]
+
+		trap_Vibrate(10, 0, Com_Clamp(0.0f, 1.0f, fabs(cg.cameraShakeAngles[0])), "camera_shake_left", 270, fabs(cg.cameraShakeAngles[0]));
+		trap_Vibrate(10, 0, Com_Clamp(0.0f, 1.0f, fabs(cg.cameraShakeAngles[1])), "camera_shake_right", 90, fabs(cg.cameraShakeAngles[0]));
+	}
 }
 
 /*
