@@ -613,24 +613,6 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
                     }
                 }
             }
-            else if (vr.emplaced_gun)
-            {
-                vec3_t delta;
-                delta[0] = pOff->Pose.position.x - pWeapon->Pose.position.x;
-                delta[1] = pOff->Pose.position.y - pWeapon->Pose.position.y;
-                delta[2] = pOff->Pose.position.z - pWeapon->Pose.position.z;
-
-                float zxDist = length(delta[0], delta[2]);
-                if (zxDist != 0.0f && delta[2] != 0.0f) {
-
-                    float heightAv = (pOff->Pose.position.y + pWeapon->Pose.position.y) / 2.0f;
-                    float diff = vr.hmdposition[1] - heightAv;
-                    float pitch = atanf(diff - 0.4f) * -70.0f;
-
-                    VectorSet(vr.weaponangles[ANGLES_ADJUSTED], pitch,
-                        -RAD2DEG(atan2f(delta[0], -delta[2])) - 90.0f, 0.0f);
-                }
-            }
 
 
             //off-hand stuff (done here as I reference it in the save state thing

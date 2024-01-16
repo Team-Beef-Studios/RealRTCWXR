@@ -35,6 +35,7 @@ If you have questions concerning this license or the applicable additional terms
 
 
 #include "g_local.h"
+#include "bg_local.h"
 
 #include <VrClientInfo.h>
 
@@ -1897,6 +1898,36 @@ void clamp_playerbehindgun( gentity_t *self, gentity_t *other, vec3_t dang ) {
 #define FLAK_SPREAD 100
 #define FLAK_DAMAGE 36
 
+static float Cvar_VariableFloatValue(char* name)
+{
+	char buffer[256];
+	trap_Cvar_VariableStringBuffer(name, buffer, 256);
+	return (float)atof(buffer);
+}
+
+static void mg42_get_angles(gentity_t* self, gentity_t* other, vec3_t dang) {
+	vec3_t handle;
+	float worldscale = Cvar_VariableFloatValue("cg_worldScale");
+	float heightAdjust = Cvar_VariableFloatValue("cg_heightAdjust");
+
+	BG_ConvertFromVR(other->client->ps.viewangles[YAW], worldscale, vr->weaponoffset, other->client->ps.origin, handle);
+	handle[2] += (other->client->ps.viewheight - DEFAULT_PLAYER_HEIGHT);
+	handle[2] += (vr->hmdposition[1] + heightAdjust) * worldscale;
+	handle[2] += 4.0f; // lower it a bit to match handle
+
+	vec3_t pivot;
+	VectorCopy(self->s.pos.trBase, pivot);
+
+	vec3_t dir;
+	VectorSubtract(pivot, handle, dir);
+	VectorNormalize(dir);
+	vectoangles(dir, dang);
+	if (dang[PITCH] < -180)
+	{
+		dang[PITCH] += 360;
+	}
+}
+
 void mg42_touch( gentity_t *self, gentity_t *other, trace_t *trace ) {
 	vec3_t dang;
 	int i;
@@ -1910,12 +1941,10 @@ void mg42_touch( gentity_t *self, gentity_t *other, trace_t *trace ) {
 			dang[i] = SHORT2ANGLE( other->client->pers.cmd.angles[i] );
 
 		if (!(self->r.svFlags & SVF_CASTAI)) {
-			dang[YAW] = other->client->ps.viewangles[YAW] + (vr->weaponangles[ANGLES_ADJUSTED][YAW] - getHMDYawForCalc() + vr->snapTurn);
-			dang[PITCH] = vr->weaponangles[ANGLES_ADJUSTED][PITCH];
-			if (dang[PITCH] < -30.f)
-				dang[PITCH] = -30.f;
-			if (dang[PITCH] > 30.f)
-				dang[PITCH] = 30.f;
+			mg42_get_angles(self, other, dang);
+
+			//gentity_t* tent = G_TempEntity(pivot, EV_RAILTRAIL);
+			//VectorCopy(handle, tent->s.origin2);
 		}
 		else {
 			other->client->ps.viewlocked = 1;
@@ -1945,7 +1974,8 @@ void mg42_touch( gentity_t *self, gentity_t *other, trace_t *trace ) {
 
 		clamp_hweapontofirearc( self, other, dang );
 
-		if (other->r.svFlags & SVF_CASTAI) {
+		if (other->r.svFlags & SVF_CASTAI) 
+		{
 			// clamp player behind the gun
 			clamp_playerbehindgun(self, other, dang);
 		}
@@ -1961,6 +1991,7 @@ void mg42_track( gentity_t *self, gentity_t *other ) {
 	qboolean is_flak = qfalse;
 	vec3_t forward, right, up;
 	vec3_t muzzle;
+	static int ltime = 0;
 
 	if ( !Q_stricmp( self->classname, "misc_flak" ) ) {
 		is_flak = qtrue;
@@ -1971,8 +2002,9 @@ void mg42_track( gentity_t *self, gentity_t *other ) {
 	}
 
 	if ( other->active ) {
-		if ( ( !( level.time % 100 ) ) && ( other->client ) && ( other->client->buttons & BUTTON_ATTACK ) ) {
+		if ( ( level.time >= (ltime+100 ) ) && ( other->client ) && ( other->client->buttons & BUTTON_ATTACK ) ) {
 			//other->client->ps.viewlocked = 1;
+			ltime = level.time;
 
 			if ( self->s.frame && !is_flak ) {
 				// G_Printf ("gun: destroyed = %d\n", self->s.frame);
@@ -1982,8 +2014,7 @@ void mg42_track( gentity_t *self, gentity_t *other ) {
 			{
 				if (!(self->r.svFlags & SVF_CASTAI)) {
 					vec3_t viewang;
-					VectorCopy(vr->weaponangles[ANGLES_ADJUSTED], viewang);
-					viewang[YAW] = other->client->ps.viewangles[YAW] + (vr->weaponangles[ANGLES_ADJUSTED][YAW] - getHMDYawForCalc());
+					mg42_get_angles(self, other, viewang);
 					AngleVectors(viewang, forward, right, up);
 				}
 				else
@@ -2121,6 +2152,8 @@ void Flak_Animate( gentity_t *ent ) {
 	}
 }
 
+qboolean mg42_active = qfalse;
+
 #define USEMG42_DISTANCE 46
 void mg42_think( gentity_t *self ) {
 	vec3_t vec;
@@ -2156,6 +2189,13 @@ void mg42_think( gentity_t *self ) {
 
 		}
 		if ( len < usedist && ( owner->active == 1 ) && owner->health > 0 ) {
+			//position player appropriately behind the gun
+			if (!mg42_active) {
+				mg42_active = qtrue;
+				clamp_playerbehindgun(self, owner, vec3_origin);
+			}
+
+			//Probably already set
 			self->active = qtrue;
 			if ( is_flak ) {
 				owner->client->ps.persistant[PERS_HWEAPON_USE] = 2;
@@ -2230,6 +2270,7 @@ void mg42_think( gentity_t *self ) {
 		}
 	}
 
+	mg42_active = qfalse;
 	self->active = qfalse;
 
 	if ( owner->client ) {
@@ -2277,6 +2318,7 @@ void mg42_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int d
 		owner->active = qfalse;
 		owner->client->ps.gunfx = 0;
 
+		mg42_active = qfalse;
 		self->active = qfalse;
 		gun->active = qfalse;
 	}
@@ -2364,8 +2406,8 @@ void mg42_spawn( gentity_t *ent ) {
 	VectorCopy( ent->s.origin, offset );
 	offset[2] += 24;
 	G_SetOrigin( gun, offset );
-	VectorSet( gun->r.mins, -24, -24, -8 );
-	VectorSet( gun->r.maxs, 24, 24, 48 );
+	VectorSet( gun->r.mins, -48, -48, -48 );
+	VectorSet( gun->r.maxs, 48, 48, 48 );
 	gun->s.apos.trTime = 0;
 	gun->s.apos.trDuration = 0;
 	VectorCopy( ent->s.angles, gun->s.angles );

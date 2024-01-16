@@ -80,15 +80,17 @@ void VR_SetHMDOrientation(float pitch, float yaw, float roll)
 void VR_SetHMDPosition(float x, float y, float z )
 {
 	static bool s_useScreen = qfalse;
+	static bool s_emplacedGun = qfalse;
 	static int frame = 0;
 
 	VectorSet(vr.hmdposition, x, y, z);
 
 	//Can be set elsewhere
-	vr.take_snap |= s_useScreen != VR_UseScreenLayer();
+	vr.take_snap |= (s_useScreen != VR_UseScreenLayer()) || (s_emplacedGun != (bool)vr.emplaced_gun);
 	if (vr.take_snap || (frame++ < 100))
     {
 		s_useScreen = VR_UseScreenLayer();
+		s_emplacedGun = vr.emplaced_gun;
 
 		//Record player position on transition
 		VectorSet(vr.hmdposition_snap, x, y, z);
@@ -126,9 +128,9 @@ void VR_GetMove(float *forward, float *side, float *pos_forward, float *pos_side
 	else if (vr.emplaced_gun) 
 	{
 		*forward = 0.0f;
-		*pos_forward = 0.0f;
+		*pos_forward = positional_movementForward;
 		*up = 0.0f;
-		*side = 0.0f;
+		*side = positional_movementSideways;
 		*pos_side = 0.0f;
 		*yaw = vr.snapTurn +vr.hmdorientation_first[YAW];
 		*pitch = 0.0f;
