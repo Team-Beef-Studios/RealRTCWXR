@@ -228,6 +228,10 @@ void VR_Init()
 	vr_align_weapons = Cvar_Get ("vr_align_weapons", "0", CVAR_ARCHIVE);
 	vr_refresh = Cvar_Get ("vr_refresh", "72", CVAR_ARCHIVE);
     vr.menu_right_handed = vr_control_scheme->integer == 0;
+	vr_engage_trigger = Cvar_Get("vr_engage_trigger", "0.7", CVAR_ARCHIVE);
+	vr_release_trigger = Cvar_Get("vr_release_trigger", "0.7", CVAR_ARCHIVE);
+	vr_engage_trigger_index = Cvar_Get("vr_engage_trigger_index", "0.7", CVAR_ARCHIVE);
+	vr_release_trigger_index = Cvar_Get("vr_release_trigger_index", "0.05", CVAR_ARCHIVE);
 }
 
 int VR_SetRefreshRate(int refreshRate)
