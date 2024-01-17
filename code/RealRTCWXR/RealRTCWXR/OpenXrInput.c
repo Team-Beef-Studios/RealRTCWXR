@@ -1048,7 +1048,8 @@ void TBXR_ProcessHaptics() {
             vibration.type = XR_TYPE_HAPTIC_VIBRATION;
             vibration.next = NULL;
             vibration.amplitude = vibration_channel_intensity[i];
-            vibration.duration = ToXrTime(vibration_channel_duration[i]);            
+            vibration.duration = (vibration_channel_duration[i] == -1.0f) ? ToXrTime(1) :
+                ToXrTime(vibration_channel_duration[i]);
             
             if(gAppState.controllersPresent == VIVE_CONTROLLERS)
                 vibration.duration /= 1000;

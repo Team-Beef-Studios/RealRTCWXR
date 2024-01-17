@@ -3638,7 +3638,7 @@ void CG_ApplyShakeCamera() {
 		// roll cg.cameraShakeAngles[2]
 
 		trap_Vibrate(10, 0, Com_Clamp(0.0f, 1.0f, fabs(cg.cameraShakeAngles[0])), "camera_shake_left", 270, fabs(cg.cameraShakeAngles[0]));
-		trap_Vibrate(10, 0, Com_Clamp(0.0f, 1.0f, fabs(cg.cameraShakeAngles[1])), "camera_shake_right", 90, fabs(cg.cameraShakeAngles[0]));
+		trap_Vibrate(10, 1, Com_Clamp(0.0f, 1.0f, fabs(cg.cameraShakeAngles[1])), "camera_shake_right", 90, fabs(cg.cameraShakeAngles[0]));
 	}
 }
 
