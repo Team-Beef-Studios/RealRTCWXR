@@ -1746,7 +1746,7 @@ static float Cvar_VariableFloatValue(char* name)
 //	Cmd_WolfPunch
 //===================
 
-#define WOLFPUNCHDISTANCE    24
+#define WOLFPUNCHDISTANCE    12
 int Cmd_WolfPunch_f(gentity_t* ent, qboolean left) {
 	trace_t tr;
 	vec3_t end;
@@ -1757,7 +1757,7 @@ int Cmd_WolfPunch_f(gentity_t* ent, qboolean left) {
 	int punchtime = level.time;
 	qboolean solidPunch = qfalse;    // don't play "hit" sound on a trigger unless it's an func_invisible_user
 
-	int damage = 15;
+	int damage = 10;
 
 	if (ent->client->ps.leanf) {
 		return 0;   // no kick when leaning

@@ -1651,6 +1651,8 @@ void Fire_Lead( gentity_t *ent, gentity_t *activator, float spread, int damage, 
 		VectorCopy( muzzle, lead_muzzle );
 	}
 
+	trap_Vibrate(100, vr->right_handed ? 1 : 0, 1.0, "mg42", 0.0, 0.0);
+
 	r = crandom() * spread;
 	u = crandom() * spread;
 	VectorMA( lead_muzzle, 8192, forward, end );
