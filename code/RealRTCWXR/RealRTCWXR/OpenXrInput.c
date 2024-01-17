@@ -926,6 +926,7 @@ void TBXR_UpdateControllers( )
         {
             //Reload
             rightTrackedRemoteState_new.Joystick.y = -0.9f;
+            rightTrackedRemoteState_new.Buttons |= xrButton_RThumb;
         }
     }
     else
