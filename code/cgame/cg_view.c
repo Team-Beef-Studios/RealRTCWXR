@@ -1453,6 +1453,14 @@ void CG_DrawSkyBoxPortal( void ) {
 			+ vr->weaponangles[ANGLES_ADJUSTED][YAW] + SHORT2ANGLE(cg.snap->ps.delta_angles[YAW]);
 		AnglesToAxis(cg.refdef.viewangles, cg.refdef.viewaxis);
 	}
+	else if (vr->emplaced_gun)
+	{
+		VectorCopy(vr->hmdorientation, cg.refdef.viewangles);
+		cg.refdef.viewangles[YAW] = vr->clientviewangles[YAW] +
+			(vr->hmdorientation[YAW] - vr->hmdorientation_first[YAW]) +
+			SHORT2ANGLE(cg.snap->ps.delta_angles[YAW]);
+		AnglesToAxis(cg.refdef.viewangles, cg.refdef.viewaxis);
+	}
 	else
 	{
 		VectorCopy(vr->hmdorientation, cg.refdef.viewangles);

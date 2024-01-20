@@ -3709,16 +3709,10 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 
 	cg.refdef.worldscale = cg_worldScale.value;
 
-	//Immersive cinematic sequence 6DoF
-	if (vr->emplaced_gun || cg.renderingThirdPerson)
-	{
-		//BG_ConvertFromVR(cg.refdefViewAngles[YAW], cg.refdef.worldscale, vr->hmdposition_offset, cg.refdef.vieworg, cg.refdef.vieworg);
-	}
-
 	//Vertical Positional Movement
 	vec3_t prevOrigin;
 	VectorCopy(cg.refdef.vieworg, prevOrigin);
-	if (!vr->using_screen_layer)// && !vr->emplaced_gun)
+	if (!vr->using_screen_layer)
 	{
 		cg.refdef.vieworg[2] -= DEFAULT_PLAYER_HEIGHT;
 		cg.refdef.vieworg[2] += (vr->hmdposition[1] + cg_heightAdjust.value) * cg_worldScale.value;
