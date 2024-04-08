@@ -47,7 +47,7 @@ int demo_protocols[] =
 
 #define MIN_DEDICATED_COMHUNKMEGS 1
 #define MIN_COMHUNKMEGS		256
-#define DEF_COMHUNKMEGS 	2046
+#define DEF_COMHUNKMEGS 	4096
 #define DEF_COMZONEMEGS		128
 #define DEF_COMHUNKMEGS_S	XSTRING(DEF_COMHUNKMEGS)
 #define DEF_COMZONEMEGS_S	XSTRING(DEF_COMZONEMEGS)
@@ -953,7 +953,7 @@ static hunkUsed_t hunk_low, hunk_high;
 static hunkUsed_t  *hunk_permanent, *hunk_temp;
 
 static byte    *s_hunkData = NULL;
-static long s_hunkTotal;
+static uint64_t s_hunkTotal;
 
 static int s_zoneTotal;
 //static	int		s_smallZoneTotal; // TTimo: unused
@@ -1152,7 +1152,7 @@ void Com_InitHunkMemory( void ) {
 		s_hunkTotal = 1024 * 1024 * nMinAlloc;
 		Com_Printf( pMsg, nMinAlloc, s_hunkTotal / ( 1024 * 1024 ) );
 	} else {
-		s_hunkTotal = (long)cv->integer * 1024 * 1024;
+		s_hunkTotal = (uint64_t)cv->integer * 1024 * 1024;
 	}
 
 
@@ -2731,7 +2731,7 @@ void Com_Frame( void ) {
 
 
 	// write config file if anything changed
-	Com_WriteConfiguration();
+	// Com_WriteConfiguration();
 
 	//
 	// main event loop

@@ -666,9 +666,8 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
 
             //B Button - Weapon alt mode (unless it is a scoped weapon
             if (!vr.scopedweapon && (primaryButton2New != primaryButton2Old)) {
-                sendButtonActionSimple("weapalt");
+                sendButtonAction("+reload", primaryButton2New);
             }
-
 
             static bool firing = false;
 
@@ -749,7 +748,8 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
                         else if (between(-1.0f, pPrimaryJoystick->y, -0.6f))
                         {
                             action = 1;
-                            sendButtonActionSimple("+reload");
+                            sendButtonActionSimple("weapalt");
+                            //sendButtonActionSimple("+reload");
                         }
                         else
                         {
@@ -767,7 +767,7 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
                         sendButtonActionSimple("-kick");
                         break;
                     case 1:
-                        sendButtonActionSimple("-reload");
+                        //sendButtonActionSimple("-reload");
                         break;
                     case 2:
                         sendButtonActionSimple("-activate");
