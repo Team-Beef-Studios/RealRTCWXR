@@ -3968,7 +3968,7 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 
 	vr->emplaced_gun = (cg.snap->ps.eFlags & EF_MG42_ACTIVE);
 
-	if (cg.weaponSelect == WP_FG42SCOPE || cg.weaponSelect == WP_SNOOPERSCOPE || cg.weaponSelect == WP_SNIPERRIFLE || cg.weaponSelect == WP_DELISLESCOPE)
+	if (cg.weaponSelect == WP_FG42SCOPE || cg.weaponSelect == WP_SNOOPERSCOPE || cg.weaponSelect == WP_SNIPERRIFLE || cg.weaponSelect == WP_DELISLESCOPE || cg.weaponSelect == WP_M1941SCOPE)
 	{
 		cg.refdef.viewangles[ROLL] = vr->hmdorientation[ROLL];
 		cg.refdef.viewangles[PITCH] = vr->weaponangles[ANGLES_ADJUSTED][PITCH];

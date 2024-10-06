@@ -259,6 +259,7 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
                     }
                 }
                 if (cl.snap.ps.weapon == WP_M7 ||
+                    cl.snap.ps.weapon == WP_DELISLE ||
                     (cl.snap.ps.weapon >= WP_MP40 &&
                     cl.snap.ps.weapon <= WP_VENOM))
                 {
@@ -664,8 +665,8 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
                 sendButtonAction("+moveup", (primaryButtonsNew & primaryButton1));
             }
 
-            //B Button - Weapon alt mode (unless it is a scoped weapon
-            if (!vr.scopedweapon && (primaryButton2New != primaryButton2Old)) {
+            //B Button - Reload
+            if (primaryButton2New != primaryButton2Old) {
                 sendButtonAction("+reload", primaryButton2New);
             }
 
@@ -732,8 +733,7 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
             }
 
             static int action = -1;
-            if ((primaryButtonsNew & primaryThumb) !=
-                (primaryButtonsOld & primaryThumb))
+            if ((primaryButtonsNew & primaryThumb) != (primaryButtonsOld & primaryThumb))
             {
                 if (primaryButtonsNew & primaryThumb)
                 {
@@ -747,9 +747,11 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
                         }
                         else if (between(-1.0f, pPrimaryJoystick->y, -0.6f))
                         {
-                            action = 1;
-                            sendButtonActionSimple("weapalt");
-                            //sendButtonActionSimple("+reload");
+                            if (!vr.scopedweapon)
+                            {
+                                action = 1;
+                                sendButtonActionSimple("weapalt");
+                            }
                         }
                         else
                         {

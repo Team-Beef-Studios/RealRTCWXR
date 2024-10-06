@@ -3622,7 +3622,6 @@ static void PM_Weapon( void ) {
 	case WP_FG42SCOPE:
 	case WP_M97:
 	case WP_AUTO5:
-	case WP_AIRSTRIKE:
 	case WP_M30:
 		if ( !weaponstateFiring ) {
 			if ( pm->ps->aiChar && pm->ps->weapon == WP_VENOM ) {
@@ -3693,6 +3692,7 @@ static void PM_Weapon( void ) {
 	case WP_GRENADE_LAUNCHER:
 	case WP_GRENADE_PINEAPPLE:
 	case WP_POISONGAS:
+	case WP_AIRSTRIKE:
 		if ( !delayedFire ) {
 			if ( pm->ps->aiChar ) {
 				// ai characters go into their regular animation setup

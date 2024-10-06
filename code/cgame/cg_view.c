@@ -1457,7 +1457,7 @@ void CG_DrawSkyBoxPortal( void ) {
 
 	cg.refdef.time = cg.time;
 
-	if (cg.weaponSelect == WP_FG42SCOPE || cg.weaponSelect == WP_SNOOPERSCOPE || cg.weaponSelect == WP_SNIPERRIFLE || cg.weaponSelect == WP_DELISLESCOPE)
+	if (cg.weaponSelect == WP_FG42SCOPE || cg.weaponSelect == WP_SNOOPERSCOPE || cg.weaponSelect == WP_SNIPERRIFLE || cg.weaponSelect == WP_DELISLESCOPE || cg.weaponSelect == WP_M1941SCOPE)
 	{
 		cg.refdef.viewangles[ROLL] = vr->hmdorientation[ROLL];
 		cg.refdef.viewangles[PITCH] = vr->weaponangles[ANGLES_ADJUSTED][PITCH];
@@ -1531,7 +1531,9 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	vr->cgzoommode = cg.zoomedBinoc || cg.zoomval;
 	vr->scopedweapon = (cg.weaponSelect == WP_GARAND ||
 		cg.weaponSelect == WP_FG42 || 
-		cg.weaponSelect == WP_MAUSER);
+		cg.weaponSelect == WP_MAUSER ||
+		cg.weaponSelect == WP_M1941 ||
+		cg.weaponSelect == WP_DELISLE);
 
 	// update cvars
 	CG_UpdateCvars();

@@ -753,6 +753,7 @@ void Bullet_Fire( gentity_t *ent, float spread, int damage ) {
 				trap_Vibrate(100, right ? 0 : 1, 0.7, fire_command, 0.0, 0.0);
 			}
 		}
+		free(fire_command);
 	}
 
 	Bullet_Fire_Extended( ent, ent, muzzleTrace, end, spread, damage, 0 );
@@ -985,7 +986,7 @@ gentity_t *weapon_gpg40_fire( gentity_t *ent, int grenType ) {
 	//bani - to prevent nade-through-teamdoor sploit
 	vec3_t orig_viewpos;
 
-	AngleVectors( ent->client->ps.viewangles, forward, NULL, NULL );
+	//AngleVectors( ent->client->ps.viewangles, forward, NULL, NULL );
 
 	VectorCopy( muzzleEffect, tosspos );
 
@@ -1018,8 +1019,8 @@ gentity_t *weapon_gpg40_fire( gentity_t *ent, int grenType ) {
 	return m;
 }
 
-#define OLDEST_READING		5
-#define NEWEST_READING		2
+#define OLDEST_READING		9
+#define NEWEST_READING		4
 
 gentity_t* weapon_grenadelauncher_fire_vr(gentity_t* ent, int grenType) {
 	gentity_t* m, * te; // JPW NERVE
@@ -1041,11 +1042,12 @@ gentity_t* weapon_grenadelauncher_fire_vr(gentity_t* ent, int grenType) {
 		VectorScale(trajectory, velocity, trajectory);
 	}
 
-	// pineapples are not thrown as far as mashers
 	if (grenType == WP_GRENADE_LAUNCHER ||
-		grenType == WP_GRENADE_PINEAPPLE)
+		grenType == WP_GRENADE_PINEAPPLE ||
+		grenType == WP_AIRSTRIKE ||
+		grenType == WP_POISONGAS)
 	{
-		power = 2.5f;
+		power = 3.0f;
 	}
 	else {      // WP_DYNAMITE
 		power = 1.5f;
@@ -1929,7 +1931,7 @@ void FireWeapon( gentity_t *ent ) {
 				ent->client->ps.classWeaponTime = level.time - g_LTChargeTime.integer;
 			}
 			ent->client->ps.classWeaponTime = level.time; //+= g_LTChargeTime.integer*0.5f; FIXME later
-			weapon_grenadelauncher_fire( ent,WP_AIRSTRIKE );
+			weapon_grenadelauncher_fire_vr( ent,WP_AIRSTRIKE );
 		}
 		break;
 	case WP_SNIPERRIFLE:
@@ -2145,6 +2147,8 @@ void FireWeapon( gentity_t *ent ) {
 		}
 		break;
 	case WP_GRENADE_LAUNCHER:
+		weapon_grenadelauncher_fire(ent, ent->s.weapon);
+		break;
 	case WP_GRENADE_PINEAPPLE:
 	case WP_DYNAMITE:
 	case WP_POISONGAS:
