@@ -314,7 +314,7 @@
       <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <AdditionalIncludeDirectories>..\..\..\code\SDL2\include;..\..\..\code\zlib-1.2.11;..\..\..\code\qcommon;..\..\..\code\openxr\include;..\..\..\code\external\include;..\..\..\code\RealRTCWXR\RealRTCWXR;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard_C>Default</LanguageStandard_C>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>

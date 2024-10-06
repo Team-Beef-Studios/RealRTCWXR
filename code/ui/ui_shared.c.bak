@@ -107,16 +107,12 @@ translateString_t translateStrings[] = {
 	{"secretarea"},              //	"You found a secret area"
 	{"objectivesnotcomplete"},   //	"Objectives not complete"
 	{"drankwine"},               //	"You drank the wine"
-	{"usedbandages"},            //	"You used the bandages"
-	{"usedadrenaline"},          //	"You used the adrenaline"
-	{"usedeg_syringe"},           // "You used the EG Syringe"	
-	{"usedbg_syringe"},           // "You used the BG Syringe"	
-	{"usedlp_syringe"},           // "You used the LP Syringe"
-	{"noquickgrenammo"},         //	"No grenades left"
+	{"usedbandages"},            //	
+	{"usedadrenaline"},          //	
+	{"noquickgrenammo"},         //	
 	{"noitem"},                  //	"No item to use"
 	{"gamesaved"},               //	"Game Saved"
 	{"ironchallengesave"},       // no save 4 u
-	{"checkpointsaved"},         // save 4 u
 	{"missionfail1"},            //	"Mission Failed\nYou Killed a Civilian"
 	{"missionfail2"},            //	"Mission Failed\nYou Killed a Kreisau Agent"
 	{"missionfail3"},            //	"Mission Failed\nYou Killed Kessler"
@@ -213,8 +209,7 @@ bonusString_t bonusStrings[] = {
 	{"bonus_end_alt"}             
 };
 
-translateTextString_t translateTextStrings[MAX_TRANSLATETEXTSTRINGS] = {
-};
+translateTextString_t translateTextStrings[MAX_TRANSLATETEXTSTRINGS] = { 0 };
 vmCvar_t ui_fixedAspect;
 vmCvar_t ui_fixedAspectFOV;
 
@@ -3629,7 +3624,6 @@ static bind_t g_bindings[] =
 	{"+moveright",       '.',         -1, -1, -1},
 	{"+moveup",      K_SPACE,        -1, -1, -1},
 	{"+movedown",        'c',         -1, -1, -1},
-	{"=movedown",        -1,         -1, -1, -1},
 	{"+left",            K_LEFTARROW,    -1, -1, -1},
 	{"+right",           K_RIGHTARROW,   -1, -1, -1},
 	{"+strafe",      K_ALT,          -1, -1, -1},
@@ -3720,7 +3714,6 @@ static bind_t g_bindings[] =
 
 	{"savegame quicksave",   -1,         -1, -1, -1},    //----(SA)	added
 	{"loadgame quicksave",   -1,         -1, -1, -1},    //----(SA)	added
-	{"loadgame lastcheckpoint",   -1,         -1, -1, -1},    //----(SA)	added
 
 	{"+activate",        -1,             -1, -1, -1},
 	{"zoomin",           -1,             -1, -1, -1},

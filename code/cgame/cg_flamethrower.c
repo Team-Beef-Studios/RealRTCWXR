@@ -74,7 +74,7 @@ typedef struct flameChunk_s
 	vec3_t parentFwd;
 } flameChunk_t;
 
-#define MAX_FLAME_CHUNKS    512
+#define MAX_FLAME_CHUNKS    2048
 static flameChunk_t flameChunks[MAX_FLAME_CHUNKS];
 static flameChunk_t *freeFlameChunks, *activeFlameChunks, *headFlameChunks;
 
@@ -218,7 +218,7 @@ void CG_FireFlameChunks( centity_t *cent, vec3_t origin, vec3_t angles, float sp
 	trace_t trace;
 	vec3_t parentFwd;
 	int flameLife;
-#define MAX_CHUNKS_PER_CALL     10
+#define MAX_CHUNKS_PER_CALL     30
 
 
 	centInfo = &centFlameInfo[cent->currentState.number];

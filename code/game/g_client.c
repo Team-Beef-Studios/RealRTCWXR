@@ -324,6 +324,7 @@ A player is respawning, so make an entity that looks
 just like the existing corpse to leave behind.
 =============
 */
+
 void CopyToBodyQue( gentity_t *ent ) {
 	gentity_t       *body;
 	int contents, i;
@@ -353,6 +354,8 @@ void CopyToBodyQue( gentity_t *ent ) {
 	body->timestamp = level.time;
 	body->physicsObject = qtrue;
 	body->physicsBounce = 0;        // don't bounce
+	body->physicsSlide = qfalse;
+	body->physicsFlush = qfalse;
 	if ( body->s.groundEntityNum == ENTITYNUM_NONE ) {
 		body->s.pos.trType = TR_GRAVITY;
 		body->s.pos.trTime = level.time;
@@ -757,6 +760,7 @@ void ClientUserinfoChanged( int clientNum ) {
 	gentity_t *ent;
 	char    *s;
 	char model[MAX_QPATH], modelname[MAX_QPATH];
+	char translation[MAX_TRANSLATION_TOKEN];
 
 //----(SA) added this for head separation
 	char head[MAX_QPATH];
@@ -826,6 +830,11 @@ void ClientUserinfoChanged( int clientNum ) {
 	}
 
 	// set name
+	if ( ent->r.svFlags & SVF_BOT ) {
+		s = Info_ValueForKey( userinfo, "translation" );
+		Q_strncpyz( translation, s, sizeof( translation ) );
+	}
+
 	Q_strncpyz( oldname, client->pers.netname, sizeof( oldname ) );
 	s = Info_ValueForKey( userinfo, "name" );
 	ClientCleanName( s, client->pers.netname, sizeof( client->pers.netname ) );
@@ -959,8 +968,8 @@ void ClientUserinfoChanged( int clientNum ) {
 
 	if ( ent->r.svFlags & SVF_BOT ) {
 
-		s = va( "n\\%s\\t\\%i\\model\\%s\\head\\%s\\c1\\%s\\hc\\%i\\w\\%i\\l\\%i\\skill\\%s",
-				client->pers.netname, client->sess.sessionTeam, model, head, c1,
+		s = va( "n\\%s\\tr\\%s\\t\\%i\\model\\%s\\head\\%s\\c1\\%s\\hc\\%i\\w\\%i\\l\\%i\\skill\\%s",
+				client->pers.netname, translation, client->sess.sessionTeam, model, head, c1,
 				client->pers.maxHealth, client->sess.wins, client->sess.losses,
 				Info_ValueForKey( userinfo, "skill" ) );
 	} else {
@@ -1297,9 +1306,9 @@ void ClientSpawn( gentity_t *ent ) {
 
 	client->ps.crouchMaxZ = client->ps.maxs[2] - ( client->ps.standViewHeight - client->ps.crouchViewHeight );
 
-	client->ps.runSpeedScale = 0.8;
-	client->ps.sprintSpeedScale = 1.2;  // RealRTCW was 1.1
-	client->ps.crouchSpeedScale = 0.25;
+	client->ps.runSpeedScale = DEFAULT_RUN_SPEED_SCALE;
+	client->ps.sprintSpeedScale = DEFAULT_SPRINT_SPEED_SCALE;
+	client->ps.crouchSpeedScale = DEFAULT_CROUCH_SPEED_SCALE;
 
 	// Rafael
 	client->ps.sprintTime = 20000;
@@ -1313,6 +1322,11 @@ void ClientSpawn( gentity_t *ent ) {
 	client->pmext.bAutoReload = client->pers.bAutoReloadAux;
 
 	client->ps.clientNum = index;
+
+	// spawn protection for player on initial spawn - might be useful on some custom maps
+	if ( !( ent->r.svFlags & SVF_CASTAI ) ) {  
+	client->ps.powerups[PW_INVULNERABLE] = level.time + 5000;
+	}
 
 	ent->health = client->ps.stats[STAT_HEALTH] = client->ps.stats[STAT_MAX_HEALTH];
 
@@ -1508,3 +1522,5 @@ void G_RetrieveMoveSpeedsFromClient( int entnum, char *text ) {
 		anim->stepGap = atoi( token );
 	}
 }
+
+

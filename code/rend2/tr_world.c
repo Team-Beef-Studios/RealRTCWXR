@@ -64,6 +64,12 @@ static qboolean	R_CullSurface( msurface_t *surf ) {
 			return qfalse;
 		}
 
+		if (*surf->data == SF_FOLIAGE) {
+			if (!r_drawfoliage->value) {
+				return qtrue;
+			}
+		}
+
 		// don't cull for depth shadow
 		/*
 		if ( tr.viewParms.flags & VPF_DEPTHSHADOW )
@@ -219,9 +225,9 @@ static int R_DlightSurface( msurface_t *surf, int dlightBits ) {
 		case SF_FACE:
 		case SF_GRID:
 		case SF_TRIANGLES:
+		case SF_FOLIAGE:
 			((srfBspSurface_t *)surf->data)->dlightBits = dlightBits;
 			break;
-
 		default:
 			dlightBits = 0;
 			break;

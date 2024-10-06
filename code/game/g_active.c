@@ -183,7 +183,6 @@ void P_DamageFeedback( gentity_t *player ) {
 		case MOD_AIRSTRIKE:
 			trap_Vibrate(1000, 1, (count / 255.0) + 0.5f, "damage_explosion", yaw, pitch);
 			break;
-		case MOD_GAUNTLET:
 		case MOD_GRAPPLE:
 		case MOD_KICKED:
 		case MOD_GRABBER:
@@ -602,7 +601,7 @@ void ClientTimerActions( gentity_t *ent, int msec ) {
 		client->timeResidual -= 1000;
 
     if ( g_gametype.integer == GT_GOTHIC ) {
-	    if (g_gameskill.integer == GSKILL_HARD)  // vampirism (health decay)
+	    if ((g_gameskill.integer == GSKILL_HARD) && (!ent->aiCharacter))  // vampirism (health decay)
         {
 	        if (ent->health > 25)
 	        {
@@ -634,11 +633,50 @@ void ClientTimerActions( gentity_t *ent, int msec ) {
 				}
 			}
 
+		// regenerate health only if cvar is turned on
+     if (g_regen.integer == 1 && level.time >= client->healthRegenStartTime) {
+
+		    if (ent->health < client->ps.stats[STAT_MAX_HEALTH])
+		    {
+			if (!ent->aiCharacter){ // no regen for AI
+
+
+			if (ent->health >= client->ps.stats[STAT_MAX_HEALTH] * 0.75)
+				{
+					client->healthRegenStartTime = level.time + 500;
+					ent->health += 10;
+
+					if (ent->health > client->ps.stats[STAT_MAX_HEALTH])
+					{
+						ent->health = client->ps.stats[STAT_MAX_HEALTH];
+					}
+				}
+				  else if (ent->health >= client->ps.stats[STAT_MAX_HEALTH] * 0.50 && ent->health < client->ps.stats[STAT_MAX_HEALTH] * 0.75)
+				{
+					client->healthRegenStartTime = level.time + 750;
+					ent->health += 9;
+				} else if (ent->health >= client->ps.stats[STAT_MAX_HEALTH] * 0.25 && ent->health < client->ps.stats[STAT_MAX_HEALTH] * 0.50)
+				{
+                   	client->healthRegenStartTime = level.time + 1000;
+					ent->health += 7;
+				}  else if (ent->health < client->ps.stats[STAT_MAX_HEALTH] * 0.25)
+				{
+					client->healthRegenStartTime = level.time + 1500;
+					ent->health += 5;
+				}
+
+
+			}
+		    }
+		}
+
+
 		// count down armor when over max // RealRTCW if more than 100
 		if ( client->ps.stats[STAT_ARMOR] > 100 ) {
 			client->ps.stats[STAT_ARMOR]--;
 		}
 	}
+
 }
 
 /*
@@ -718,17 +756,41 @@ void ClientEvents( gentity_t *ent, int oldEventSequence ) {
 			if ( event == EV_FALL_NDIE ) {
 				damage = 9999;
 			} else if ( event == EV_FALL_DMG_50 ) {
+			if ( client->ps.powerups[PW_FLIGHT] ) 
+			    {
+				damage = 25;
+				stunTime = 500;
+			    } else {
 				damage = 50;
 				stunTime = 1000;
+				}
 			} else if ( event == EV_FALL_DMG_25 ) {
+			if ( client->ps.powerups[PW_FLIGHT] ) 
+			    {
+				damage = 12;
+				stunTime = 125;
+			    } else {
 				damage = 25;
 				stunTime = 250;
+				}
 			} else if ( event == EV_FALL_DMG_15 ) {
+			if ( client->ps.powerups[PW_FLIGHT] ) 
+			    {
+				damage = 7;
+				stunTime = 500;
+			    } else {
 				damage = 15;
 				stunTime = 1000;
+				}
 			} else if ( event == EV_FALL_DMG_10 ) {
+			if ( client->ps.powerups[PW_FLIGHT] ) 
+			    {
+				damage = 5;
+				stunTime = 500;
+			    } else {
 				damage = 10;
 				stunTime = 1000;
+				}
 			} else {
 				damage = 5; // never used
 			}
@@ -746,7 +808,7 @@ void ClientEvents( gentity_t *ent, int oldEventSequence ) {
 			}
 
 			ent->pain_debounce_time = level.time + 200; // no normal pain sound
-			G_Damage( ent, NULL, NULL, NULL, NULL, damage, 0, MOD_FALLING );
+			G_Damage( ent, NULL, NULL, NULL, NULL, damage, DAMAGE_NO_ARMOR, MOD_FALLING );
 			// falls through to FALL_SHORT
 
 //----(SA)	added the audible events for jumping/falling
@@ -815,7 +877,9 @@ void ClientEvents( gentity_t *ent, int oldEventSequence ) {
 		case EV_USE_ITEM10:     // ( HI_BOOK3 )
 			UseHoldableItem( ent, event - EV_USE_ITEM0 );
 			break;
-//----(SA)	end
+		case EV_THROWKNIFE:
+			ThrowKnife( ent );
+			break;
 
 		default:
 
@@ -901,6 +965,7 @@ void ClientThink_real( gentity_t *ent ) {
 	//int i;
 	int monsterslick = 0;
 	vec3_t muzzlebounce;      // JPW NERVE
+	int i;
 
 
 	// Rafael wolfkick
@@ -1000,40 +1065,78 @@ void ClientThink_real( gentity_t *ent ) {
 		return;
 	}
 
-	// NOTE: -------------- SP uses now too
-// JPW NERVE do some time-based muzzle flip -- this never gets touched in single player (see g_weapon.c)
-// #define RIFLE_SHAKE_TIME 150 // JPW NERVE this one goes with the commented out old damped "realistic" behavior below
-#define RIFLE_SHAKE_TIME 300 // per Id request, longer recoil time
+    // calculating scoped weapons recoil
+    switch ( client->ps.weapon ) {
+		case WP_SNIPERRIFLE:
+	             if ( client->sniperRifleFiredTime ) {
+		            if ( level.time - client->sniperRifleFiredTime >  ammoTable[WP_SNIPERRIFLE].weapRecoilDuration ) {
+			        client->sniperRifleFiredTime = 0;
+		            } else {
+			        VectorCopy( client->ps.viewangles,muzzlebounce );
+			         muzzlebounce[PITCH] -= 0.25*client->sniperRifleMuzzlePitch*cos( 2.5*( level.time - client->sniperRifleFiredTime ) / ammoTable[WP_SNIPERRIFLE].weapRecoilDuration );
+			         muzzlebounce[YAW] += 0.2*client->sniperRifleMuzzleYaw*cos( 1.0 - ( level.time - client->sniperRifleFiredTime )*3 / ammoTable[WP_SNIPERRIFLE].weapRecoilDuration );
+			         muzzlebounce[PITCH] -= 0.25*client->sniperRifleMuzzlePitch*random() * ( 1.0f - ( level.time - client->sniperRifleFiredTime ) / ammoTable[WP_SNIPERRIFLE].weapRecoilDuration );
+			         muzzlebounce[YAW] += 0.2 * crandom() * ( 1.0f - ( level.time - client->sniperRifleFiredTime ) / ammoTable[WP_SNIPERRIFLE].weapRecoilDuration );
+			         SetClientViewAngle( ent,muzzlebounce );
+		            }
+	                }
+		break;
+		case WP_SNOOPERSCOPE:
+	             if ( client->sniperRifleFiredTime ) {
+		            if ( level.time - client->sniperRifleFiredTime >  ammoTable[WP_SNOOPERSCOPE].weapRecoilDuration ) {
+			        client->sniperRifleFiredTime = 0;
+		            } else {
+			        VectorCopy( client->ps.viewangles,muzzlebounce );
+			         muzzlebounce[PITCH] -= 0.25*client->sniperRifleMuzzlePitch*cos( 2.5*( level.time - client->sniperRifleFiredTime ) / ammoTable[WP_SNOOPERSCOPE].weapRecoilDuration );
+			         muzzlebounce[YAW] += 0.2*client->sniperRifleMuzzleYaw*cos( 1.0 - ( level.time - client->sniperRifleFiredTime )*3 / ammoTable[WP_SNOOPERSCOPE].weapRecoilDuration );
+			         muzzlebounce[PITCH] -= 0.25*client->sniperRifleMuzzlePitch*random() * ( 1.0f - ( level.time - client->sniperRifleFiredTime ) / ammoTable[WP_SNOOPERSCOPE].weapRecoilDuration );
+			         muzzlebounce[YAW] += 0.2 * crandom() * ( 1.0f - ( level.time - client->sniperRifleFiredTime ) / ammoTable[WP_SNOOPERSCOPE].weapRecoilDuration );
+			         SetClientViewAngle( ent,muzzlebounce );
+		            }
+	                }
+		break;
+		case WP_FG42SCOPE:
+	             if ( client->sniperRifleFiredTime ) {
+		            if ( level.time - client->sniperRifleFiredTime >  ammoTable[WP_FG42SCOPE].weapRecoilDuration ) {
+			        client->sniperRifleFiredTime = 0;
+		            } else {
+			        VectorCopy( client->ps.viewangles,muzzlebounce );
+			         muzzlebounce[PITCH] -= 0.25*client->sniperRifleMuzzlePitch*cos( 2.5*( level.time - client->sniperRifleFiredTime ) / ammoTable[WP_FG42SCOPE].weapRecoilDuration );
+			         muzzlebounce[YAW] += 0.2*client->sniperRifleMuzzleYaw*cos( 1.0 - ( level.time - client->sniperRifleFiredTime )*3 / ammoTable[WP_FG42SCOPE].weapRecoilDuration );
+			         muzzlebounce[PITCH] -= 0.25*client->sniperRifleMuzzlePitch*random() * ( 1.0f - ( level.time - client->sniperRifleFiredTime ) / ammoTable[WP_FG42SCOPE].weapRecoilDuration );
+			         muzzlebounce[YAW] += 0.2 * crandom() * ( 1.0f - ( level.time - client->sniperRifleFiredTime ) / ammoTable[WP_FG42SCOPE].weapRecoilDuration );
+			         SetClientViewAngle( ent,muzzlebounce );
+		            }
+	                }
+		break;
+		case WP_M1941SCOPE:
 	if ( client->sniperRifleFiredTime ) {
-		if ( level.time - client->sniperRifleFiredTime > RIFLE_SHAKE_TIME ) {
+		            if ( level.time - client->sniperRifleFiredTime >  ammoTable[WP_M1941SCOPE].weapRecoilDuration ) {
+			        client->sniperRifleFiredTime = 0;
+		            } else {
+			        VectorCopy( client->ps.viewangles,muzzlebounce );
+			         muzzlebounce[PITCH] -= 0.25*client->sniperRifleMuzzlePitch*cos( 2.5*( level.time - client->sniperRifleFiredTime ) / ammoTable[WP_M1941SCOPE].weapRecoilDuration );
+			         muzzlebounce[YAW] += 0.2*client->sniperRifleMuzzleYaw*cos( 1.0 - ( level.time - client->sniperRifleFiredTime )*3 / ammoTable[WP_M1941SCOPE].weapRecoilDuration );
+			         muzzlebounce[PITCH] -= 0.25*client->sniperRifleMuzzlePitch*random() * ( 1.0f - ( level.time - client->sniperRifleFiredTime ) / ammoTable[WP_M1941SCOPE].weapRecoilDuration );
+			         muzzlebounce[YAW] += 0.2 * crandom() * ( 1.0f - ( level.time - client->sniperRifleFiredTime ) / ammoTable[WP_M1941SCOPE].weapRecoilDuration );
+			         SetClientViewAngle( ent,muzzlebounce );
+		            }
+	                }
+		break;
+		case WP_DELISLESCOPE:
+	             if ( client->sniperRifleFiredTime ) {
+		            if ( level.time - client->sniperRifleFiredTime >  ammoTable[WP_DELISLESCOPE].weapRecoilDuration ) {
 			client->sniperRifleFiredTime = 0;
 		} else {
 			VectorCopy( client->ps.viewangles,muzzlebounce );
-
-// JPW old damped behavior -- feels more like a real rifle (modeled on Remington 700 7.62x51mm w/ 14x scope)
-/*
-			muzzlebounce[PITCH] -= 2*cos(1.0-(level.time - client->sniperRifleFiredTime)*3/RIFLE_SHAKE_TIME);
-			muzzlebounce[YAW] += client->sniperRifleMuzzleYaw*cos(1.0-(level.time - client->sniperRifleFiredTime)*3/RIFLE_SHAKE_TIME);
-			muzzlebounce[PITCH] -= random()*(1.0f-(level.time - client->sniperRifleFiredTime)/RIFLE_SHAKE_TIME);
-			muzzlebounce[YAW] += crandom()*(1.0f-(level.time - client->sniperRifleFiredTime)/RIFLE_SHAKE_TIME);
-*/
-
-// JPW per Id request, longer recoil time
-
-			// MP method \/
-/*			muzzlebounce[PITCH] -= 2*cos(2.5*(level.time - client->sniperRifleFiredTime)/RIFLE_SHAKE_TIME);
-			muzzlebounce[YAW] += 0.5*client->sniperRifleMuzzleYaw*cos(1.0-(level.time - client->sniperRifleFiredTime)*3/RIFLE_SHAKE_TIME);
-			muzzlebounce[PITCH] -= 0.25*random()*(1.0f-(level.time - client->sniperRifleFiredTime)/RIFLE_SHAKE_TIME);
-			muzzlebounce[YAW] += 0.5*crandom()*(1.0f-(level.time - client->sniperRifleFiredTime)/RIFLE_SHAKE_TIME);
-*/
-
-			// NOTE: ----------------- SP uses this method
-			muzzlebounce[PITCH] -= 0.25*client->sniperRifleMuzzlePitch*cos( 2.5*( level.time - client->sniperRifleFiredTime ) / RIFLE_SHAKE_TIME );
-			muzzlebounce[YAW] += 0.2*client->sniperRifleMuzzleYaw*cos( 1.0 - ( level.time - client->sniperRifleFiredTime )*3 / RIFLE_SHAKE_TIME );
-			muzzlebounce[PITCH] -= 0.25*client->sniperRifleMuzzlePitch*random() * ( 1.0f - ( level.time - client->sniperRifleFiredTime ) / RIFLE_SHAKE_TIME );
-			muzzlebounce[YAW] += 0.2 * crandom() * ( 1.0f - ( level.time - client->sniperRifleFiredTime ) / RIFLE_SHAKE_TIME );
+			         muzzlebounce[PITCH] -= 0.25*client->sniperRifleMuzzlePitch*cos( 2.5*( level.time - client->sniperRifleFiredTime ) / ammoTable[WP_DELISLESCOPE].weapRecoilDuration );
+			         muzzlebounce[YAW] += 0.2*client->sniperRifleMuzzleYaw*cos( 1.0 - ( level.time - client->sniperRifleFiredTime )*3 / ammoTable[WP_DELISLESCOPE].weapRecoilDuration );
+			         muzzlebounce[PITCH] -= 0.25*client->sniperRifleMuzzlePitch*random() * ( 1.0f - ( level.time - client->sniperRifleFiredTime ) / ammoTable[WP_DELISLESCOPE].weapRecoilDuration );
+			         muzzlebounce[YAW] += 0.2 * crandom() * ( 1.0f - ( level.time - client->sniperRifleFiredTime ) / ammoTable[WP_DELISLESCOPE].weapRecoilDuration );
 			SetClientViewAngle( ent,muzzlebounce );
 		}
+	}
+		break;
 	}
 	if ( client->ps.stats[STAT_PLAYER_CLASS] == PC_MEDIC ) {
 		if ( level.time > client->ps.powerups[PW_REGEN] + 5000 ) {
@@ -1102,13 +1205,24 @@ void ClientThink_real( gentity_t *ent ) {
 		client->ps.aiState = AISTATE_COMBAT;
 	}
 
+	// set holding
+	if (client->ps.holdable[ucmd->holdable] <= 0) {
+		for (i = 0; i < MAX_HOLDABLE; i++) {
+			if (client->ps.holdable[i] > 0) {
+				client->ps.holding = i;
+			}
+		}
+	} else {
+		client->ps.holding = ucmd->holdable;
+	}
+
 	client->ps.gravity = g_gravity.value;
 
 	// set speed
 	client->ps.speed = g_speed.value;
 
 	if ( client->ps.powerups[PW_HASTE] ) {
-		client->ps.speed *= 1.6;
+		client->ps.speed *= 1.2;
 	}
 
 	// set up for pmove

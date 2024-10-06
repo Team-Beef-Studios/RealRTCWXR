@@ -932,14 +932,14 @@ typedef struct {
 } hunkHeader_t;
 
 typedef struct {
-	int mark;
-	int permanent;
-	int temp;
-	int tempHighwater;
+	uint64_t mark;
+	uint64_t permanent;
+	uint64_t temp;
+	uint64_t tempHighwater;
 } hunkUsed_t;
 
 typedef struct hunkblock_s {
-	int size;
+	uint64_t size;
 	byte printed;
 	struct hunkblock_s *next;
 	char *label;
@@ -955,7 +955,7 @@ static hunkUsed_t  *hunk_permanent, *hunk_temp;
 static byte    *s_hunkData = NULL;
 static uint64_t s_hunkTotal;
 
-static int s_zoneTotal;
+static uint64_t s_zoneTotal;
 //static	int		s_smallZoneTotal; // TTimo: unused
 
 

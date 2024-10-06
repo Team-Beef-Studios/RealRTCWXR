@@ -73,6 +73,8 @@ at the same time.
 
 static kbutton_t kb[NUM_BUTTONS];
 
+static qboolean s_isToggledCrouch = qfalse;
+
 #ifdef USE_VOIP
 kbutton_t	in_voiprecord;
 #endif
@@ -164,6 +166,17 @@ void IN_KeyUp( kbutton_t *b ) {
 	b->active = qfalse;
 }
 
+void IN_KeyToggle( kbutton_t *b ) {
+	if ( s_isToggledCrouch ) {
+	 	IN_KeyUp(b);
+	 	// Com_Printf("= 1 -> %i\n", s_isToggledCrouch);
+	} else {
+	 	IN_KeyDown(b);
+	 	// Com_Printf("= 0 -> %i\n", s_isToggledCrouch);
+	}
+
+	s_isToggledCrouch = !s_isToggledCrouch;
+}
 
 
 /*
@@ -208,6 +221,7 @@ float CL_KeyState( kbutton_t *key ) {
 }
 
 
+void IN_DownToggle( void ) {IN_KeyToggle( &kb[KB_DOWN] );}
 
 void IN_UpDown( void ) {IN_KeyDown( &kb[KB_UP] );}
 void IN_UpUp( void ) {IN_KeyUp( &kb[KB_UP] );}
@@ -1046,6 +1060,7 @@ void CL_InitInput( void ) {
 	Cmd_AddCommand( "-moveup",IN_UpUp );
 	Cmd_AddCommand( "+movedown",IN_DownDown );
 	Cmd_AddCommand( "-movedown",IN_DownUp );
+	Cmd_AddCommand( "=movedown",IN_DownToggle );
 	Cmd_AddCommand( "+left",IN_LeftDown );
 	Cmd_AddCommand( "-left",IN_LeftUp );
 	Cmd_AddCommand( "+right",IN_RightDown );
@@ -1152,6 +1167,7 @@ void CL_ShutdownInput(void)
 	Cmd_RemoveCommand("-moveup");
 	Cmd_RemoveCommand("+movedown");
 	Cmd_RemoveCommand("-movedown");
+	Cmd_RemoveCommand("=movedown");
 	Cmd_RemoveCommand("+left");
 	Cmd_RemoveCommand("-left");
 	Cmd_RemoveCommand("+right");

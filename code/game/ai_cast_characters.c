@@ -559,6 +559,34 @@ AICharacterDefaults_t aiDefaults[NUM_CHARACTERS] = {
 		NULL,
 		AISTATE_RELAXED
 	},
+
+		//AICHAR_SUPERSOLDIER_LAB
+	{
+		"Super Soldier Lab",
+		{ // Default
+			0
+		},
+		{
+			"superSoldierSightPlayer",
+			"superSoldierAttackPlayer",
+			"superSoldierOrders",
+			"superSoldierDeath",
+			"superSoldierSilentDeath",	//----(SA)	added
+			"superSoldierFlameDeath",	//----(SA)	added
+			"superSoldierPain",
+			"superSoldierStay",			// stay - you're told to stay put
+			"superSoldierFollow",		// follow - go with ordering player ("i'm with you" rather than "yes sir!")
+			"superSoldierOrdersDeny",	// deny - refuse orders (doing something else)
+		},
+		AITEAM_NAZI,
+		"supersoldier/default",
+		{WP_VENOM},
+		BBOX_LARGE, {48,64},
+		AIFL_NO_RELOAD | AIFL_NO_FLAME_DAMAGE | AIFL_NO_TESLA_DAMAGE,
+		0, 0, 0,
+		NULL,
+		AISTATE_ALERT
+	},
 };
 //---------------------------------------------------------------------------
 
@@ -821,7 +849,7 @@ void AIChar_Pain( gentity_t *ent, gentity_t *attacker, int damage, vec3_t point 
 	// adjust the new damage with distance, if they are really close, scale it down, to make it
 	// harder to get through the game by continually rushing the enemies
 	if ( ( attacker->s.weapon != WP_TESLA  && attacker->s.weapon != WP_HOLYCROSS ) && ( ( dist = VectorDistance( ent->r.currentOrigin, attacker->r.currentAngles ) ) < 384 ) ) {
-		damage -= (int)( (float)damage * ( 1.0 - ( dist / 384.0 ) ) * ( 0.5 + 0.5 * g_gameskill.value / GSKILL_MAX ) );
+		damage -= (int)( (float)damage * ( 1.0 - ( dist / 384.0 ) ) * ( 0.5 + 0.5 * g_gameskill.value / GSKILL_REALISM ) );
 	}
 
 	// add the new damage
@@ -886,7 +914,7 @@ void AIChar_Pain( gentity_t *ent, gentity_t *attacker, int damage, vec3_t point 
 		cs->damageQuota = 0;
 		cs->damageQuotaTime = 0;
 		//
-		cs->painSoundTime = cs->pauseTime + (int)( 1000 * ( g_gameskill.value / GSKILL_MAX ) );     // add a bit more of a buffer before the next one
+		cs->painSoundTime = cs->pauseTime + (int)( 1000 * ( g_gameskill.value / GSKILL_REALISM ) );     // add a bit more of a buffer before the next one
 	}
 
 }
@@ -1066,6 +1094,7 @@ void AIChar_spawn( gentity_t *ent ) {
 	newent->client->ps.aiChar = ent->aiCharacter;
 	newent->spawnflags = ent->spawnflags;
 	newent->aiTeam = ent->aiTeam;
+	newent->canSpeak = ent->canSpeak;
 	if ( newent->aiTeam < 0 ) {
 		newent->aiTeam = aiCharDefaults->aiTeam;
 	}
@@ -1425,6 +1454,23 @@ void SP_ai_supersoldier( gentity_t *ent ) {
 	AICast_DelayedSpawnCast( ent, AICHAR_SUPERSOLDIER );
 }
 
+//----------------------------------------------------------------------------------------------------------------------------
+/*QUAKED ai_supersoldier_lab (1 0.25 0) (-32 -32 -24) (32 32 64) TriggerSpawn NoRevive
+supersoldier entity
+"skin" the .skin file to use for this character (must exist in the player characters directory, otherwise 'supersoldier/default' is used)
+"head" the .skin file to use for his head (must exist in the pc's dir, otherwise 'default' is used)
+"ainame" name of AI
+*/
+
+/*
+============
+SP_ai_supersoldier_lab
+============
+*/
+void SP_ai_supersoldier_lab( gentity_t *ent ) {
+	AICast_DelayedSpawnCast( ent, AICHAR_SUPERSOLDIER_LAB );
+}
+
 
 //----------------------------------------------------------------------------------------------------------------------------
 /*QUAKED ai_priest (1 0.25 0) (-32 -32 -24) (32 32 64) TriggerSpawn NoRevive
@@ -1539,6 +1585,7 @@ char *BG_GetCharacterFilename( AICharacters_t characterNum )
 		case AICHAR_LOPER:             return "loper.aidefaults";
 		case AICHAR_ELITEGUARD:        return "eliteguard.aidefaults";
 		case AICHAR_SUPERSOLDIER:      return "supersoldier.aidefaults";
+		case AICHAR_SUPERSOLDIER_LAB:  return "supersoldier_lab.aidefaults";
 		case AICHAR_BLACKGUARD:        return "blackguard.aidefaults";
 		case AICHAR_PROTOSOLDIER:      return "protosoldier.aidefaults";
 		case AICHAR_HELGA:             return "helga.aidefaults";

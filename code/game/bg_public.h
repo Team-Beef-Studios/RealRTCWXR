@@ -59,6 +59,7 @@ If you have questions concerning this license or the applicable additional terms
 #define TESLA_RANGE         1200
 #define HOLYCROSS_RANGE     800
 #define TESLA_SUPERSOLDIER_RANGE    2000
+#define TESLA_SUPERSOLDIER_LAB_RANGE    400
 
 #define FLAMETHROWER_RANGE 2000
 
@@ -81,6 +82,10 @@ If you have questions concerning this license or the applicable additional terms
 #define CROUCH_VIEWHEIGHT   16
 #define DEAD_VIEWHEIGHT     -16
 
+#define DEFAULT_RUN_SPEED_SCALE     0.8
+#define DEFAULT_SPRINT_SPEED_SCALE  1.2
+#define DEFAULT_CROUCH_SPEED_SCALE  0.25
+
 #define DEFAULT_MODEL       "bj2"
 #define DEFAULT_HEAD        "default"   
 
@@ -88,6 +93,10 @@ If you have questions concerning this license or the applicable additional terms
 #define FIRE_FLASH_FADEIN_TIME  1000
 
 #define LIGHTNING_FLASH_TIME    150
+
+#define	KNIFECHARGETIME			500
+#define KNIFESPEED				2000
+#define MIN_KNIFESPEED          250
 
 typedef enum {
 	CLDMG_SPIRIT,
@@ -185,6 +194,7 @@ typedef enum {
 	GT_NONE,            // no game mode
 	GT_SINGLE_PLAYER,   // single player
 	GT_GOTHIC,          // castle gothicstein
+	GT_SURVIVAL,        // survival
 	GT_MAX_GAME_TYPE
 } gametype_t;
 
@@ -231,7 +241,11 @@ typedef enum {
 	WEAPON_FIRING,
 	WEAPON_FIRINGALT,
 	WEAPON_WAITING,     // player allowed to switch/reload, but not fire
-	WEAPON_RELOADING    
+	WEAPON_RELOADING,
+	WEAPON_HOLSTER_IN,
+	WEAPON_HOLSTER_OUT,
+	WEAPON_SPRINT_IN,
+	WEAPON_SPRINT_OUT   
 } weaponstate_t;
 
 // pmove->pm_flags	(sent as max 16 bits in msg.c)
@@ -250,6 +264,7 @@ typedef enum {
 #define PMF_SCOREBOARD      8192    // spectate as a scoreboard
 #define PMF_LIMBO           16384   // JPW NERVE limbo state, pm_time is time until reinforce
 #define PMF_TIME_LOAD       32768   // hold for this time after a load game, and prevent large thinks
+#define PMF_SPRINTING       65536 
 
 #define PMF_ALL_TIMES   ( PMF_TIME_WATERJUMP | PMF_TIME_LAND | PMF_TIME_KNOCKBACK | PMF_TIME_LOAD )
 
@@ -263,6 +278,7 @@ typedef struct
 {
 	qboolean bAutoReload;
 	qboolean m97reloadInterrupt;
+	qboolean	releasedFire;
 	int lastRecoilDeltaTime;
 	int weapRecoilDuration;
 	float weapRecoilPitch;       
@@ -355,7 +371,6 @@ typedef enum {
 
 } persEnum_t;
 
-
 // entityState_t->eFlags
 #define EF_DEAD             0x00000001      // don't draw a foe marker over players with EF_DEAD
 #define EF_NONSOLID_BMODEL  0x00000002      // bmodel is visible, but not solid
@@ -434,11 +449,12 @@ typedef enum {
 	HI_BOOK1,   
 	HI_BOOK2,   
 	HI_BOOK3,   
-	HI_11,
-	HI_12,
-	HI_13,
-	HI_14,
+	HI_EG_SYRINGE,
+	HI_BG_SYRINGE,
+	HI_LP_SYRINGE,
+	HI_KNIVES,
 	HI_M97,
+	HI_AUTO5,
 	HI_NUM_HOLDABLE
 } holdable_t;
 
@@ -463,6 +479,7 @@ typedef enum
 	AICHAR_DOG,
 	AICHAR_PRIEST,
 	AICHAR_XSHEPHERD,
+	AICHAR_SUPERSOLDIER_LAB,
 	NUM_CHARACTERS
 } AICharacters_t;
 
@@ -494,12 +511,14 @@ typedef enum {
 	// Semi auto rifles
 	WP_M1GARAND,
 	WP_G43,
+	WP_M1941,
 	// Assault Rifles
 	WP_MP44,
 	WP_FG42,
 	WP_BAR,
 	// Shotguns
 	WP_M97, 
+	WP_AUTO5, 
 	// Heavy Weapons
 	WP_BROWNING,
 	WP_MG42M,
@@ -517,19 +536,21 @@ typedef enum {
 	// Misc Alt modes
 	WP_FG42SCOPE,   
 	WP_AKIMBO,     
+	WP_DUAL_TT33,     
 	WP_M7,      
-	// Currently inactive Gothicstein weapons                                 
+	WP_M1941SCOPE,
+
 	WP_P38,                 
 	WP_M30,                
 	WP_DELISLE,            
 	WP_DELISLESCOPE, 	   
-	WP_WELROD,             	
+	WP_HDM,             	
 	WP_HOLYCROSS,           
     // Misc stuff, not actual weapons
+	WP_DUMMY_MG42,
 	WP_MONSTER_ATTACK1,     	
 	WP_MONSTER_ATTACK2,     	
 	WP_MONSTER_ATTACK3,    	
-	WP_GAUNTLET,            
 	WP_SNIPER,              
 	WP_MORTAR,             
 	VERYBIGEXPLOSION,     
@@ -541,13 +562,19 @@ typedef enum {
 } weapon_t;
 
 
+extern int reloadableWeapons[];
 
-typedef struct ammotable_s {
+
+typedef struct ammoTable_s {
 	int weaponindex;
+	int weaponClass;
+	weapon_t weapAlts;
+	int weaponTeam;
 	int maxammo;            
 	int uses;               
 	int maxclip;            
 	int reloadTime;         
+	int reloadTimeFull;         
 	int fireDelayTime;      
 	int nextShotTime;
 	int nextShotTime2;        
@@ -567,9 +594,17 @@ typedef struct ammotable_s {
 	float moveSpeed; 
 	int twoHand;
 	int upAngle;
+	float falloffDistance[2];
 	int mod;   
-} ammotable_t;
-    
+	int shotgunReloadStart;
+	int shotgunReloadLoop;
+	int shotgunReloadEnd;
+	int shotgunPumpStart;
+	int shotgunPumpLoop;
+	int shotgunPumpEnd;
+	int brassDelayEmpty;
+	int brassDelay;
+} ammoTable_t;
 
 // Skill-based ammo parameters
 typedef struct ammoskill_s {
@@ -577,28 +612,26 @@ typedef struct ammoskill_s {
 	int maxclip;
 } ammoskill_t;
 
-extern int weapAlts[]; 
+//extern int weapAlts[]; 
 
-extern ammotable_t ammoTable[WP_NUM_WEAPONS];
+extern ammoTable_t ammoTable[WP_NUM_WEAPONS];
 extern ammoskill_t ammoSkill[GSKILL_NUM_SKILLS][WP_NUM_WEAPONS];
-#define GetWeaponTableData(weaponIndex) ((ammotable_t *)(&ammoTable[weaponIndex]))
+#define GetWeaponTableData(weaponIndex) ((ammoTable_t *)(&ammoTable[weaponIndex]))
 
 
-#define IS_AUTORELOAD_WEAPON( weapon ) \
-	(	\
-		weapon == WP_LUGER    || weapon == WP_COLT          || weapon == WP_MP40          || \
-		weapon == WP_THOMPSON || weapon == WP_STEN      || \
-		weapon == WP_MAUSER    || weapon == WP_SNIPERRIFLE       || weapon == WP_M1GARAND  || \
-		weapon == WP_FG42     || weapon == WP_G43           || weapon == WP_MG42M   || \
-		weapon == WP_SILENCER    || weapon == WP_VENOM      || \
-		weapon == WP_GARAND   || weapon == WP_TT33     || weapon == WP_FG42SCOPE     || \
-		weapon == WP_BAR    || weapon == WP_MP44      || \
-		weapon == WP_M97   || weapon == WP_MP34     || weapon == WP_MOSIN     || \
-		weapon == WP_PPSH    || weapon == WP_GARAND      || \
-		weapon == WP_SNOOPERSCOPE  || weapon == WP_REVOLVER || weapon == WP_AKIMBO ||      \
-		weapon == WP_BROWNING || weapon == WP_P38 || weapon == WP_DELISLE ||  \
-        weapon == WP_DELISLESCOPE \
-	)
+// Define the auto-reload weapons
+static const int autoReloadWeapons[] = {
+    WP_GRENADE_LAUNCHER,
+	WP_GRENADE_PINEAPPLE,
+	WP_DYNAMITE,
+	WP_PANZERFAUST,
+	WP_TESLA,
+	WP_FLAMETHROWER,
+	WP_POISONGAS,
+	WP_AIRSTRIKE,
+	WP_KNIFE,
+	WP_M7,
+};
 
  // entityState_t->event values
 // entity events are for effects that take place reletive
@@ -683,6 +716,8 @@ typedef enum {
 	EV_WEAPONSWITCHED, // autoreload
 	EV_EMPTYCLIP,
 	EV_FILL_CLIP,
+	EV_FILL_CLIP_FULL,
+	EV_FILL_CLIP_AI,
 	EV_WEAP_OVERHEAT,
 	EV_CHANGE_WEAPON,
 	EV_FIRE_WEAPON,
@@ -780,16 +815,21 @@ typedef enum {
 	EV_SNOWFLURRY,
 	EV_CONCUSSIVE,
 	EV_DUST,
+	EV_BOUNCE_SOUND,
 	EV_RUMBLE_EFX,
 	EV_GUNSPARKS,
 	EV_FLAMETHROWER_EFFECT,
 	EV_SNIPER_SOUND,
 	EV_POPUP,
 	EV_POPUPBOOK,
+	EV_OBJECTIVE_MET,
+	EV_CHECKPOINT_PASSED,
+	EV_GAME_SAVED,
 	EV_GIVEPAGE,    
 	EV_CLOSEMENU,   
 	EV_SPAWN_SPIRIT,
 	EV_M97_PUMP, // RealRTCW
+	EV_THROWKNIFE,
 	EV_COUGH,
 	EV_QUICKGRENS,
 	EV_MAX_EVENTS   // just added as an 'endcap'
@@ -974,6 +1014,8 @@ typedef enum {
 	WEAP_ALTSWITCHFROM, // switch from alt fire mode weap (scoped/silencer/etc)
 	WEAP_ALTSWITCHTO,   // switch to alt fire mode weap
 	WEAP_DROP2,
+	WEAP_SPRINTIN,
+	WEAP_SPRINTOUT,
 	MAX_WP_ANIMATIONS
 } weapAnimNumber_t;
 
@@ -1051,7 +1093,7 @@ typedef enum {
 typedef enum {
 	MOD_UNKNOWN,
 	MOD_SHOTGUN,
-	MOD_GAUNTLET,
+	MOD_MONSTER_MELEE,
 	MOD_MACHINEGUN,
 	MOD_GRENADE,
 	MOD_GRENADE_SPLASH,
@@ -1062,6 +1104,7 @@ typedef enum {
 	MOD_BFG,
 	MOD_BFG_SPLASH,
 	MOD_KNIFE,
+	MOD_THROWKNIFE,
 	MOD_DAGGER,
 	MOD_DAGGER_STEALTH,	
 	MOD_KNIFE2,
@@ -1079,6 +1122,7 @@ typedef enum {
 	MOD_SNOOPERSCOPE,
 	MOD_SILENCER,   
 	MOD_AKIMBO,     
+	MOD_DUAL_TT33,     
 	MOD_FG42,
 	MOD_FG42SCOPE,
 	MOD_PANZERFAUST,
@@ -1095,6 +1139,8 @@ typedef enum {
 	MOD_PPSH,
 	MOD_MOSIN,
 	MOD_G43,
+	MOD_M1941,
+	MOD_M1941SCOPE,
 	MOD_M1GARAND,
 	MOD_M7,
 	MOD_BAR,
@@ -1102,8 +1148,9 @@ typedef enum {
 	MOD_MG42M,
 	MOD_BROWNING,
 	MOD_M97,
+	MOD_AUTO5,
 	MOD_M30,
-	MOD_WELROD,
+	MOD_HDM,
 	MOD_REVOLVER,
 	MOD_GRENADE_PINEAPPLE,
 	MOD_CROSS,
@@ -1141,6 +1188,37 @@ typedef enum {
 
 } meansOfDeath_t;
 
+typedef enum
+{
+	WEAPON_CLASS_NONE,
+	WEAPON_CLASS_MELEE,
+	WEAPON_CLASS_PISTOL,
+	WEAPON_CLASS_SMG,
+	WEAPON_CLASS_RIFLE,
+	WEAPON_CLASS_ASSAULT_RIFLE,
+	WEAPON_CLASS_SHOTGUN,
+	WEAPON_CLASS_GRENADE,
+	WEAPON_CLASS_RIFLENADE,
+	WEAPON_CLASS_MG,
+	WEAPON_CLASS_LAUNCHER,
+	WEAPON_CLASS_BEAM,
+	WEAPON_CLASS_SCOPED,
+	WEAPON_CLASS_SCOPABLE,
+	WEAPON_CLASS_AKIMBO,
+	WEAPON_CLASS_UNUSED
+
+} weaponClass_t;
+
+typedef enum
+{
+	WEAPON_TEAM_NONE,
+	WEAPON_TEAM_ALLIES,
+	WEAPON_TEAM_AXIS,
+	WEAPON_TEAM_SOVIET,
+	WEAPON_TEAM_COMMON
+
+} weaponTeam_t;
+
 
 //---------------------------------------------------------
 
@@ -1163,7 +1241,7 @@ typedef enum {
 } itemType_t;
 
 #define MAX_ITEM_MODELS 3
-#define MAX_ITEM_ICONS 4
+#define MAX_ITEM_ICONS 16
 
 typedef struct gitem_s {
 	char        *classname; // spawning name
@@ -1194,6 +1272,7 @@ extern gitem_t bg_itemlist[];
 extern int bg_numItems;
 
 gitem_t *BG_FindItem( const char *pickupName );
+gitem_t *BG_FindItemForClassName( const char *className );
 gitem_t *BG_FindItem2( const char *name );  
 gitem_t *BG_FindItemForWeapon( weapon_t weapon );
 gitem_t *BG_FindItemForPowerup( powerup_t pw );
@@ -1260,9 +1339,12 @@ typedef enum {
 	ET_FP_PARTS,
 	ET_FIRE_COLUMN,
 	ET_FIRE_COLUMN_SMOKE,
+	ET_CABINET_H,
+	ET_CABINET_A,
+	ET_HEALER,
+	ET_SUPPLIER,
 	ET_RAMJET,
 	ET_EXPLO_PART,
-	ET_CROWBAR,
 	ET_PROP,
 	ET_BAT,
 	ET_AI_EFFECT,
@@ -1321,6 +1403,7 @@ typedef enum {
 	HINT_PLYR_ENEMY,
 	HINT_PLYR_UNKNOWN,      // 40
 	HINT_BUILD,
+	HINT_PLYR_SPEAK,
 
 	HINT_BAD_USER,  // invisible user with no target
 
@@ -1341,6 +1424,7 @@ void    BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t
 
 qboolean    BG_PlayerTouchesItem( playerState_t *ps, entityState_t *item, int atTime );
 qboolean    BG_PlayerSeesItem( playerState_t *ps, entityState_t *item, int atTime );
+qboolean    BG_AddMagicAmmo( playerState_t *ps, int numOfClips );
 
 void PM_ClipVelocity( vec3_t in, vec3_t normal, vec3_t out, float overbounce );
 
@@ -1675,12 +1759,18 @@ float BG_AnimGetFootstepGap( playerState_t *ps, float xyspeed );
 int PM_IdleAnimForWeapon( int weapon );
 int PM_RaiseAnimForWeapon( int weapon );
 
+int PM_SprintInAnimForWeapon( int weapon );
+int PM_SprintOutAnimForWeapon( int weapon );
+
 int PM_AltSwitchFromForWeapon( int weapon );
 int PM_AltSwitchToForWeapon( int weapon );
 
 
 extern animStringItem_t animStateStr[];
 extern animStringItem_t animBodyPartsStr[];
+
+long BG_StringHashValue(const char *fname);
+long BG_StringHashValue_Lwr(const char *fname);
 
 int trap_PC_LoadSource( const char *filename );
 int trap_PC_ReadToken( int handle, pc_token_t *pc_token );
@@ -1755,3 +1845,4 @@ splinePath_t *BG_Find_Spline( const char *match );
 float BG_SplineLength( splinePath_t* pSpline );
 void BG_AddSplineControl( splinePath_t* spline, const char* name );
 void BG_LinearPathOrigin2( float radius, splinePath_t** pSpline, float *deltaTime, vec3_t result, qboolean backwards );
+void BG_ClipVelocity( vec3_t in, vec3_t normal, vec3_t out, float overbounce );

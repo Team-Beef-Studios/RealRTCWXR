@@ -34,7 +34,7 @@ If you have questions concerning this license or the applicable additional terms
 
 #include <VrClientInfo.h>
 
-vr_client_info_t* vr;
+vr_client_info_t* vr = NULL;
 
 level_locals_t level;
 
@@ -50,6 +50,8 @@ typedef struct {
 
 gentity_t g_entities[MAX_GENTITIES];
 gclient_t g_clients[MAX_CLIENTS];
+
+int g_scriptGlobalAccumBuffer[G_MAX_SCRIPT_GLOBAL_ACCUM_BUFFERS];
 
 gentity_t       *g_camEnt = NULL;   //----(SA)	script camera
 
@@ -164,6 +166,14 @@ vmCvar_t g_reinforce;
 vmCvar_t g_fullarsenal;
 vmCvar_t g_endmapbonus;
 vmCvar_t g_randomweapons;
+vmCvar_t g_realism;
+vmCvar_t g_regen;
+vmCvar_t g_flushItems;	// items land depending on the slope thy're on
+vmCvar_t g_midgame;
+vmCvar_t g_vanilla_guns;
+vmCvar_t g_dlc1;
+vmCvar_t g_class;
+vmCvar_t g_noobTube;
 
 vmCvar_t g_mapname;
 
@@ -192,6 +202,13 @@ cvarTable_t gameCvarTable[] = {
 	{ &g_fullarsenal, "g_fullarsenal", "1", CVAR_ARCHIVE | CVAR_LATCH, 0, qfalse },
 	{ &g_endmapbonus, "g_endmapbonus", "1", CVAR_ARCHIVE | CVAR_LATCH, 0, qfalse },
 	{ &g_randomweapons, "g_randomweapons", "0", CVAR_ARCHIVE | CVAR_LATCH, 0, qfalse },
+	{ &g_realism, "g_realism", "0", CVAR_ARCHIVE | CVAR_LATCH, 0, qfalse },
+	{ &g_regen, "g_regen", "0", CVAR_ARCHIVE | CVAR_LATCH, 0, qfalse },
+	{ &g_midgame, "g_midgame", "0", CVAR_ARCHIVE | CVAR_LATCH, 0, qfalse },
+	{ &g_vanilla_guns, "g_vanilla_guns", "0", CVAR_ARCHIVE | CVAR_LATCH, 0, qfalse },
+	{ &g_dlc1, "g_dlc1", "0", CVAR_ARCHIVE | CVAR_LATCH, 0, qfalse },
+	{ &g_class, "g_class", "0", CVAR_ARCHIVE, 0, qfalse },
+	{ &g_noobTube, "g_noobTube", "0", CVAR_ARCHIVE, 0, qfalse },
 
 	{ &g_reloading, "g_reloading", "0", CVAR_ROM },   //----(SA)	added
 
@@ -249,7 +266,7 @@ cvarTable_t gameCvarTable[] = {
 	{ &g_debugMove, "g_debugMove", "0", 0, 0, qfalse },
 	{ &g_debugDamage, "g_debugDamage", "0", 0, 0, qfalse },
 	{ &g_debugAlloc, "g_debugAlloc", "0", 0, 0, qfalse },
-	{ &g_debugBullets, "g_debugBullets", "0", 0, 0, qfalse}, //----(SA)	added
+	{ &g_debugBullets, "g_debugBullets", "0", CVAR_CHEAT, 0, qfalse}, //----(SA)	added
 	{ &g_debugAudibleEvents, "g_debugAudibleEvents", "0", CVAR_CHEAT, 0, qfalse}, //----(SA)	added
 
 	{ &g_headshotMaxDist, "g_headshotMaxDist", "1024", CVAR_CHEAT, 0, qfalse},    //----(SA)	added
@@ -296,6 +313,7 @@ cvarTable_t gameCvarTable[] = {
 
 	{ &g_bodysink, "g_bodysink", "0", CVAR_ARCHIVE },
 	{ &g_weaponfalloff, "g_weaponfalloff", "0", CVAR_ARCHIVE },
+	{ &g_flushItems,	"g_flushItems",		"1",	0 },
 	{ &g_mapname, "mapname", "", CVAR_ARCHIVE }
 };
 
@@ -598,11 +616,23 @@ void G_CheckForCursorHints( gentity_t *ent ) {
 
 		// check for friendly.
 		if ( traceEnt->aiTeam == AITEAM_ALLIES || traceEnt->aiTeam == AITEAM_NEUTRAL ) {
+		
+			if (traceEnt->canSpeak == 1 ) {
+				if ( dist > CH_ACTIVATE_DIST ) {
 			hintType = HINT_PLYR_FRIEND;
-			hintDist = CH_FRIENDLY_DIST;    // far, since this will be used to determine whether to shoot bullet weaps or not
+			       hintDist = CH_FRIENDLY_DIST; 
+				} else {
+			       hintType = HINT_PLYR_SPEAK;
+			       hintDist = CH_ACTIVATE_DIST; 
+				}
+			} else {
+   		        hintType = HINT_PLYR_FRIEND;
+			    hintDist = CH_FRIENDLY_DIST; 
+			}
 		}
 
 	}
+
 	//
 	// OTHER ENTITIES
 	//
@@ -683,7 +713,8 @@ void G_CheckForCursorHints( gentity_t *ent ) {
 					if ( ent->s.weapon != WP_SNIPERRIFLE &&
 						 ent->s.weapon != WP_SNOOPERSCOPE &&
 						 ent->s.weapon != WP_FG42SCOPE &&
-						 ent->s.weapon != WP_DELISLESCOPE ) 
+						 ent->s.weapon != WP_DELISLESCOPE &&
+						 ent->s.weapon != WP_M1941SCOPE ) 
 						{
 						if ( traceEnt->takedamage ) {
 							hintDist = CH_ACTIVATE_DIST;
@@ -835,6 +866,7 @@ void G_CheckForCursorHints( gentity_t *ent ) {
 		case HINT_NOEXIT:
 		case HINT_NOEXIT_FAR:
 		case HINT_PLYR_FRIEND:
+		case HINT_PLYR_SPEAK:
 		case HINT_PLYR_NEUTRAL:
 		case HINT_PLYR_ENEMY:
 		case HINT_PLYR_UNKNOWN:
@@ -853,6 +885,16 @@ void G_CheckForCursorHints( gentity_t *ent ) {
 
 
 //	Com_Printf("hint: %d\n", ps->serverCursorHint);
+}
+
+
+void G_SetTargetName( gentity_t* ent, char* targetname ) {
+	if ( targetname && *targetname ) {
+		ent->targetname = targetname;
+		ent->targetnamehash = BG_StringHashValue( targetname );
+	} else {
+		ent->targetnamehash = -1;
+	}
 }
 
 
@@ -1063,6 +1105,7 @@ void G_UpdateCvars( void ) {
 						// if we are not watching a cutscene, save the game
 						if ( !g_entities[0].client->cameraPortal ) {
 							G_SaveGame( NULL );
+							G_SaveGame( "lastcheckpoint" );
 						}
 
 						trap_Cvar_Set( "cg_norender", "0" );  // camera has started, render 'on'
@@ -1286,6 +1329,8 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	InitBodyQue();
 
 	ClearRegisteredItems();
+
+	G_ResetRemappedShaders();
 
 	// parse the key/value pairs and spawn gentities
 	G_SpawnEntitiesFromString();
@@ -2169,6 +2214,12 @@ void CheckReloadStatus( void ) {
 					} else {
 						trap_SendConsoleCommand( EXEC_APPEND, va( "gtmap %s\n", level.nextMap ) );
 					} 
+				  } else if ( g_gametype.integer == GT_SURVIVAL ) {
+			        if ( g_cheats.integer ) {
+						trap_SendConsoleCommand( EXEC_APPEND, va( "svdevmap %s\n", level.nextMap ) );
+					} else {
+						trap_SendConsoleCommand( EXEC_APPEND, va( "svmap %s\n", level.nextMap ) );
+					} 
 				  }
 				} else if ( g_reloading.integer == RELOAD_ENDGAME ) {
 					G_EndGame();    // kick out to the menu and start the "endgame" menu (credits, etc)
@@ -2239,6 +2290,107 @@ void G_RunThink( gentity_t *ent ) {
 	ent->think( ent );
 }
 
+void G_RunEntity( gentity_t* ent, int msec );
+
+void G_RunEntity( gentity_t* ent, int msec ) {
+
+	if ( ent->runthisframe ) {
+		return;
+	}
+
+	ent->runthisframe = qtrue;
+
+	if ( !ent->inuse ) {
+		return;
+	}
+
+	// check EF_NODRAW status for non-clients
+	if ( ent - g_entities > level.maxclients ) {
+		if ( ent->flags & FL_NODRAW ) {
+			ent->s.eFlags |= EF_NODRAW;
+		} else {
+			ent->s.eFlags &= ~EF_NODRAW;
+		}
+	}
+
+
+	// clear events that are too old
+	if ( level.time - ent->eventTime > EVENT_VALID_MSEC ) {
+		if ( ent->s.event ) {
+			ent->s.event = 0;
+		}
+		if ( ent->freeAfterEvent ) {
+			// tempEntities or dropped items completely go away after their event
+			G_FreeEntity( ent );
+			return;
+		} else if ( ent->unlinkAfterEvent ) {
+			// items that will respawn will hide themselves after their pickup event
+			ent->unlinkAfterEvent = qfalse;
+			trap_UnlinkEntity( ent );
+		}
+	}
+
+	// temporary entities don't think
+	if ( ent->freeAfterEvent ) {
+		return;
+	}
+
+	if ( !ent->r.linked && ent->neverFree ) {
+		return;
+	}
+
+	if ( ent->s.eType == ET_MISSILE
+		 || ent->s.eType == ET_FLAMEBARREL
+		 || ent->s.eType == ET_FP_PARTS
+		 || ent->s.eType == ET_FIRE_COLUMN
+		 || ent->s.eType == ET_FIRE_COLUMN_SMOKE
+		 || ent->s.eType == ET_EXPLO_PART
+		 || ent->s.eType == ET_RAMJET ) {
+		return;
+	}
+
+		if ( ent->s.eType == ET_ITEM || ent->physicsObject ) {
+		G_RunItem( ent );
+
+		// ydnar: hack for instantaneous velocity
+		VectorSubtract( ent->r.currentOrigin, ent->oldOrigin, ent->instantVelocity );
+		VectorScale( ent->instantVelocity, 1000.0f / msec, ent->instantVelocity );
+
+		return;
+	}
+
+	if ( ent->s.eType == ET_MOVER || ent->s.eType == ET_PROP ) {
+		G_RunMover( ent );
+
+		// ydnar: hack for instantaneous velocity
+		VectorSubtract( ent->r.currentOrigin, ent->oldOrigin, ent->instantVelocity );
+		VectorScale( ent->instantVelocity, 1000.0f / msec, ent->instantVelocity );
+
+		return;
+	}
+
+	if ( ent - g_entities < MAX_CLIENTS ) {
+		G_RunClient( ent );
+
+		// ydnar: hack for instantaneous velocity
+		VectorSubtract( ent->r.currentOrigin, ent->oldOrigin, ent->instantVelocity );
+		VectorScale( ent->instantVelocity, 1000.0f / msec, ent->instantVelocity );
+
+		return;
+	}
+
+	if ( ( ent->s.eType == ET_HEALER || ent->s.eType == ET_SUPPLIER ) && ent->target_ent ) {
+		ent->target_ent->s.onFireStart =    ent->health;
+		ent->target_ent->s.onFireEnd =      ent->count;
+	}
+
+	G_RunThink( ent );
+
+	// ydnar: hack for instantaneous velocity
+	VectorSubtract( ent->r.currentOrigin, ent->oldOrigin, ent->instantVelocity );
+	VectorScale( ent->instantVelocity, 1000.0f / msec, ent->instantVelocity );
+}
+
 /*
 ================
 G_RunFrame
@@ -2247,7 +2399,7 @@ Advances the non-player objects in the world
 ================
 */
 void G_RunFrame( int levelTime ) {
-	int i;
+	int i, msec;
 	gentity_t   *ent;
 
 	if (steamAlive())
@@ -2264,6 +2416,8 @@ void G_RunFrame( int levelTime ) {
 	level.previousTime = level.time;
 	level.time = levelTime;
 
+	msec = level.time - level.previousTime;
+
 	// Ridah, check for loading a save game
 		extern void AICast_CheckLoadGame( void );
 		AICast_CheckLoadGame();
@@ -2272,11 +2426,16 @@ void G_RunFrame( int levelTime ) {
 	// get any cvar changes
 	G_UpdateCvars();
 
+	for ( i = 0; i < level.num_entities; i++ ) {
+		g_entities[i].runthisframe = qfalse;
+	}
+
 	//
 	// go through all allocated objects
 	//
 	ent = &g_entities[0];
 	for ( i = 0 ; i < level.num_entities ; i++, ent++ ) {
+		G_RunEntity( &g_entities[ i ], msec );
 		if ( !ent->inuse ) {
 			continue;
 		}
@@ -2358,11 +2517,6 @@ void G_RunFrame( int levelTime ) {
 
 		if ( ent->s.eType == ET_ZOMBIESPIT ) {
 			G_RunSpit( ent );
-			continue;
-		}
-
-		if ( ent->s.eType == ET_CROWBAR ) {
-			G_RunCrowbar( ent );
 			continue;
 		}
 

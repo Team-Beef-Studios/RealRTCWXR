@@ -174,6 +174,10 @@ typedef struct
 } g_script_status_t;
 //
 #define G_MAX_SCRIPT_ACCUM_BUFFERS  8
+#define G_MAX_SCRIPT_GLOBAL_ACCUM_BUFFERS  8
+
+extern int g_scriptGlobalAccumBuffer[G_MAX_SCRIPT_GLOBAL_ACCUM_BUFFERS];
+
 //
 void G_Script_ScriptEvent( gentity_t *ent, char *eventStr, char *params );
 //====================================================================
@@ -193,6 +197,8 @@ struct gentity_s {
 
 	qboolean inuse;
 
+	vec3_t instantVelocity;         // ydnar: per entity instantaneous velocity, set per frame
+
 	char        *classname;         // set in QuakeEd
 	int spawnflags;                 // set in QuakeEd
 
@@ -200,6 +206,7 @@ struct gentity_s {
 									// bodyque uses this
 
 	int flags;                      // FL_* variables
+	char        *translation;
 	char		*Name;
 	char        *model;
 	char        *model2;
@@ -212,6 +219,8 @@ struct gentity_s {
 	qboolean physicsObject;         // if true, it can be pushed by movers and fall off edges
 									// all game items are physicsObjects,
 	float physicsBounce;            // 1.0 = continuous bounce, 0.0 = no bounce
+	qboolean	physicsSlide;
+	qboolean	physicsFlush;			// if true object will never be flushed ( realigned to fit the terrain slope )
 	int clipmask;                   // brushes with this content value will be collided against
 									// when moving.  items and corpses do not collide against
 									// players, for instance
@@ -252,6 +261,7 @@ struct gentity_s {
 	char        *target;
 	char        *targetdeath;   // fire this on death exclusively //----(SA)	added
 	char        *targetname;
+	int         targetnamehash;         // Gordon: adding a hash for this for faster lookups
 	char        *team;
 	char        *targetShaderName;
 	char        *targetShaderNewName;
@@ -366,6 +376,10 @@ struct gentity_s {
 	qboolean is_dead;
 	// done
 
+	vec3_t oldOrigin;
+
+	qboolean runthisframe;
+
 	int start_size;
 	int end_size;
 
@@ -425,6 +439,8 @@ struct gentity_s {
 
 	// -------------------------------------------------------------------------------------------
 	// if working on a post release patch, new variables should ONLY be inserted after this point
+
+	int canSpeak;               // can this entity speak?
 };
 
 // Ridah
@@ -482,6 +498,8 @@ typedef struct {
 //
 #define MAX_NETNAME         36
 #define MAX_VOTE_COUNT      3
+
+#define MAX_TRANSLATION_TOKEN 36
 
 #define PICKUP_ACTIVATE 0   // pickup items only when using "+activate"
 #define PICKUP_TOUCH    1   // pickup items when touched
@@ -587,6 +605,7 @@ struct gclient_s {
 	// RF, may be shared by multiple clients/characters
 	animModelInfo_t *modelInfo;
 
+
 	// -------------------------------------------------------------------------------------------
 	// if working on a post release patch, new variables should ONLY be inserted after this point
 
@@ -607,6 +626,8 @@ struct gclient_s {
 	int saved_persistant[MAX_PERSISTANT];           // DHM - Nerve :: Save ps->persistant here during Limbo
 	
 	pmoveExt_t pmext;
+
+	int healthRegenStartTime;
 };
 
 
@@ -786,6 +807,7 @@ int ArmorIndex( gentity_t *ent );
 void Fill_Clip( playerState_t *ps, int weapon );
 void    Add_Ammo( gentity_t *ent, int weapon, int count, qboolean fillClip );
 void Touch_Item( gentity_t *ent, gentity_t *other, trace_t *trace );
+qboolean AddMagicAmmo( gentity_t *receiver, int numOfClips );
 
 // Touch_Item_Auto is bound by the rules of autoactivation (if cg_autoactivate is 0, only touch on "activate")
 void Touch_Item_Auto( gentity_t *ent, gentity_t *other, trace_t *trace );
@@ -807,6 +829,8 @@ int     G_SoundIndex( const char *name );
 void    G_TeamCommand( team_t team, char *cmd );
 void    G_KillBox( gentity_t *ent );
 gentity_t *G_Find( gentity_t *from, int fieldofs, const char *match );
+gentity_t* G_FindByTargetname( gentity_t *from, const char* match );
+gentity_t* G_FindByTargetnameFast( gentity_t *from, const char* match, int hash );
 gentity_t *G_PickTarget( char *targetname );
 void    G_UseTargets( gentity_t *ent, gentity_t *activator );
 void    G_SetMovedir( vec3_t angles, vec3_t movedir );
@@ -828,6 +852,7 @@ void G_AddPredictableEvent( gentity_t *ent, int event, int eventParm );
 void G_AddEvent( gentity_t *ent, int event, int eventParm );
 void G_SetOrigin( gentity_t *ent, vec3_t origin );
 void AddRemap( const char *oldShader, const char *newShader, float timeOffset );
+void G_ResetRemappedShaders(void);
 const char *BuildShaderStateConfig( void );
 void G_SetAngle( gentity_t *ent, vec3_t angle );
 
@@ -865,9 +890,6 @@ int G_PredictMissile( gentity_t *ent, int duration, vec3_t endPos, qboolean allo
 void G_RunSpit( gentity_t *ent );
 void G_RunDebris( gentity_t *ent );
 
-void G_RunCrowbar( gentity_t *ent );
-
-//----(SA) removed unused q3a weapon firing
 gentity_t *fire_grenade( gentity_t *self, vec3_t start, vec3_t aimdir, int grenadeWPID );
 gentity_t *fire_rocket( gentity_t *self, vec3_t start, vec3_t dir );
 
@@ -880,7 +902,6 @@ gentity_t *fire_mortar( gentity_t *self, vec3_t start, vec3_t dir );
 
 gentity_t *fire_zombiespit( gentity_t *self, vec3_t start, vec3_t dir );
 gentity_t *fire_zombiespirit( gentity_t *self, gentity_t *bolt, vec3_t start, vec3_t dir );
-gentity_t *fire_crowbar( gentity_t *self, vec3_t start, vec3_t dir );
 gentity_t *fire_flamebarrel( gentity_t *self, vec3_t start, vec3_t dir );
 // done
 
@@ -910,6 +931,8 @@ void Reached_Tramcar( gentity_t *ent );
 void TeleportPlayer( gentity_t *player, vec3_t origin, vec3_t angles );
 
 
+int G_GetEnemyPosition(gentity_t *ent, gentity_t *targ);
+
 //
 // g_weapon.c
 //
@@ -919,13 +942,7 @@ void SnapVectorTowards( vec3_t v, vec3_t to );
 trace_t *CheckMeleeAttack( gentity_t *ent, float dist, qboolean isTest );
 gentity_t *weapon_grenadelauncher_fire( gentity_t *ent, int grenadeWPID );
 gentity_t *quickgren_fire( gentity_t *ent, int grenadeWPID );
-// Rafael
-gentity_t *weapon_crowbar_throw( gentity_t *ent );
-
 void CalcMuzzlePoints( gentity_t *ent, int weapon );
-//----(SA) commented out as we have no hook
-//void Weapon_HookFree (gentity_t *ent);
-//void Weapon_HookThink (gentity_t *ent);
 
 // Rafael - for activate
 void CalcMuzzlePointForActivate( gentity_t *ent, vec3_t forward, vec3_t right, vec3_t up, vec3_t muzzlePoint );
@@ -959,6 +976,7 @@ qboolean G_FilterPacket( char *from );
 // g_weapon.c
 //
 void FireWeapon( gentity_t *ent );
+void ThrowKnife( gentity_t	*ent );
 void G_LoadAmmoTable( weapon_t weaponNum );
 
 //
@@ -1106,6 +1124,10 @@ extern vmCvar_t g_reinforce;
 extern vmCvar_t g_fullarsenal;
 extern vmCvar_t g_endmapbonus;
 extern vmCvar_t g_randomweapons;
+extern vmCvar_t g_midgame;
+extern vmCvar_t g_dlc1;
+extern vmCvar_t g_class;
+extern vmCvar_t g_noobTube;
 
 extern vmCvar_t g_reloading;        //----(SA)	added
 
@@ -1196,6 +1218,10 @@ extern vmCvar_t g_spawndogs;
 extern vmCvar_t g_spawnpriests;
 extern vmCvar_t g_spawnxshepherds;
 extern vmCvar_t g_aicanheadshot;
+extern vmCvar_t g_realism;
+extern vmCvar_t g_regen;
+extern vmCvar_t	g_flushItems;
+extern vmCvar_t g_vanilla_guns;
 
 void	trap_Print( const char *text );
 void	trap_Error( const char *text ) __attribute__((noreturn));
@@ -1414,12 +1440,15 @@ void    trap_BotResetWeaponState( int weaponstate );
 int     trap_GeneticParentsAndChildSelection( int numranks, float *ranks, int *parent1, int *parent2, int *child );
 
 void    trap_SnapVector( float *v );
+void    G_FlushItem( gentity_t *ent, trace_t *trace);
 
 // New in IORTCW
 void	*trap_Alloc( int size );
 
 gentity_t* G_FindSmokeBomb( gentity_t* start );
 void G_PoisonGasExplode  ( gentity_t* );
+
+void G_SetTargetName( gentity_t* ent, char* targetname );
 
 typedef enum
 {

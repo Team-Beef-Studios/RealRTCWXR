@@ -70,6 +70,7 @@ qboolean AICast_ScriptAction_ClearAnim( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_SetAmmo( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_SetClip( cast_state_t *cs, char *params );			//----(SA)	added
 qboolean AICast_ScriptAction_SelectWeapon( cast_state_t *cs, char *params );
+qboolean AICast_ScriptAction_SetMoveSpeed( cast_state_t *cs, char *params );		
 qboolean AICast_ScriptAction_GiveArmor( cast_state_t *cs, char *params );		//----(SA)	added
 qboolean AICast_ScriptAction_SetArmor( cast_state_t *cs, char *params );		//----(SA)	added
 qboolean AICast_ScriptAction_GiveAmmo( cast_state_t *cs, char *params );		//----(SA)	added
@@ -84,9 +85,11 @@ qboolean AICast_ScriptAction_RandomRespawn( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_Movetype( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_AlertEntity( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_SaveGame( cast_state_t *cs, char *params );
+qboolean AICast_ScriptAction_SaveCheckpoint( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_FireAtTarget( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_GodMode( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_Accum( cast_state_t *cs, char *params );
+qboolean AICast_ScriptAction_GlobalAccum( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_SpawnCast( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_MissionFailed( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_ObjectiveMet( cast_state_t *cs, char *params );
@@ -95,6 +98,7 @@ qboolean AICast_ScriptAction_ObjectivesNeeded( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_NoAIDamage( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_Print( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_FaceTargetAngles( cast_state_t *cs, char *params );
+qboolean AICast_ScriptAction_FaceEntity( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_ResetScript( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_Mount( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_Unmount( cast_state_t *cs, char *params );
@@ -223,6 +227,22 @@ qboolean AICast_ScriptAction_Achievement_WARBELL3( cast_state_t *cs, char *param
 qboolean AICast_ScriptAction_Achievement_WARBELL4( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_Achievement_WARBELL5( cast_state_t *cs, char *params );
 
+// Malta Update Achievements
+qboolean AICast_ScriptAction_Achievement_MALTA_NIGHTMARE( cast_state_t *cs, char *params );
+qboolean AICast_ScriptAction_Achievement_MALTA_LEAP( cast_state_t *cs, char *params );
+qboolean AICast_ScriptAction_Achievement_MALTA_OSA( cast_state_t *cs, char *params );
+qboolean AICast_ScriptAction_Achievement_MALTA_GOAT( cast_state_t *cs, char *params );
+qboolean AICast_ScriptAction_Achievement_MALTA_COURSE( cast_state_t *cs, char *params );
+qboolean AICast_ScriptAction_Achievement_MALTA_RADIO( cast_state_t *cs, char *params );
+qboolean AICast_ScriptAction_Achievement_MALTA_EGYPT( cast_state_t *cs, char *params );
+qboolean AICast_ScriptAction_Achievement_MALTA_WIDE( cast_state_t *cs, char *params );
+qboolean AICast_ScriptAction_Achievement_MALTA_FIREFLY( cast_state_t *cs, char *params );
+qboolean AICast_ScriptAction_Achievement_MALTA_LAIR( cast_state_t *cs, char *params );
+qboolean AICast_ScriptAction_Achievement_MALTA_HIDEOUT( cast_state_t *cs, char *params );
+qboolean AICast_ScriptAction_Achievement_MALTA_BARTENDER( cast_state_t *cs, char *params );
+qboolean AICast_ScriptAction_Achievement_MALTA_BETRAYER( cast_state_t *cs, char *params );
+qboolean AICast_ScriptAction_Achievement_MALTA_AGENT2( cast_state_t *cs, char *params );
+
 
 
 qboolean AICast_ScriptAction_EndGame( cast_state_t *cs, char *params );			//----(SA)	added
@@ -262,6 +282,7 @@ qboolean AICast_ScriptAction_MusicQueue( cast_state_t *cs, char *params );		//--
 
 qboolean AICast_ScriptAction_ExplicitRouting( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_LockPlayer( cast_state_t *cs, char *params );
+qboolean AICast_ScriptAction_ScreenFade( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_AnimCondition( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_PushAway( cast_state_t *cs, char *params );
 qboolean AICast_ScriptAction_CatchFire( cast_state_t *cs, char *params );
@@ -270,6 +291,7 @@ qboolean AICast_ScriptAction_ChangeAiTeam(cast_state_t* cs, char* params);
 qboolean AICast_ScriptAction_ChangeAiName(cast_state_t* cs, char* params);
 qboolean AICast_ScriptAction_DropWeapon(cast_state_t* cs, char* params);
 qboolean AICast_ScriptAction_AccumPrint(cast_state_t* cs, char* params);
+qboolean AICast_ScriptAction_GlobalAccumPrint(cast_state_t* cs, char* params);
 qboolean AICast_ScriptAction_Burned(cast_state_t* cs, char* params);
 
 // these are the actions that each event can call
@@ -280,6 +302,7 @@ cast_script_stack_action_t scriptActions[] =
 	{"changeainame", AICast_ScriptAction_ChangeAiName},
 	{"burn", AICast_ScriptAction_Burned},
 	{"accumprint", AICast_ScriptAction_AccumPrint},
+	{"globalaccumprint", AICast_ScriptAction_GlobalAccumPrint},
 	{"gotomarker",       AICast_ScriptAction_GotoMarker},
 	{"runtomarker",      AICast_ScriptAction_GotoMarker},
 	{"walktomarker", AICast_ScriptAction_WalkToMarker},
@@ -301,6 +324,7 @@ cast_script_stack_action_t scriptActions[] =
 	{"noattack",     AICast_ScriptAction_NoAttack},
 	{"suggestweapon",    AICast_ScriptAction_SuggestWeapon},		//----(SA)	added
 	{"attack",           AICast_ScriptAction_Attack},
+	{"setmovespeed",     AICast_ScriptAction_SetMoveSpeed},					
 	{"givearmor",        AICast_ScriptAction_GiveArmor},			//----(SA)	added
 	{"setarmor",     AICast_ScriptAction_SetArmor},					//----(SA)	added
 	{"giveammo",        AICast_ScriptAction_GiveAmmo},			
@@ -314,9 +338,11 @@ cast_script_stack_action_t scriptActions[] =
 	{"movetype",     AICast_ScriptAction_Movetype},
 	{"alertentity",      AICast_ScriptAction_AlertEntity},
 	{"savegame",     AICast_ScriptAction_SaveGame},
+	{"savecheckpoint",     AICast_ScriptAction_SaveCheckpoint},
 	{"fireattarget", AICast_ScriptAction_FireAtTarget},
 	{"godmode",          AICast_ScriptAction_GodMode},
 	{"accum",            AICast_ScriptAction_Accum},
+	{"globalaccum",      AICast_ScriptAction_GlobalAccum},
 	{"spawncast",        AICast_ScriptAction_SpawnCast},
 	{"missionfailed",    AICast_ScriptAction_MissionFailed},
 	{"missionsuccess",   AICast_ScriptAction_ObjectiveMet},
@@ -326,6 +352,7 @@ cast_script_stack_action_t scriptActions[] =
 	{"noaidamage",       AICast_ScriptAction_NoAIDamage},
 	{"print",            AICast_ScriptAction_Print},
 	{"facetargetangles",AICast_ScriptAction_FaceTargetAngles},
+	{"face_entity",      AICast_ScriptAction_FaceEntity},
 	{"resetscript",      AICast_ScriptAction_ResetScript},
 	{"mount",            AICast_ScriptAction_Mount},
 	{"unmount",          AICast_ScriptAction_Unmount},
@@ -446,6 +473,21 @@ cast_script_stack_action_t scriptActions[] =
 	{"achievement_blavWarbell",      AICast_ScriptAction_Achievement_WARBELL3},
 	{"achievement_olaricWarbell",    AICast_ScriptAction_Achievement_WARBELL4},
 	{"achievement_heinrichWarbell",  AICast_ScriptAction_Achievement_WARBELL5},
+	// Malta Update Achievements
+	{"achievement_malta_nightmare",  AICast_ScriptAction_Achievement_MALTA_NIGHTMARE},
+	{"achievement_malta_leap",       AICast_ScriptAction_Achievement_MALTA_LEAP},
+	{"achievement_malta_osa",       AICast_ScriptAction_Achievement_MALTA_OSA},
+	{"achievement_malta_goat",       AICast_ScriptAction_Achievement_MALTA_GOAT},
+	{"achievement_malta_course",       AICast_ScriptAction_Achievement_MALTA_COURSE},
+	{"achievement_malta_radio",       AICast_ScriptAction_Achievement_MALTA_RADIO},
+	{"achievement_malta_egypt",       AICast_ScriptAction_Achievement_MALTA_EGYPT},
+	{"achievement_malta_wide",       AICast_ScriptAction_Achievement_MALTA_WIDE},
+	{"achievement_malta_firefly",       AICast_ScriptAction_Achievement_MALTA_FIREFLY},
+	{"achievement_malta_lair",       AICast_ScriptAction_Achievement_MALTA_LAIR},
+	{"achievement_malta_hideout",       AICast_ScriptAction_Achievement_MALTA_HIDEOUT},
+	{"achievement_malta_bartender",       AICast_ScriptAction_Achievement_MALTA_BARTENDER},
+	{"achievement_malta_betrayer",       AICast_ScriptAction_Achievement_MALTA_BETRAYER},
+	{"achievement_malta_agent2",       AICast_ScriptAction_Achievement_MALTA_AGENT2},
      // achievements end
 	{"endgame",          AICast_ScriptAction_EndGame},				//----(SA)	added
 	{"teleport",     AICast_ScriptAction_Teleport},					//----(SA)	added
@@ -485,6 +527,7 @@ cast_script_stack_action_t scriptActions[] =
 
 	{"explicit_routing", AICast_ScriptAction_ExplicitRouting},
 	{"lockplayer",       AICast_ScriptAction_LockPlayer},
+	{"screenfade",       AICast_ScriptAction_ScreenFade},
 	{"anim_condition",   AICast_ScriptAction_AnimCondition},
 	{"pushaway",     AICast_ScriptAction_PushAway},
 	{"catchfire",        AICast_ScriptAction_CatchFire},

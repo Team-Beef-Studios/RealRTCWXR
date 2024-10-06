@@ -774,7 +774,6 @@ static qboolean CG_RegisterClientModelname( clientInfo_t *ci, const char *modelN
 
 			cgs.media.spiritSkullModel = trap_R_RegisterModel( "models/mapobjects/skull/skul2t.md3" );
 
-			CG_RegisterWeapon( WP_GAUNTLET, qfalse );
 		} else if ( !Q_strcasecmp( (char *)modelName, "beast" ) )      {
 			cgs.media.helgaSpiritSkullShader = trap_R_RegisterShader( "helgaSpiritGhost" );
 			cgs.media.helgaSpiritTrailShader = trap_R_RegisterShader( "helgaSpiritTrail" );
@@ -1506,6 +1505,10 @@ void CG_NewClientInfo( int clientNum ) {
 	// isolate the player's name
 	v = Info_ValueForKey( configstring, "n" );
 	Q_strncpyz( newInfo.name, v, sizeof( newInfo.name ) );
+
+	// isolate the player's translation token
+	v = CG_translateTextString2( Info_ValueForKey( configstring, "tr" ) );
+	Q_strncpyz( newInfo.translation, v, sizeof( newInfo.translation ) );
 
 	// colors
 	v = Info_ValueForKey( configstring, "c1" );
@@ -2606,6 +2609,7 @@ static void CG_PlayerAngles( centity_t *cent, vec3_t legs[3], vec3_t torso[3], v
 CG_HasteTrail
 ===============
 */
+/*
 static void CG_HasteTrail( centity_t *cent ) {
 	localEntity_t   *smoke;
 	vec3_t origin;
@@ -2634,7 +2638,7 @@ static void CG_HasteTrail( centity_t *cent ) {
 	// use the optimized local entity add
 	smoke->leType = LE_SCALE_FADE;
 }
-
+*/
 
 //----(SA)	added and modified from missionpack
 /*
@@ -2789,9 +2793,11 @@ static void CG_PlayerPowerups( centity_t *cent ) {
 	}
 
 	// haste leaves smoke trails
+	/*
 	if ( powerups & ( 1 << PW_HASTE ) ) {
 		CG_HasteTrail( cent );
 	}
+	*/
 }
 
 
@@ -4380,10 +4386,10 @@ void CG_AddRefEntityWithPowerups( refEntity_t *ent, int powerups, int team, enti
 				trap_R_AddRefEntityToScene( ent );
 			}
 		}
-		if ( powerups & ( 1 << PW_BATTLESUIT ) ) {
+		/*if ( powerups & ( 1 << PW_BATTLESUIT ) ) {
 			ent->customShader = cgs.media.battleSuitShader;
 			trap_R_AddRefEntityToScene( ent );
-		}
+		}*/
 	}
 
 	if ( !onFire && CG_EntOnFire( &cg_entities[es->number] ) ) {
@@ -5036,6 +5042,7 @@ void CG_Player( centity_t *cent ) {
 //----(SA)	modified
 	else if (   cent->currentState.aiChar == AICHAR_PROTOSOLDIER ||
 				cent->currentState.aiChar == AICHAR_SUPERSOLDIER ||
+				cent->currentState.aiChar == AICHAR_SUPERSOLDIER_LAB ||
 				cent->currentState.aiChar == AICHAR_HEINRICH ) {
 
 		char *protoTags[] = {   "tag_chest",
@@ -5102,6 +5109,11 @@ void CG_Player( centity_t *cent ) {
 			models = &cgs.media.protoArmor[0];
 			dynamicparts = totalparts = protoParts;
 		} else if ( cent->currentState.aiChar == AICHAR_SUPERSOLDIER ) {
+			tags = &ssTags[0];
+			models = &cgs.media.superArmor[0];
+			dynamicparts = 14;  // the other two stay permanent
+			totalparts = superParts;
+		} else if ( cent->currentState.aiChar == AICHAR_SUPERSOLDIER_LAB ) {
 			tags = &ssTags[0];
 			models = &cgs.media.superArmor[0];
 			dynamicparts = 14;  // the other two stay permanent

@@ -99,7 +99,24 @@ qboolean G_BounceMissile( gentity_t *ent, trace_t *trace ) {
 
 		// check for stop
 		if ( trace->plane.normal[2] > 0.2 && VectorLength( ent->s.pos.trDelta ) < 40 ) {
-//----(SA)	make the world the owner of the dynamite, so the player can shoot it after it stops moving
+			
+				if (g_flushItems.integer && 0) { // fretn - ground oriented items
+         		vectoangles( trace->plane.normal, ent->s.angles );
+         		ent->s.angles[0] += 90;
+
+		 		if (ent->s.angles[0] > 0.0 && ent->s.angles[0] < 50.0) { // avoid freaky medpacks
+         		   G_SetAngle( ent, ent->s.angles);
+         		   trace->endpos[2] -= (tan(DEG2RAD(ent->s.angles[0])) * ITEM_RADIUS);
+         		}
+		 		else {
+         		   trace->endpos[2] += 1.0;   // make sure it is off ground
+         		}
+         		// -fretn
+      		}
+	  		else {
+      		   trace->endpos[2] += 1.0;   // make sure it is off ground
+      		}
+			
 			if ( ent->s.weapon == WP_DYNAMITE ) {
 				ent->r.ownerNum = ENTITYNUM_WORLD;
 
@@ -237,7 +254,7 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace, int impactDamage, vec3_t d
 //		vec3_t dir;
 //		BG_EvaluateTrajectoryDelta( &ent->s.pos, level.time, dir );
 		BG_GetMarkDir( dir, trace->plane.normal, dir );
-		G_AddEvent( ent, EV_MISSILE_MISS, DirToByte( dir ) );
+		G_AddEvent( ent, EV_MISSILE_MISS_LARGE, DirToByte( dir ) );
 	}
 
 	ent->freeAfterEvent = qtrue;
@@ -477,6 +494,9 @@ void G_ExplodeMissile( gentity_t *ent ) {
 		ent->freeAfterEvent = qtrue;
 		trap_LinkEntity( ent );
 		return;
+	} else if ( !Q_stricmp( ent->classname, "rocket" ) ) {
+		G_AddEvent( ent, EV_MISSILE_MISS_LARGE, DirToByte( dir ) );
+		small = qfalse;
 	} else {
 		G_AddEvent( ent, EV_MISSILE_MISS, DirToByte( dir ) );
 	}
@@ -841,50 +861,6 @@ void G_RunSpit( gentity_t *ent ) {
 }
 
 
-void G_RunCrowbar( gentity_t *ent ) {
-	vec3_t origin;
-	trace_t tr;
-
-	// get current position
-	BG_EvaluateTrajectory( &ent->s.pos, level.time, origin );
-
-	// trace a line from the previous position to the current position,
-	// ignoring interactions with the missile owner
-	trap_Trace( &tr, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, origin,
-				ent->r.ownerNum, ent->clipmask );
-
-	VectorCopy( tr.endpos, ent->r.currentOrigin );
-
-	if ( tr.startsolid ) {
-		tr.fraction = 0;
-	}
-
-	trap_LinkEntity( ent );
-
-	if ( tr.fraction != 1 ) {
-		// never explode or bounce on sky
-		if  (   tr.surfaceFlags & SURF_NOIMPACT ) {
-			// If grapple, reset owner
-			if ( ent->parent && ent->parent->client->hook == ent ) {
-				ent->parent->client->hook = NULL;
-			}
-			G_FreeEntity( ent );
-			return;
-		}
-
-		if ( ent->s.eType != ET_MISSILE ) {
-			return;     // exploded
-		}
-	}
-
-	// check think function after bouncing
-	G_RunThink( ent );
-}
-
-//=============================================================================
-
-//----(SA) removed unused quake3 weapons.
-
 int G_GetWeaponDamage( int weapon, qboolean player ); // JPW NERVE
 
 /*
@@ -1091,7 +1067,7 @@ gentity_t *fire_rocket( gentity_t *self, vec3_t start, vec3_t dir ) {
 
     if ( g_gametype.integer == GT_GOTHIC ) 
 	        {
-	           if ( self->aiCharacter == AICHAR_SUPERSOLDIER || self->aiCharacter == AICHAR_PROTOSOLDIER ) { 
+	           if ( self->aiCharacter == AICHAR_SUPERSOLDIER || self->aiCharacter == AICHAR_PROTOSOLDIER || self->aiCharacter == AICHAR_SUPERSOLDIER_LAB ) { 
 		       bolt->s.pos.trType = TR_LINEAR; // no special behaviour for robots - it looks cringe
 		       } else {
 		       bolt->s.pos.trType = TR_GRAVITY_LOW; //special rocket behaviour for gothicstein
@@ -1199,43 +1175,6 @@ gentity_t *fire_zombiespirit( gentity_t *self, gentity_t *bolt, vec3_t start, ve
 
 	bolt->s.pos.trType = TR_INTERPOLATE;        // we'll move it manually, since it needs to track it's enemy
 	bolt->s.pos.trTime = level.time;            // move a bit on the very first frame
-	VectorCopy( start, bolt->s.pos.trBase );
-	VectorScale( dir, 800, bolt->s.pos.trDelta );
-	SnapVector( bolt->s.pos.trDelta );          // save net bandwidth
-	VectorCopy( start, bolt->r.currentOrigin );
-
-	return bolt;
-}
-
-// the crowbar for the mechanic
-gentity_t *fire_crowbar( gentity_t *self, vec3_t start, vec3_t dir ) {
-	gentity_t   *bolt;
-
-	VectorNormalize( dir );
-
-	bolt = G_Spawn();
-	bolt->classname = "crowbar";
-	bolt->nextthink = level.time + 50000;
-	bolt->think = G_ExplodeMissile;
-	bolt->s.eType = ET_CROWBAR;
-
-
-	bolt->r.svFlags = SVF_USE_CURRENT_ORIGIN | SVF_BROADCAST;
-	// bolt->r.svFlags = SVF_USE_CURRENT_ORIGIN;
-
-	bolt->s.weapon = WP_PANZERFAUST;
-	bolt->r.ownerNum = self->s.number;
-	bolt->parent = self;
-	bolt->damage = 10;
-	bolt->splashDamage = 0;
-	bolt->splashRadius = 0;
-	bolt->methodOfDeath = MOD_ROCKET;
-	bolt->splashMethodOfDeath = MOD_ROCKET_SPLASH;
-//	bolt->clipmask = MASK_SHOT;
-	bolt->clipmask = MASK_MISSILESHOT;
-
-	bolt->s.pos.trType = TR_GRAVITY;
-	bolt->s.pos.trTime = level.time - MISSILE_PRESTEP_TIME;     // move a bit on the very first frame
 	VectorCopy( start, bolt->s.pos.trBase );
 	VectorScale( dir, 800, bolt->s.pos.trDelta );
 	SnapVector( bolt->s.pos.trDelta );          // save net bandwidth

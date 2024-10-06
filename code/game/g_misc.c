@@ -1588,7 +1588,7 @@ int muzzleflashmodel;
 
 void mg42_muzzleflash( gentity_t *ent, vec3_t muzzlepos ) {  // cheezy, but lets me use this routine for finding the muzzle point for firing the actual bullet
 
-	vec3_t forward, up;
+	vec3_t forward;
 	vec3_t point;
 	gentity_t   *flash;
 
@@ -1601,7 +1601,7 @@ void mg42_muzzleflash( gentity_t *ent, vec3_t muzzlepos ) {  // cheezy, but lets
 		G_SetOrigin( flash, ent->s.pos.trBase );
 
 		VectorCopy( flash->s.origin, point );
-		AngleVectors( flash->s.angles, forward, NULL, up );
+		AngleVectors( flash->s.angles, forward, NULL, NULL );
 		VectorMA( point, 40, forward, point );
 
 		if ( muzzlepos ) {
@@ -1639,8 +1639,6 @@ void Fire_Lead( gentity_t *ent, gentity_t *activator, float spread, int damage, 
 	gentity_t       *traceEnt;
 	vec3_t forward, right, up;
 
-	//qboolean	isflak = qfalse;
-
 	AngleVectors( angles, forward, right, up );
 
 	// 'muzzle' is bogus for mg42.  adjust for it
@@ -1677,7 +1675,6 @@ void Fire_Lead( gentity_t *ent, gentity_t *activator, float spread, int damage, 
 
 			flakPuff( tr.endpos, qtrue, forward );
 		} else {
-//			mg42_muzzleflash (ent, 0);
 			G_AddEvent( ent, EV_FIRE_WEAPON_MG42, 0 );
 		}
 		return;
@@ -1892,9 +1889,6 @@ void clamp_playerbehindgun( gentity_t *self, gentity_t *other, vec3_t dang ) {
 	trap_LinkEntity( other );
 }
 
-#define MG42_SPREAD 200
-#define MG42_DAMAGE 18
-#define MG42_DAMAGE_AI  9
 #define FIREARC         120
 
 #define FLAK_SPREAD 100
@@ -2073,14 +2067,14 @@ void mg42_track( gentity_t *self, gentity_t *other ) {
 							Fire_Lead( self, other, FLAK_SPREAD, FLAK_DAMAGE, muzzle, self->s.apos.trBase );
 						} else
 						{
-							Fire_Lead( self, other, MG42_SPREAD, MG42_DAMAGE, muzzle, self->s.apos.trBase );
+							Fire_Lead( self, other, ammoTable[WP_DUMMY_MG42].spread, ammoTable[WP_DUMMY_MG42].playerDamage, muzzle, self->s.apos.trBase );
 						}
 					} else
 					{
 						if ( self->damage ) {
-							Fire_Lead( self, other, MG42_SPREAD / self->accuracy, self->damage, muzzle, self->s.apos.trBase );
+							Fire_Lead( self, other, ammoTable[WP_DUMMY_MG42].spread / self->accuracy, self->damage, muzzle, self->s.apos.trBase );
 						} else {
-							Fire_Lead( self, other, MG42_SPREAD / self->accuracy, MG42_DAMAGE_AI, muzzle, self->s.apos.trBase );
+							Fire_Lead( self, other, ammoTable[WP_DUMMY_MG42].spread / self->accuracy, ammoTable[WP_DUMMY_MG42].aiDamage, muzzle, self->s.apos.trBase );
 						}
 
 					}
@@ -2755,4 +2749,31 @@ void SP_misc_firetrails( gentity_t *ent ) {
 	ent->think = misc_firetrails_finishspawning;
 	ent->nextthink = level.time + 100;
 
+}
+
+int G_GetEnemyPosition(gentity_t *ent, gentity_t *targ)
+{
+	float  angle = 0;
+	vec3_t pforward, eforward, attacker, target;
+
+	VectorCopy(ent->client->ps.viewangles, attacker);
+	VectorCopy(targ->client->ps.viewangles, target);
+
+	attacker[PITCH] = target[PITCH] = 0;
+
+	AngleVectors(attacker, pforward, NULL, NULL);
+	AngleVectors(target, eforward, NULL, NULL);
+
+	angle = DotProduct(eforward, pforward);
+
+	if (angle > 0.6f)
+	{
+		return POSITION_BEHIND;
+	}
+	if (angle < -0.6f)
+	{
+		return POSITION_INFRONT;
+	}
+
+	return POSITION_UNUSED;
 }

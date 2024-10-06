@@ -88,9 +88,7 @@ int Pickup_Powerup( gentity_t *ent, gentity_t *other ) {
 	if ( ent->item->giTag == PW_NOFATIGUE ) {
 		if ( Q_stricmp( ent->item->classname, "item_stamina_brandy" ) == 0 ) {
 			other->health += 10;
-			if ( other->health > other->client->ps.stats[STAT_MAX_HEALTH] ) {
-				other->health = other->client->ps.stats[STAT_MAX_HEALTH];
-			}
+			
 			other->client->ps.stats[STAT_HEALTH] = other->health;
 		}
 
@@ -177,13 +175,9 @@ void UseHoldableItem( gentity_t *ent, int item ) {
 		}
 		break;
 
-	case HI_ADRENALINE:       
-		ent->client->ps.powerups[PW_NOFATIGUE] = 60000;
+	case HI_ADRENALINE:     // Adrenaline 1.0. Health+Stamina
+		ent->client->ps.powerups[PW_NOFATIGUE] = 10000;
 		ent->health += 100;
-		if ( !g_cheats.integer ) 
-		{
-		steamSetAchievement("ACH_ADRENALINE");
-		}
 		
 		if (!g_decaychallenge.integer){
 		if ( g_gameskill.integer == GSKILL_REALISM || g_gameskill.integer == GSKILL_MAX ) {
@@ -194,6 +188,93 @@ void UseHoldableItem( gentity_t *ent, int item ) {
 			ent->health = ent->client->ps.stats[STAT_MAX_HEALTH] * 1.25;
 		}
 		}
+
+		if ( !g_cheats.integer ) 
+		{
+		steamSetAchievement("ACH_ADRENALINE");
+		}
+
+		break;
+	case HI_EG_SYRINGE:  // Adrenaline 2.0. Health+Stamina+Speed
+	    ent->health += 100;       
+		ent->client->ps.powerups[PW_NOFATIGUE] = 15000;
+
+        ent->client->ps.powerups[PW_HASTE] = level.time - ( level.time % 1000 );
+		ent->client->ps.powerups[PW_HASTE] += 30 * 1000;
+		
+		if (!g_decaychallenge.integer){
+		if ( g_gameskill.integer == GSKILL_REALISM || g_gameskill.integer == GSKILL_MAX ) {
+			if ( ent->health > ent->client->ps.stats[STAT_MAX_HEALTH] ) {
+			ent->health = ent->client->ps.stats[STAT_MAX_HEALTH] * 2.0;
+		}
+		} else if ( ent->health > ent->client->ps.stats[STAT_MAX_HEALTH] ) {
+			ent->health = ent->client->ps.stats[STAT_MAX_HEALTH] * 1.25;
+		}
+		}
+
+		if ( !g_cheats.integer ) 
+		{
+		steamSetAchievement("ACH_ADRENALINE");
+		}
+
+		break;
+	case HI_BG_SYRINGE:       // Adrenaline 3.0. Health+Stamina+Speed+Armor
+		ent->health += 100;
+		ent->client->ps.powerups[PW_NOFATIGUE] = 15000;       
+
+        ent->client->ps.powerups[PW_HASTE] = level.time - ( level.time % 1000 );
+		ent->client->ps.powerups[PW_HASTE] += 30 * 1000;
+
+		ent->client->ps.powerups[PW_BATTLESUIT] = level.time - ( level.time % 1000 );
+		ent->client->ps.powerups[PW_BATTLESUIT] += 30 * 1000;
+
+		if (!g_decaychallenge.integer){
+		if ( g_gameskill.integer == GSKILL_REALISM || g_gameskill.integer == GSKILL_MAX ) {
+			if ( ent->health > ent->client->ps.stats[STAT_MAX_HEALTH] ) {
+			ent->health = ent->client->ps.stats[STAT_MAX_HEALTH] * 2.0;
+		}
+		} else if ( ent->health > ent->client->ps.stats[STAT_MAX_HEALTH] ) {
+			ent->health = ent->client->ps.stats[STAT_MAX_HEALTH] * 1.25;
+		}
+		}
+
+		if ( !g_cheats.integer ) 
+		{
+		steamSetAchievement("ACH_ADRENALINE");
+		}
+		
+		break;
+
+	case HI_LP_SYRINGE:       // Adrenaline 4.0. Health+Stamina+Speed+Armor+Acrobatics
+	    ent->health += 100;
+		ent->client->ps.powerups[PW_NOFATIGUE] = 15000;  
+
+		
+        ent->client->ps.powerups[PW_HASTE] = level.time - ( level.time % 1000 );
+		ent->client->ps.powerups[PW_HASTE] += 30 * 1000;
+
+		ent->client->ps.powerups[PW_BATTLESUIT] = level.time - ( level.time % 1000 );
+		ent->client->ps.powerups[PW_BATTLESUIT] += 30 * 1000;
+
+        ent->client->ps.powerups[PW_FLIGHT] = level.time - ( level.time % 1000 );
+		ent->client->ps.powerups[PW_FLIGHT] += 30 * 1000;
+
+		if (!g_decaychallenge.integer){
+		if ( g_gameskill.integer == GSKILL_REALISM || g_gameskill.integer == GSKILL_MAX ) {
+			if ( ent->health > ent->client->ps.stats[STAT_MAX_HEALTH] ) {
+			ent->health = ent->client->ps.stats[STAT_MAX_HEALTH] * 2.0;
+		}
+		} else if ( ent->health > ent->client->ps.stats[STAT_MAX_HEALTH] ) {
+			ent->health = ent->client->ps.stats[STAT_MAX_HEALTH] * 1.25;
+		}
+		}
+
+		if ( !g_cheats.integer ) 
+		{
+		steamSetAchievement("ACH_ADRENALINE");
+		}
+		
+
 		break;
 
 	case HI_BANDAGES:       
@@ -309,11 +390,10 @@ void Add_Ammo( gentity_t *ent, int weapon, int count, qboolean fillClip ) {
 	case WP_GRENADE_PINEAPPLE:
 	case WP_DYNAMITE:
 	case WP_POISONGAS:
+    case WP_KNIFE:
 		COM_BitSet( ent->client->ps.weapons, ammoweap );
-
 	case WP_TESLA:
 	case WP_FLAMETHROWER:
-	case WP_WELROD:
 	case WP_HOLYCROSS:
 		noPack = qtrue;
 		break;
@@ -340,6 +420,16 @@ void Add_Ammo( gentity_t *ent, int weapon, int count, qboolean fillClip ) {
 		if ( count >= 999 ) { // 'really, give /all/'
 			ent->client->ps.ammo[ammoweap] = count;
 		}
+	}
+
+		switch (ammoweap) {
+		case WP_KNIFE:
+			ent->client->ps.ammoclip[ammoweap] += count;
+
+			if( ent->client->ps.ammoclip[ammoweap] > ammoTable[ammoweap].maxammo ) {
+				ent->client->ps.ammoclip[ammoweap] = ammoTable[ammoweap].maxammo;
+			}
+			break;
 	}
 
 	if ( ent->client->ps.ammoclip[ammoweap] > ammoTable[ammoweap].maxclip ) {
@@ -378,6 +468,10 @@ int Pickup_Ammo( gentity_t *ent, gentity_t *other ) {
 
 	Add_Ammo( other, ent->item->giTag, quantity, qfalse );   //----(SA)	modified
 
+	if (strcmp(ent->item->classname, "ammo_panzerfaust") == 0) {
+       COM_BitSet( other->client->ps.weapons, WP_PANZERFAUST);
+    }
+
 	// single player has no respawns	(SA)
 
 		if ( !( ent->spawnflags & 8 ) ) {
@@ -385,6 +479,20 @@ int Pickup_Ammo( gentity_t *ent, gentity_t *other ) {
 		}
 
 	return RESPAWN_AMMO;
+}
+
+
+// xkan, 9/18/2002 - Extracted AddMagicAmmo from Pickup_Weapon()
+/*
+=================================================================
+AddMagicAmmo - added the specified number of clips of magic ammo
+for any two-handed weapon
+
+- returns whether any ammo was actually added
+=================================================================
+*/
+qboolean AddMagicAmmo( gentity_t *receiver, int numOfClips ) {
+	return BG_AddMagicAmmo( &receiver->client->ps, numOfClips );
 }
 
 //======================================================================
@@ -412,7 +520,7 @@ int Pickup_Weapon( gentity_t *ent, gentity_t *other ) {
 
 	}
 
-	if (( weapon == WP_PPSH ) && strstr (level.scriptAI, "Village1"))
+	if (( weapon == WP_PPSH ) && strstr (level.scriptAI, "Factory"))
 	{
 	if ( !g_cheats.integer ) 
 	{
@@ -420,7 +528,7 @@ int Pickup_Weapon( gentity_t *ent, gentity_t *other ) {
 	}
 	}
 
-	if (( weapon == WP_MOSIN ) && strstr (level.scriptAI, "chateau"))
+	if (( weapon == WP_MOSIN ) && strstr (level.scriptAI, "Village2_118"))
 	{
 	if ( !g_cheats.integer ) 
 	{
@@ -436,15 +544,35 @@ int Pickup_Weapon( gentity_t *ent, gentity_t *other ) {
 	}
 	}
 
+	if (( weapon == WP_REVOLVER ) && strstr (level.scriptAI, "Escape #2"))
+	{
+	if ( !g_cheats.integer ) 
+	{
+    steamSetAchievement("ACH_AGENT1");
+	}
+	}
 
-	//----(SA)	added
 	// check for special colt->akimbo add (if you've got a colt already, add the second now)
 	if ( weapon == WP_COLT ) {
 		if ( COM_BitCheck( other->client->ps.weapons, WP_COLT ) ) {
 			weapon = WP_AKIMBO;
 		}
 	}
-//----(SA)	end
+
+		if ( weapon == WP_TT33 ) {
+		if ( COM_BitCheck( other->client->ps.weapons, WP_TT33 ) ) {
+			weapon = WP_DUAL_TT33;
+		}
+	}
+
+
+		if ( ent->item->giTag == WP_KNIFE ){
+		if ( other->client->ps.ammoclip[ent->item->giTag] < ammoTable[WP_KNIFE].maxammo  ){
+			Add_Ammo( other, ent->item->giTag, 1, qfalse );
+			return -1;
+		}
+		return 0;
+	}
 
 	// check if player already had the weapon
 	alreadyHave = COM_BitCheck( other->client->ps.weapons, weapon );
@@ -452,7 +580,6 @@ int Pickup_Weapon( gentity_t *ent, gentity_t *other ) {
 	// add the weapon
 	COM_BitSet( other->client->ps.weapons, weapon );
 
-//----(SA)	added
 	// snooper/garand
 	if ( weapon == WP_SNOOPERSCOPE ) {
 		COM_BitSet( other->client->ps.weapons, WP_GARAND );
@@ -474,17 +601,12 @@ int Pickup_Weapon( gentity_t *ent, gentity_t *other ) {
 		COM_BitSet( other->client->ps.weapons, WP_M1GARAND );
 	} else if ( weapon == WP_DELISLESCOPE ) {
 		COM_BitSet( other->client->ps.weapons, WP_DELISLE );
+	} else if ( weapon == WP_M1941SCOPE ) {
+		COM_BitSet( other->client->ps.weapons, WP_M1941 );
 	}
-
-//----(SA)	end
 
 	Add_Ammo( other, weapon, quantity, !alreadyHave );
 
-//----(SA) no hook
-//	if (weapon == WP_GRAPPLING_HOOK)
-//		other->client->ps.ammo[BG_FindAmmoForWeapon(weapon)] = -1; // unlimited ammo
-
-	// single player has no respawns	(SA)
 
 		if ( !( ent->spawnflags & 8 ) ) {
 			return RESPAWN_SP;
@@ -661,6 +783,11 @@ void Touch_Item( gentity_t *ent, gentity_t *other, trace_t *trace ) {
 	}
 	// the same pickup rules are used for client side and server side
 	if ( !BG_CanItemBeGrabbed( &ent->s, &other->client->ps ) ) {
+		return;
+	}
+
+	// jaquboss, dont catch hot knives
+	if ( ent->damage && ent->s.pos.trType != TR_STATIONARY && ent->s.pos.trType != TR_GRAVITY_PAUSED && ent->s.pos.trType != TR_GRAVITY_FLOAT ) {
 		return;
 	}
 
@@ -853,6 +980,9 @@ gentity_t *LaunchItem( gitem_t *item, vec3_t origin, vec3_t velocity ) {
 
 	dropped->s.eFlags |= EF_BOUNCE_HALF;
 
+	dropped->physicsSlide = qtrue;
+	dropped->physicsFlush = qtrue;
+
 	// (SA) TODO: FIXME: don't do this right now.  bug needs to be found.
 //	if(item->giType == IT_WEAPON)
 //		dropped->s.eFlags |= EF_SPINNING;	// spin the weapon as it flies from the dead player.  it will stop when it hits the ground
@@ -958,6 +1088,11 @@ void FinishSpawningItem( gentity_t *ent ) {
     return;
 	}
 
+	if ( g_regen.integer && ent->item->giType == IT_HEALTH )
+	{
+    return;
+	}
+
 	if ( g_decaychallenge.integer && ent->item->giType == IT_HEALTH )
 	{
     return;
@@ -968,7 +1103,8 @@ void FinishSpawningItem( gentity_t *ent ) {
     return;
 	}
 
-	if ( !g_fullarsenal.integer && (   ent->item->giWeapon == WP_MP34 
+    // Classic arsenal
+	if ( g_fullarsenal.integer == 0 && (   ent->item->giWeapon == WP_MP34 
 	                                || ent->item->giWeapon == WP_REVOLVER 
 									|| ent->item->giWeapon == WP_G43 
 									|| ent->item->giWeapon == WP_M1GARAND 
@@ -978,6 +1114,21 @@ void FinishSpawningItem( gentity_t *ent ) {
 									|| ent->item->giWeapon == WP_MP44
 									|| ent->item->giWeapon == WP_M7
 									|| ent->item->giWeapon == WP_BROWNING ) )
+	{
+    return;
+	}
+
+    // No new ammo types too
+	if ( g_fullarsenal.integer == 0 && ent->item->giType == IT_AMMO && (ent->item->giAmmoIndex == WP_MP44 || ent->item->giAmmoIndex == WP_M97 || ent->item->giAmmoIndex == WP_BAR)) 
+	{
+	return;
+	} 
+    
+	// RealRTCW arsenal without extra guns, value 2 will ge everything
+	if ( !g_dlc1.integer && ( ent->item->giWeapon == WP_M1941SCOPE
+									|| ent->item->giWeapon == WP_DELISLE
+									|| ent->item->giWeapon == WP_M1941
+									|| ent->item->giWeapon == WP_AUTO5 ) )
 	{
     return;
 	}
@@ -1165,6 +1316,8 @@ void G_SpawnItem( gentity_t *ent, gitem_t *item ) {
 	}
 
 	ent->physicsBounce = 0.50;      // items are bouncy
+	ent->physicsSlide = qtrue;
+	ent->physicsFlush = qtrue;
 
 	if ( ent->model ) {
 		ent->s.modelindex2 = G_ModelIndex( ent->model );
@@ -1187,6 +1340,98 @@ void G_SpawnItem( gentity_t *ent, gitem_t *item ) {
 	}
 }
 
+void G_FlushItem( gentity_t *ent, trace_t *trace )
+{
+	vec3_t  forward, start, end;
+	trace_t tr;
+	vec3_t outAxis[ 3 ];
+	float s;
+
+	if ( g_flushItems.integer &&
+		ent->physicsFlush &&
+		trace->plane.normal[2] > 0.7f &&
+		( trace->plane.normal[0] != 0.0f || trace->plane.normal[1] != 0.0f  || trace->plane.normal[2] != 1.0f ) ) { // no need to adjust flat ground, make it faster
+		AngleVectors( ent->r.currentAngles, forward, NULL, NULL );
+		VectorCopy( trace->plane.normal, outAxis[ 2 ] );
+		ProjectPointOnPlane( outAxis[ 0 ], forward, outAxis[ 2 ] );
+
+		if( !VectorNormalize( outAxis[ 0 ] ) )
+		{
+			AngleVectors( ent->r.currentAngles, NULL, NULL, forward );
+			ProjectPointOnPlane( outAxis[ 0 ], forward, outAxis[ 2 ] );
+			VectorNormalize( outAxis[ 0 ] );
+		}
+
+		CrossProduct( outAxis[ 0 ], outAxis[ 2 ], outAxis[ 1 ] );
+		outAxis[ 1 ][ 0 ] = -outAxis[ 1 ][ 0 ];
+		outAxis[ 1 ][ 1 ] = -outAxis[ 1 ][ 1 ];
+		outAxis[ 1 ][ 2 ] = -outAxis[ 1 ][ 2 ];
+
+		AxisToAngles( outAxis, ent->r.currentAngles );
+		VectorMA( trace->endpos, -64.0f, trace->plane.normal, end );
+		VectorMA( trace->endpos, 1.0f, trace->plane.normal, start );
+
+		trap_Trace( &tr, start, NULL, NULL, end, ent->s.number, MASK_SOLID );
+
+		if ( !tr.startsolid ) {
+			s = tr.fraction * -64;
+			VectorMA( trace->endpos, s, trace->plane.normal, trace->endpos );
+		}
+
+		// make sure it is off ground
+		VectorMA( trace->endpos, 1.0f, trace->plane.normal, trace->endpos );
+
+	}
+	else {
+		trace->endpos[2] += 1.0;
+
+		if ( ent->physicsFlush )
+			ent->r.currentAngles[0] = ent->r.currentAngles[2] = 0;
+	}
+
+	G_SetAngle( ent, ent->r.currentAngles);
+	SnapVector( trace->endpos );
+	G_SetOrigin( ent, trace->endpos );
+	ent->s.groundEntityNum = trace->entityNum;
+
+	if ( ent->s.groundEntityNum != ENTITYNUM_WORLD )
+		ent->s.pos.trType = TR_GRAVITY_PAUSED; // jaquboss, so items will fall down when needed
+
+}
+
+
+qboolean G_ItemStick( gentity_t *ent, trace_t *trace, vec3_t velocity )
+{
+	float	dot;
+
+	// check if it is knife
+	if ( !ent->damage )
+		return qfalse;
+
+	if ( ent->s.weapon != WP_KNIFE )
+		return qfalse;
+
+	// reset flushing
+	ent->physicsFlush = qtrue;
+
+	// get a direction
+	VectorNormalize( velocity );
+	dot = DotProduct( velocity, trace->plane.normal );
+
+	// do not lodge
+	if ( dot > -0.75 )
+		return qfalse;
+
+	if ( trace->surfaceFlags & (SURF_GRASS|SURF_SNOW|SURF_WOOD|SURF_GRAVEL) ){
+
+		vectoangles( velocity, ent->r.currentAngles );
+		ent->physicsFlush = qfalse;
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
 
 /*
 ================
@@ -1199,27 +1444,57 @@ void G_BounceItem( gentity_t *ent, trace_t *trace ) {
 	float dot;
 	int hitTime;
 
-	// reflect the velocity on the trace plane
 	hitTime = level.previousTime + ( level.time - level.previousTime ) * trace->fraction;
-	BG_EvaluateTrajectoryDelta( &ent->s.pos, hitTime, velocity, qfalse, ent->s.effect2Time );
-	dot = DotProduct( velocity, trace->plane.normal );
-	VectorMA( velocity, -2 * dot, trace->plane.normal, ent->s.pos.trDelta );
 
+	// reflect the velocity on the trace plane
+	BG_EvaluateTrajectoryDelta( &ent->s.pos, hitTime, velocity, qfalse, ent->s.effect2Time );
+	dot = -2 * DotProduct( velocity, trace->plane.normal );
+	VectorMA( velocity, dot, trace->plane.normal, ent->s.pos.trDelta );
+
+
+	// bounce or just slide? - check if stuck or surface not too step
+	if ( trace->plane.normal[2] >= 0.7 || VectorLength( ent->s.pos.trDelta ) < 16 || !ent->physicsSlide ) {
 	// cut the velocity to keep from bouncing forever
+		
+		if (trace->contents & (CONTENTS_BODY)) {
+		VectorScale( ent->s.pos.trDelta, ent->physicsBounce * 0.1, ent->s.pos.trDelta );
+		} else {
 	VectorScale( ent->s.pos.trDelta, ent->physicsBounce, ent->s.pos.trDelta );
+		}
+
+		// do a bounce
+        if ( ent->item && ( ent->item->giType == IT_WEAPON || ent->item->giType == IT_AMMO ) && ent->item->giTag > WP_NONE && ent->item->giTag < WP_NUM_WEAPONS)
+		{
+			G_AddEvent( ent, EV_BOUNCE_SOUND, ent->item->giType == IT_WEAPON ? 0 : 1 );
+			ent->s.weapon = ent->item->giTag;
+		}
 
 	// check for stop
-	if ( trace->plane.normal[2] > 0 && ent->s.pos.trDelta[2] < 40 ) {
-		trace->endpos[2] += 1.0;    // make sure it is off ground
-		SnapVector( trace->endpos );
-		G_SetOrigin( ent, trace->endpos );
-		ent->s.groundEntityNum = trace->entityNum;
+		if ( G_ItemStick( ent, trace, velocity ) || ( VectorLength(ent->s.pos.trDelta) < 40 && trace->plane.normal[2] > 0)  )
+		{
+			G_FlushItem( ent, trace );
 		return;
 	}
 
-	VectorAdd( ent->r.currentOrigin, trace->plane.normal, ent->r.currentOrigin );
+		// bounce the angles
+		if ( ent->s.apos.trType != TR_STATIONARY )
+		{
+			if (trace->contents & (CONTENTS_BODY)) {
+		    VectorScale( ent->s.pos.trDelta, ent->physicsBounce * 0.1, ent->s.pos.trDelta);
+		    } else {
+		    VectorScale( ent->s.apos.trDelta, ent->physicsBounce, ent->s.apos.trDelta );
+		    }
+			ent->s.apos.trTime = level.time;
+		}
+
+
+	} else if ( ent->physicsSlide ) {
+		BG_ClipVelocity( ent->s.pos.trDelta, trace->plane.normal, ent->s.pos.trDelta, 1.001 );
+	}
+
 	VectorCopy( ent->r.currentOrigin, ent->s.pos.trBase );
 	ent->s.pos.trTime = level.time;
+	VectorAdd( ent->r.currentOrigin, trace->plane.normal, ent->r.currentOrigin);
 }
 
 /*
@@ -1334,6 +1609,49 @@ void G_RunItem( gentity_t *ent ) {
 			G_FreeEntity( ent );
 		}
 		return;
+	}
+
+
+        // This is needed for throwing knives
+		if ( ent->damage && tr.entityNum != ENTITYNUM_NONE ) {
+		float	speed;
+		vec3_t	delta, dir;
+		int      hitTime;
+
+		hitTime = level.previousTime + ( level.time - level.previousTime ) * tr.fraction;
+
+		BG_EvaluateTrajectoryDelta( &ent->s.pos, hitTime, delta, qfalse, ent->s.effect2Time );
+		VectorCopy ( delta, dir );
+		VectorNormalize( dir );
+		speed = VectorLength( delta );
+        
+		// Let the AI know that the knife hit the ground
+		AICast_ProcessBullet( &g_entities[ent->r.ownerNum], g_entities[ent->r.ownerNum].s.pos.trBase, tr.endpos );
+
+
+		if ( speed > MIN_KNIFESPEED ){
+
+
+			gentity_t		*temp, *traceEnt;
+
+			traceEnt = &g_entities[tr.entityNum];
+
+			// do damage
+			if ( traceEnt->takedamage ){
+				int	damage = ent->damage; //+ ((speed-300)/20);
+
+				G_Damage( traceEnt, ent, ent->parent, dir, tr.endpos, damage, 0, ent->methodOfDeath );
+			}
+
+			// do impact
+			if ( traceEnt->client && traceEnt->takedamage ) {
+				temp = G_TempEntity( tr.endpos, EV_MISSILE_HIT );
+				temp->s.otherEntityNum = traceEnt->s.number;
+				temp->s.weapon = ent->s.weapon;
+				temp->s.clientNum = ent->r.ownerNum;
+			}
+
+		}
 	}
 
 	G_BounceItem( ent, &tr );

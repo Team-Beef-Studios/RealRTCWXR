@@ -79,6 +79,7 @@ void TossClientItems( gentity_t *self ) {
 	case AICHAR_LOPER:
 	case AICHAR_PROTOSOLDIER:
 	case AICHAR_SUPERSOLDIER:
+	case AICHAR_SUPERSOLDIER_LAB:
 	case AICHAR_DOG:
 	case AICHAR_PRIEST:
 	case AICHAR_XSHEPHERD:
@@ -111,7 +112,6 @@ void TossClientItems( gentity_t *self ) {
 
 // (SA) always drop what you were switching to
 	if ( 1 ) {
-//	if ( weapon == WP_MACHINEGUN || weapon == WP_GRAPPLING_HOOK ) {
 		if ( self->client->ps.weaponstate == WEAPON_DROPPING || self->client->ps.weaponstate == WEAPON_DROPPING_TORELOAD ) {
 			weapon = self->client->pers.cmd.weapon;
 		}
@@ -129,6 +129,9 @@ void TossClientItems( gentity_t *self ) {
 	}
 	if ( weapon == WP_AKIMBO ) { //----(SA)	added
 		weapon = WP_COLT;
+	}
+	if ( weapon == WP_DUAL_TT33 ) { //----(SA)	added
+		weapon = WP_TT33;
 	}
 //----(SA)	end
 
@@ -239,12 +242,12 @@ void body_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int d
 		return;
 	}
 
-		if ( meansOfDeath == MOD_POISONGAS ) {
+	if ( meansOfDeath == MOD_POISONGAS || meansOfDeath == MOD_KNIFE || meansOfDeath == MOD_THROWKNIFE  ) {
 		self->health = GIB_HEALTH + 1;
 		return;
 	}
 
-	if ( self->aiCharacter == AICHAR_HEINRICH || self->aiCharacter == AICHAR_HELGA || self->aiCharacter == AICHAR_SUPERSOLDIER || self->aiCharacter == AICHAR_PROTOSOLDIER ) {
+	if ( self->aiCharacter == AICHAR_HEINRICH || self->aiCharacter == AICHAR_HELGA || self->aiCharacter == AICHAR_SUPERSOLDIER || self->aiCharacter == AICHAR_SUPERSOLDIER_LAB || self->aiCharacter == AICHAR_PROTOSOLDIER ) {
 		if ( self->health <= GIB_HEALTH ) {
 			self->health = -1;
 			return;
@@ -259,7 +262,7 @@ void body_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int d
 char    *modNames[] = {
 	"MOD_UNKNOWN",
 	"MOD_SHOTGUN",
-	"MOD_GAUNTLET",
+	"MOD_MONSTER_MELEE",
 	"MOD_MACHINEGUN",
 	"MOD_GRENADE",
 	"MOD_GRENADE_SPLASH",
@@ -591,7 +594,7 @@ qboolean IsHeadShotWeapon( int mod, gentity_t *targ, gentity_t *attacker ) {
 		   if ( mod == MOD_SNIPERRIFLE ||
 			    mod == MOD_SNOOPERSCOPE ||
 			    mod == MOD_DELISLESCOPE ||
-			    mod == MOD_MAUSER ) {
+				mod == MOD_M1941SCOPE ) {
 			    return qtrue;
 		        }
 		return qfalse;
@@ -620,14 +623,16 @@ qboolean IsHeadShotWeapon( int mod, gentity_t *targ, gentity_t *attacker ) {
 	case MOD_LUGER:
 	case MOD_COLT:
 	case MOD_AKIMBO:
+	case MOD_DUAL_TT33:
 	case MOD_MP40:
 	case MOD_MP34:
 	case MOD_TT33:
 	case MOD_P38:
-	case MOD_WELROD:
+	case MOD_HDM:
 	case MOD_PPSH:
 	case MOD_MOSIN:
 	case MOD_G43:
+	case MOD_M1941:
 	case MOD_M1GARAND:
 	case MOD_BAR:
 	case MOD_MP44:
@@ -640,7 +645,11 @@ qboolean IsHeadShotWeapon( int mod, gentity_t *targ, gentity_t *attacker ) {
 	case MOD_SILENCER:
 	case MOD_FG42SCOPE:
 	case MOD_SNOOPERSCOPE:
+	case MOD_DELISLE:
 	case MOD_SNIPERRIFLE:
+	case MOD_BROWNING:
+	case MOD_MG42M:
+	case MOD_M1941SCOPE:
 	return qtrue;
 	}
 	return qfalse;
@@ -764,6 +773,8 @@ void G_ArmorDamage( gentity_t *targ ) {
 	if ( targ->s.aiChar == AICHAR_PROTOSOLDIER ) {
 		numParts = 9;
 	} else if ( targ->s.aiChar == AICHAR_SUPERSOLDIER ) {
+		numParts = 14;
+	} else if ( targ->s.aiChar == AICHAR_SUPERSOLDIER_LAB ) {
 		numParts = 14;
 	} else if ( targ->s.aiChar == AICHAR_HEINRICH ) {
 		numParts = 20;
@@ -897,9 +908,9 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 			// Rafael - had to change this since the
 			// we added a new lvl of diff
 			if ( g_gameskill.integer == GSKILL_EASY ) {
-				damage *= 0.25;
-			} else if ( g_gameskill.integer == GSKILL_MEDIUM ) {
 				damage *= 0.75;
+			} else if ( g_gameskill.integer == GSKILL_MEDIUM ) {
+				damage *= 0.80;
 			} else if ( g_gameskill.integer == GSKILL_HARD ) {
 				damage *= 0.9;
 			} else {
@@ -1076,16 +1087,21 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 	// and protects 50% against all damage
 	if ( client && client->ps.powerups[PW_BATTLESUIT] ) {
 		G_AddEvent( targ, EV_POWERUP_BATTLESUIT, 0 );
-		if ( dflags & DAMAGE_RADIUS ) {
+		/*if ( dflags & DAMAGE_RADIUS ) {
 			return;
-		}
-		damage *= 0.1;
+		}*/
+
+		damage *= 0.30;
 	}
 
 	// always give half damage if hurting self
 	// calculated after knockback, so rocket jumping works
 
 		qboolean dynamite = (qboolean)( mod == MOD_DYNAMITE || mod == MOD_DYNAMITE_SPLASH );
+
+		qboolean shotguns = (qboolean)( mod == MOD_M97 || mod == MOD_AUTO5 );
+
+		qboolean panzer = (qboolean)( mod == MOD_PANZERFAUST );
 
 		qboolean venomgun = (qboolean)( mod == MOD_VENOM );
 
@@ -1095,18 +1111,52 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 			}
 		}
 
+        // Helga special damage cases
 		if ( dynamite && targ->aiCharacter == AICHAR_HELGA ) {
-			//helga gets special dynamite damage
 			damage *= 0.5;
 		}
 
+        // Heinrich special damage cases
 		if ( venomgun && targ->aiCharacter == AICHAR_HEINRICH ) {
-			//heinrich gets special venom damage
 			damage *= 0.5;
 		}
 
+		if ( panzer && targ->aiCharacter == AICHAR_HEINRICH ) {
+			damage *= 0.6;
+		}
+
+		if ( shotguns && targ->aiCharacter == AICHAR_HEINRICH ) {
+			damage *= 0.5;
+		}
+
+        // Loper special damage cases
+		if ( venomgun && targ->aiCharacter == AICHAR_LOPER ) {
+			damage *= 1.2;
+		}
+
+
+        // Supersoldier special damage cases
 		if ( venomgun && targ->aiCharacter == AICHAR_SUPERSOLDIER ) {
-			//supersoldier gets special venom damage
+			damage *= 0.7;
+		}
+
+		if ( venomgun && targ->aiCharacter == AICHAR_SUPERSOLDIER_LAB ) {
+			damage *= 0.7;
+		}
+
+		if ( panzer && targ->aiCharacter == AICHAR_SUPERSOLDIER_LAB ) {
+			damage *= 0.6;
+		}
+
+		if ( panzer && targ->aiCharacter == AICHAR_SUPERSOLDIER ) {
+			damage *= 0.6;
+		}
+
+		if ( shotguns && targ->aiCharacter == AICHAR_SUPERSOLDIER ) {
+			damage *= 0.6;
+		}
+
+		if ( shotguns && targ->aiCharacter == AICHAR_SUPERSOLDIER_LAB ) {
 			damage *= 0.6;
 		}
 
@@ -1147,7 +1197,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 			// and go to 20% at 2500 units (and after)
 
 			// 1500 to 2500 -> 0.0 to 1.0
-			scale = ( dist - 1500.f ) / ( 2500.f - 1500.f );
+			scale = ( dist - ammoTable [attacker->s.weapon].falloffDistance[0] ) / ( ammoTable [attacker->s.weapon].falloffDistance[1] - ammoTable [attacker->s.weapon].falloffDistance[0] );
 			// 0.0 to 1.0 -> 0.0 to 0.8
 			scale *= 0.8f;
 			// 0.0 to 0.8 -> 1.0 to 0.2
@@ -1242,6 +1292,8 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker,
 		client->damage_armor += asave;
 		client->damage_blood += take;
 		client->damage_knockback += knockback;
+
+		client->healthRegenStartTime = level.time + 5000; // This will reset health regen timer
 
 		if ( dir ) {
 			VectorCopy( dir, client->damage_from );

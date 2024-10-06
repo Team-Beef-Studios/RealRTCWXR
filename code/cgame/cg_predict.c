@@ -303,7 +303,7 @@ static void CG_InterpolatePlayerState( qboolean grabAngles ) {
 CG_TouchItem
 ===================
 */
-static void CG_TouchItem( centity_t *cent ) {
+/*static void CG_TouchItem( centity_t *cent ) {
 	gitem_t     *item;
 
 	if ( !cg_predictItems.integer ) {
@@ -334,7 +334,7 @@ static void CG_TouchItem( centity_t *cent ) {
 
 	// (SA) no prediction of books/clipboards
 	if ( item->giType == IT_HOLDABLE ) {
-		if ( item->giTag >= HI_BOOK1 && item->giTag <= HI_BOOK3 ) {
+		if ( item->giTag >= HI_BOOK1 && item->giTag <= HI_LP_SYRINGE ) {
 			return;
 		}
 	}
@@ -405,7 +405,7 @@ static void CG_TouchItem( centity_t *cent ) {
 	}
 //----(SA)	end
 }
-
+*/
 
 /*
 =========================
@@ -438,7 +438,7 @@ static void CG_TouchTriggerPrediction( void ) {
 		ent = &cent->currentState;
 
 		if ( ent->eType == ET_ITEM && !spectator ) {
-			CG_TouchItem( cent );
+			//CG_TouchItem( cent );
 			continue;
 		}
 
@@ -470,9 +470,9 @@ static void CG_TouchTriggerPrediction( void ) {
 			}
 
 			// flying characters don't hit bounce pads
-			if ( cg.predictedPlayerState.powerups[PW_FLIGHT] ) {
+			/*if ( cg.predictedPlayerState.powerups[PW_FLIGHT] ) {
 				continue;
-			}
+			}*/
 
 			// if we are already flying along the bounce direction, don't play sound again
 			VectorNormalize2( ent->origin2, dir );
@@ -717,7 +717,7 @@ void CG_PredictPlayerState( void ) {
 		}
 
 		// RF, if waiting for mission stats to go, ignore all input
-		if ( ( cgs.scrFadeAlphaCurrent ) || cg_norender.integer ) {
+		if ( /*( cgs.scrFadeAlphaCurrent ) ||*/ cg_norender.integer ) {
 			cg_pmove.cmd.buttons = 0;
 			cg_pmove.cmd.forwardmove = 0;
 			cg_pmove.cmd.rightmove = 0;

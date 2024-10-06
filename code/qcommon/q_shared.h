@@ -40,11 +40,7 @@ If you have questions concerning this license or the applicable additional terms
 // ver 1.2.b5	- Mac code merge in
 // ver 1.3		- patch 2 (02/13/02)
 
-#ifndef PRODUCT_VERSION
-#define PRODUCT_VERSION "4.0" // iortcw 1.51
-#endif
-
-#define REALRTCWXR_VERSION		"0.5.6" 
+#define REALRTCWXR_VERSION		"0.6.0" 
 #define REALRTCWXR_NAME		"(RealRTCW XR " REALRTCWXR_VERSION ")" 
 
 #ifdef STANDALONE
@@ -53,28 +49,28 @@ If you have questions concerning this license or the applicable additional terms
   #define CLIENT_WINDOW_TITLE     	PRODUCT_NAME " " PRODUCT_VERSION " " REALRTCWXR_NAME
   #define CLIENT_WINDOW_MIN_TITLE 	CLIENT_WINDOW_TITLE
   #define HOMEPATH_NAME_UNIX		".realrtcw"
-  #define HOMEPATH_NAME_WIN		"RealRTCW 4.0"
+  #define HOMEPATH_NAME_WIN		"RealRTCW XR"
   #define STEAMPATH_NAME		"Return To Castle Wolfenstein"
   #define STEAMPATH_APPID		"9010"
   
   #define STEAMPATH_REALNAME	"RealRTCW"
   #define STEAMPATH_REALAPPID	"1379630"
   #define HOMEPATH_NAME_MACOSX		HOMEPATH_NAME_WIN
-  #define GAMENAME_FOR_MASTER		"wolfsp"
-  #define CINEMATICS_LOGO		"gmlogo.RoQ"	// non-existent
-  #define CINEMATICS_INTRO		"wolfintro.RoQ"	// SP only
+  #define GAMENAME_FOR_MASTER		"foobar"	// must NOT contain whitespace
+  #define CINEMATICS_LOGO		"foologo.roq"
+  #define CINEMATICS_INTRO		"foointro.roq"
 //  #define LEGACY_PROTOCOL	// You probably don't need this for your standalone game
 #else
   #define PRODUCT_NAME			"RealRTCW"  // iortcw
   #define BASEGAME			"main"
-  #define CLIENT_WINDOW_TITLE     	"Return To Castle Wolfenstein"
+  #define CLIENT_WINDOW_TITLE     	"RealRTCW"
   #define CLIENT_WINDOW_MIN_TITLE 	"RealRTCW" //iowolfsp
 #ifdef USE_XDG
-  #define HOMEPATH_NAME_UNIX		"RealRTCW 4.0"
+  #define HOMEPATH_NAME_UNIX		"RealRTCW\\5.0"
 #else
   #define HOMEPATH_NAME_UNIX		".realrtcw"
 #endif
-  #define HOMEPATH_NAME_WIN		"RealRTCW 4.0"
+  #define HOMEPATH_NAME_WIN		"RealRTCW\\5.0"
   #define STEAMPATH_NAME		"Return To Castle Wolfenstein"
   #define STEAMPATH_APPID		"9010"
 
@@ -95,6 +91,10 @@ If you have questions concerning this license or the applicable additional terms
 // You shouldn't change this unless you know what you're doing
 #define LEGACY_MASTER_GAMENAME		"wolfsp"
 #define LEGACY_HEARTBEAT_FOR_MASTER	"Wolfenstein-1"
+
+#ifndef PRODUCT_VERSION
+  #define PRODUCT_VERSION "5.0" // iortcw 1.51
+#endif
 
 #ifndef PRODUCT_DATE
 #  define PRODUCT_DATE __DATE__
@@ -1284,7 +1284,6 @@ typedef enum {
 
 #define MAX_MULTI_SPAWNTARGETS  16 // JPW NERVE
 
-//#define	MAX_CONFIGSTRINGS	1024
 #define MAX_CONFIGSTRINGS   4096
 
 #define MAX_DLIGHT_CONFIGSTRINGS    128

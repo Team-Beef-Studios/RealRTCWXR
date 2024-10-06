@@ -57,7 +57,10 @@ If you have questions concerning this license or the applicable additional terms
 #define DUCK_TIME           100
 #define PAIN_TWITCH_TIME    200
 #define WEAPON_SELECT_TIME  1400
-#define HOLDABLE_SELECT_TIME 1400   //----(SA)	for drawing holdable icons
+#define HOLDABLE_SELECT_TIME 2000   //----(SA)	for drawing holdable icons
+#define OBJECTIVE_MET_TIME  10000
+#define CHECKPOINT_PASSED_TIME 5000
+#define GAME_SAVED_TIME     5000
 #define ITEM_SCALEUP_TIME   1000
 #define ZOOM_TIME           150
 #define ITEM_BLOB_TIME      200
@@ -107,6 +110,9 @@ If you have questions concerning this license or the applicable additional terms
 #define LIMBO_3D_W  420
 #define LIMBO_3D_H  330
 // -NERVE - SMF
+
+#define SOUND_FAR_ECHO_DISTANCE 512
+#define SOUND_MAX_WEAPON_DISTANCE 8192
 
 //=================================================
 
@@ -546,6 +552,7 @@ typedef struct {
 	int clientNum;
 
 	char name[MAX_QPATH];
+	char translation[MAX_QPATH];
 	team_t team;
 
 	int botSkill;                   // 0 = not bot, 1-5 = bot
@@ -680,6 +687,7 @@ typedef struct weaponInfo_s {
 	float flashDlight;
 	vec3_t flashDlightColor;
 	sfxHandle_t flashSound[4];          // fast firing weapons randomly choose
+	sfxHandle_t flashSoundAi[4];         // fast firing weapons randomly choose
 	sfxHandle_t flashEchoSound[4];      //----(SA)	added - distant gun firing sound
 	sfxHandle_t lastShotSound[4];       // sound of the last shot can be different (mauser doesn't have bolt action on last shot for example)
 
@@ -707,7 +715,9 @@ typedef struct weaponInfo_s {
 	sfxHandle_t overheatSound;
 	sfxHandle_t reloadSound;
 	sfxHandle_t	reloadFastSound;
-
+	sfxHandle_t	reloadFullSound;
+	sfxHandle_t reloadSoundAi;
+	sfxHandle_t	bounceSound;
 	sfxHandle_t spinupSound;        //----(SA)	added // sound started when fire button goes down, and stepped on when the first fire event happens
 	sfxHandle_t spindownSound;      //----(SA)	added // sound called if the above is running but player doesn't follow through and fire
 
@@ -877,6 +887,12 @@ typedef struct {
 	char centerPrint[1024];
 	int centerPrintLines;
 
+	int subtitlePrintTime;
+	int subtitlePrintCharWidth;
+	int subtitlePrintY;
+	char subtitlePrint[1024];
+	int subtitlePrintLines;
+
 	// fade in/out
 	int fadeTime;
 	float fadeRate;
@@ -913,6 +929,11 @@ typedef struct {
 	int crosshairPowerupNum;
 	int crosshairPowerupTime;
 
+	int identifyClientNum;                  // NERVE - SMF
+	int identifyClientHealth;               // NERVE - SMF
+	int identifyNextTime;                   // NERVE - SMF
+	int identifyClientRequest;              // NERVE - SMF
+
 //----(SA)	added
 	// cursorhints
 	int cursorHintIcon;
@@ -940,6 +961,9 @@ typedef struct {
 
 	// message icon popup time	//----(SA)	added
 	int yougotmailTime;
+
+	int checkpointTime;
+	int gameSavedTime;
 
 	//==========================
 
@@ -1231,15 +1255,11 @@ typedef struct {
 	qhandle_t dishFlashModel;
 	qhandle_t lightningExplosionModel;
 
-
 	qhandle_t zombieLoogie;
 	qhandle_t flamebarrel;
 	qhandle_t mg42muzzleflash;
 	//qhandle_t	mg42muzzleflashgg;
 	qhandle_t planemuzzleflash;
-
-	// Rafael
-	qhandle_t crowbar;
 
 	qhandle_t waterSplashModel;
 	qhandle_t waterSplashShader;
@@ -1518,6 +1538,7 @@ typedef struct {
 	qhandle_t sizeCursor;
 
 	sfxHandle_t poisonGasCough;
+	sfxHandle_t		knifeThrow;
 
 } cgMedia_t;
 
@@ -1720,6 +1741,8 @@ extern vmCvar_t cg_crosshairHealth;
 extern vmCvar_t cg_drawStatus;
 extern vmCvar_t cg_draw2D;
 extern vmCvar_t cg_drawSubtitles;
+extern vmCvar_t cg_subtitleSize;
+extern vmCvar_t cg_subtitleShadow;
 extern vmCvar_t cg_drawFrags;
 extern vmCvar_t cg_animSpeed;
 extern vmCvar_t cg_debugAnim;
@@ -1755,6 +1778,7 @@ extern vmCvar_t cg_simpleItems;
 extern vmCvar_t cg_fov;
 extern vmCvar_t cg_fixedAspect;
 extern vmCvar_t cg_fixedAspectFOV;
+extern vmCvar_t cg_drawCheckpoint;
 extern vmCvar_t cg_oldWolfUI;
 extern vmCvar_t cg_drawStatusHead;
 extern vmCvar_t cg_hudWeapIcon;
@@ -1880,6 +1904,7 @@ extern vmCvar_t cg_ironChallenge;
 extern vmCvar_t cg_nohudChallenge;
 extern vmCvar_t cg_nopickupChallenge;
 extern vmCvar_t cg_decayChallenge;
+extern vmCvar_t cg_vanilla_guns;
 
 extern vmCvar_t cg_autoReload;
 extern vmCvar_t cg_uinfo;
@@ -1891,6 +1916,7 @@ extern vmCvar_t cg_bodysink;
 extern vmCvar_t cg_gunPosLock;
 
 extern vmCvar_t cg_hudStyle;
+extern vmCvar_t	cg_weaponBounceSound;
 
 //
 // cg_main.c
@@ -2070,6 +2096,7 @@ void CG_CheckEvents( centity_t *cent );
 const char  *CG_PlaceString( int rank );
 void CG_EntityEvent( centity_t *cent, vec3_t position );
 void CG_PainEvent( centity_t *cent, int health, qboolean crouching );
+void CG_SetupCabinets( void );
 
 
 //
@@ -2080,8 +2107,8 @@ void CG_AddPacketEntities( void );
 void CG_Beam( centity_t *cent );
 void CG_AdjustPositionForMover( const vec3_t in, int moverNum, int fromTime, int toTime, vec3_t out, vec3_t angles_in, vec3_t angles_out, vec3_t outDeltaAngles );
 
-void CG_PositionEntityOnTag( refEntity_t *entity, const refEntity_t *parent,
-							 char *tagName, int startIndex, vec3_t *offset );
+void CG_PositionEntityOnTag( refEntity_t *entity, const refEntity_t *parent, char *tagName, int startIndex, vec3_t *offset );
+void CG_PositionEntityOnTagAlt( refEntity_t *entity, const refEntity_t *parent, const char *tagName, int startIndex, vec3_t *offset );
 void CG_PositionRotatedEntityOnTag( refEntity_t *entity, const refEntity_t *parent, char *tagName );
 
 
@@ -2111,7 +2138,7 @@ void CG_FinishWeaponChange( int lastweap, int newweap );
 void CG_RegisterWeapon( int weaponNum, qboolean force );
 void CG_RegisterItemVisuals( int itemNum );
 
-void CG_FireWeapon( centity_t *cent );   //----(SA)	modified.
+void CG_FireWeapon( centity_t *cent, int event );   //----(SA)	modified.
 //void CG_EndFireWeapon( centity_t *cent, int firemode );	//----(SA)	added
 void CG_MissileHitWall( int weapon, int clientNum, vec3_t origin, vec3_t dir, int surfaceFlags );   //	(SA) modified to send missilehitwall surface parameters
 
@@ -2243,6 +2270,8 @@ void CG_FlameDamage( int owner, vec3_t org, float radius );
 void    CG_InitLocalEntities( void );
 localEntity_t   *CG_AllocLocalEntity( void );
 void    CG_AddLocalEntities( void );
+//void    CG_FreeDelayedBrass( delayedBrass_t * );
+//void    CG_AllocDelayedBrass( centity_t *, int, void ( *ejectBrassFunc )( centity_t * ) );
 
 //
 // cg_effects.c
@@ -2311,6 +2340,7 @@ void CG_DrawInformation( void );
 const char *CG_translateString( const char *str );
 const char *CG_bonusString( const char *str );
 const char *CG_translateTextString( const char *str );
+const char *CG_translateTextString2( const char *str );
 
 
 //

@@ -478,6 +478,11 @@ float AICast_WeaponRange( cast_state_t *cs, int weaponnum ) {
 			if ( !COM_BitCheck( cs->bs->cur_ps.weapons, WP_PANZERFAUST ) ) {
 				return TESLA_SUPERSOLDIER_RANGE;
 			}
+		case AICHAR_SUPERSOLDIER_LAB:   // BOSS2
+			// if they have a panzer, give this weapon a shorter range
+			if ( !COM_BitCheck( cs->bs->cur_ps.weapons, WP_PANZERFAUST ) ) {
+				return TESLA_SUPERSOLDIER_LAB_RANGE;
+			}
 		case AICHAR_PRIEST:
 		return 450;
 		}
@@ -548,6 +553,7 @@ float AICast_WeaponRange( cast_state_t *cs, int weaponnum ) {
 	case WP_GARAND:
 	case WP_SNIPERRIFLE:
 	case WP_SNOOPERSCOPE:
+	case WP_M1941SCOPE:
 		return 8000;
 		break;
 
@@ -562,6 +568,8 @@ float AICast_WeaponRange( cast_state_t *cs, int weaponnum ) {
 			return 1000;
 		case AICHAR_SUPERSOLDIER: 
 			return 1500;
+		case AICHAR_SUPERSOLDIER_LAB: 
+			return 1000;
 		case AICHAR_PROTOSOLDIER:  
 			return 1500;
 		case AICHAR_XSHEPHERD:
@@ -617,9 +625,9 @@ qboolean AICast_CheckAttack_real( cast_state_t *cs, int enemy, qboolean allowHit
 	// don't attack while in air (like on a ladder)
 	if ( !ent->waterlevel && ent->client->ps.groundEntityNum == ENTITYNUM_NONE && !ent->active ) {
 		// stim is allowed to fire while in air for flying attack
-		if ( !ent->client->ps.powerups[PW_FLIGHT] ) {
+		/*if ( !ent->client->ps.powerups[PW_FLIGHT] ) {
 			return qfalse;
-		}
+		}*/
 	}
 	//
 	if ( ent->health <= 0 ) {
@@ -659,10 +667,6 @@ qboolean AICast_CheckAttack_real( cast_state_t *cs, int enemy, qboolean allowHit
 
 		traceDist = AICast_WeaponRange( cs, weapnum );
 		switch ( weapnum ) {
-		case WP_GAUNTLET:
-			mins = NULL;
-			maxs = NULL;
-			break;
 		case WP_DYNAMITE:
 		case WP_PANZERFAUST:
 		case WP_GRENADE_LAUNCHER:
@@ -894,8 +898,6 @@ AICast_WeaponWantScale
 */
 float AICast_WeaponWantScale( cast_state_t *cs, int weapon ) {
 	switch ( weapon ) {
-	case WP_GAUNTLET:
-		return 0.1;
 	case WP_FLAMETHROWER:
 		return 2.0;     // if we have this up close, definately use it
 	default:
@@ -918,8 +920,6 @@ qboolean AICast_GotEnoughAmmoForWeapon( cast_state_t *cs, int weapon ) {
 
 	// TODO!! check some kind of weapon list that holds the minimum requirements for each weapon
 	switch ( weapon ) {
-	case WP_GAUNTLET:
-		return qtrue;
 	default:
 		return (qboolean)( ( clip >= ammoTable[weapon].uses ) || ( ammo >= ammoTable[weapon].uses ) );    //----(SA)
 	}
@@ -1591,6 +1591,7 @@ qboolean AICast_CanMoveWhileFiringWeapon(int weaponnum ) {
 	case WP_MAUSER:
 	case WP_DELISLE:
 	case WP_DELISLESCOPE:
+	case WP_M1941SCOPE:
 	case WP_MOSIN:
 	case WP_GARAND:
 	case WP_SNIPERRIFLE:    //----(SA)	added
@@ -1938,7 +1939,7 @@ float AICast_GetAccuracy( int entnum ) {
 	// the more they stay in our sights, the more accurate we get
     
 	// RealRTCW - extra accuracy for guys with bolt action rifles
-	if (cs->weaponNum == WP_MAUSER || cs->weaponNum == WP_SNIPERRIFLE || cs->weaponNum == WP_DELISLE || cs->weaponNum == WP_DELISLESCOPE || cs->weaponNum == WP_GARAND || cs->weaponNum == WP_SNOOPERSCOPE || cs->weaponNum == WP_MOSIN ) {
+	if (cs->weaponNum == WP_MAUSER || cs->weaponNum == WP_SNIPERRIFLE || cs->weaponNum == WP_DELISLE || cs->weaponNum == WP_DELISLESCOPE || cs->weaponNum == WP_M1941SCOPE || cs->weaponNum == WP_GARAND || cs->weaponNum == WP_SNOOPERSCOPE || cs->weaponNum == WP_MOSIN ) {
 		acc = cs->attributes[AIM_ACCURACY] + 0.2;
 	    } else {
 	    acc = cs->attributes[AIM_ACCURACY];

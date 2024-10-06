@@ -109,7 +109,7 @@ void AICast_Pain( gentity_t *targ, gentity_t *attacker, int damage, vec3_t point
 
 	// print debugging message
 	if ( aicast_debug.integer == 2 && attacker->s.number == 0 ) {
-		G_Printf( "hit %s %i\n", targ->aiName, targ->health );
+		G_Printf( "hit %s %i\n", targ->aiName, damage );
 	}
 
 	// if we are below alert mode, then go there immediately
@@ -159,7 +159,7 @@ AICast_Die
 */
 void AICast_Die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int meansOfDeath ) {
 	int contents;
-	int killer;
+	int killer = 0;
 	cast_state_t    *cs;
 	qboolean nogib = qtrue;
 	char mapname[MAX_QPATH];
@@ -303,7 +303,7 @@ void AICast_Die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 		AICast_UpdateVisibility( self, attacker, qtrue, qtrue );
 	}
 
-	if ( self->aiCharacter == AICHAR_HEINRICH || self->aiCharacter == AICHAR_HELGA || self->aiCharacter == AICHAR_SUPERSOLDIER || self->aiCharacter == AICHAR_PROTOSOLDIER ) {
+	if ( self->aiCharacter == AICHAR_HEINRICH || self->aiCharacter == AICHAR_HELGA || self->aiCharacter == AICHAR_SUPERSOLDIER || self->aiCharacter == AICHAR_SUPERSOLDIER_LAB || self->aiCharacter == AICHAR_PROTOSOLDIER ) {
 		if ( self->health <= GIB_HEALTH ) {
 			self->health = -1;
 		}
@@ -595,7 +595,7 @@ void AICast_AIDoor_Touch( gentity_t *ent, gentity_t *aidoor_trigger, gentity_t *
 
 	// does the aidoor have ai_marker's?
 	if ( !aidoor_trigger->targetname ) {
-		G_Printf( "trigger_aidoor has no ai_marker's at %s\n", vtos( ent->r.currentOrigin ) );
+		//G_Printf( "trigger_aidoor has no ai_marker's at %s\n", vtos( ent->r.currentOrigin ) );
 		return;
 	}
 

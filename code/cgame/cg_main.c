@@ -140,6 +140,8 @@ vmCvar_t cg_crosshairY;
 vmCvar_t cg_crosshairHealth;
 vmCvar_t cg_draw2D;
 vmCvar_t cg_drawSubtitles;
+vmCvar_t cg_subtitleSize;
+vmCvar_t cg_subtitleShadow;
 vmCvar_t cg_drawFrags;
 vmCvar_t cg_teamChatsOnly;
 vmCvar_t cg_drawStatus;
@@ -176,6 +178,7 @@ vmCvar_t cg_simpleItems;
 vmCvar_t cg_fov;
 vmCvar_t cg_fixedAspect;
 vmCvar_t cg_fixedAspectFOV;
+vmCvar_t cg_drawCheckpoint;
 vmCvar_t cg_oldWolfUI;
 vmCvar_t cg_drawStatusHead;
 vmCvar_t cg_hudWeapIcon;
@@ -247,6 +250,7 @@ vmCvar_t cg_reloading;      //----(SA)	added
 vmCvar_t cg_medicChargeTime;
 vmCvar_t cg_engineerChargeTime;
 vmCvar_t cg_jumptime;
+vmCvar_t cg_realism;
 
 vmCvar_t cg_LTChargeTime;
 vmCvar_t cg_soldierChargeTime;
@@ -304,12 +308,14 @@ vmCvar_t cg_ironChallenge;
 vmCvar_t cg_nohudChallenge;
 vmCvar_t cg_nopickupChallenge;
 vmCvar_t cg_decayChallenge;
+vmCvar_t cg_vanilla_guns;
 vmCvar_t cg_autoReload;
 vmCvar_t cg_uinfo;
 vmCvar_t int_cl_maxpackets;
 vmCvar_t int_cl_timenudge;
 vmCvar_t cg_bodysink;
 vmCvar_t cg_gunPosLock;
+vmCvar_t cg_weaponBounceSound;
 
 typedef struct {
 	vmCvar_t    *vmCvar;
@@ -355,6 +361,8 @@ cvarTable_t cvarTable[] = {
 	{ &cg_gibs, "cg_gibs", "1", CVAR_ARCHIVE  },
 	{ &cg_draw2D, "cg_draw2D", "1", CVAR_ARCHIVE  },
 	{ &cg_drawSubtitles, "cg_drawSubtitles", "0", CVAR_ARCHIVE},
+	{ &cg_subtitleSize, "cg_subtitleSize", "7", CVAR_ARCHIVE},
+	{ &cg_subtitleShadow, "cg_subtitleShadow", "1", CVAR_ARCHIVE},
 	{ &cg_drawSpreadScale, "cg_drawSpreadScale", "1", CVAR_ARCHIVE },
 	{ &cg_drawFrags, "cg_drawFrags", "1", CVAR_ARCHIVE },
 	{ &cg_drawStatus, "cg_drawStatus", "1", CVAR_ARCHIVE  },
@@ -399,6 +407,8 @@ cvarTable_t cvarTable[] = {
 	{ &cg_bobroll, "cg_bobroll", "0.002", CVAR_ARCHIVE },
 
 	{ &cg_bobbing, "cg_bobbing", "1", CVAR_ARCHIVE },
+
+	{ &cg_drawCheckpoint, "cg_drawCheckpoint", "1", CVAR_ARCHIVE },
 
 	
 
@@ -481,7 +491,7 @@ cvarTable_t cvarTable[] = {
 	// done
 
 	{ &cg_atmosphericEffects,     "cg_atmosphericEffects",     "1",           CVAR_ARCHIVE, }, // RealRTCW
-	{ &cg_lowAtmosphericEffects, "cg_lowAtmosphericEffects", "1", 0 },		/// added by Berserker
+	{ &cg_lowAtmosphericEffects, "cg_lowAtmosphericEffects", "0", CVAR_ARCHIVE },		/// added by Berserker
 	{ &cg_forceAtmosphericEffects, "cg_forceAtmosphericEffects", "0", CVAR_LATCH },		/// added by Berserker
 
 	{ &cg_autoReload, "cg_autoReload", "0", CVAR_ARCHIVE },
@@ -499,6 +509,8 @@ cvarTable_t cvarTable[] = {
 	{ &cg_nohudChallenge, "g_nohudchallenge", "0", CVAR_SERVERINFO | CVAR_ROM }, 
 	{ &cg_nopickupChallenge, "g_nopickupchallenge", "0", CVAR_SERVERINFO | CVAR_ROM }, 
 	{ &cg_decayChallenge, "g_decaychallenge", "0", CVAR_SERVERINFO | CVAR_ROM }, 
+
+	{ &cg_vanilla_guns, "g_vanilla_guns", "0", CVAR_ARCHIVE }, 
 
 	{ &cg_reloading, "g_reloading", "0", 0 }, //----(SA)	added
 
@@ -549,6 +561,10 @@ cvarTable_t cvarTable[] = {
 	{ &cg_bodysink, "g_bodysink", "0", CVAR_ARCHIVE },
 	
 	{ &cg_gunPosLock, "cg_gunposlock", "1", CVAR_ARCHIVE},
+
+	{ &cg_realism, "g_realism", "0", CVAR_ARCHIVE},
+
+	{ &cg_weaponBounceSound, "cg_weaponBounceSound", "1",CVAR_ARCHIVE	},
 };
 int cvarTableSize = ARRAY_LEN( cvarTable );
 void CG_setClientFlags( void );
@@ -1052,7 +1068,7 @@ static void CG_LoadIgnoredTranslationTextStrings() {
 		if ( !token[0] ) {
 			break;
 		}
-		CG_Printf("ignored text: %s\n", token);
+		//CG_Printf("ignored text: %s\n", token);
 		Com_sprintf( cgs.ignoredSubtitles[i], MAX_QPATH, "%s", token );
 	}
 }
@@ -1075,6 +1091,33 @@ static void CG_LoadTranslateStrings( void ) {
 /// Added by Eugeny Panikarowsky
 ////////
 const char *CG_translateTextString(const char *str) {
+	int i, numStrings;
+
+	numStrings = sizeof(cgs.ignoredSubtitles) / sizeof(cgs.ignoredSubtitles[0]) - 1;
+	for (i = 0; i < numStrings; i++) {
+		if (!strcmp(str, cgs.ignoredSubtitles[i])) {
+            // Return a special string to indicate an ignored subtitle
+            return "IGNORED_SUBTITLE";
+        }
+    }
+	numStrings = sizeof(translateTextStrings) / sizeof(translateTextStrings[0]) - 1;
+	i = 0;
+	
+	for (i = 0; i < numStrings; i++) {
+		if (!translateTextStrings[i].stringname || !strlen(translateTextStrings[i].stringname)) {
+			return str;
+		}
+		if (!strcmp(str, translateTextStrings[i].stringname)) {
+			if (translateTextStrings[i].stringtext && strlen(translateTextStrings[i].stringtext)) {
+				return translateTextStrings[i].stringtext;
+			}
+			break;
+		}
+	}
+	return str;
+}
+
+const char *CG_translateTextString2(const char *str) {
 	int i, numStrings;
 
 	numStrings = sizeof(cgs.ignoredSubtitles) / sizeof(cgs.ignoredSubtitles[0]) - 1;
@@ -1162,6 +1205,7 @@ static void CG_RegisterSounds( void ) {
 	cgs.media.underWaterSound = trap_S_RegisterSound( "sound/world/underwater03.wav" );
 
 	cgs.media.poisonGasCough = trap_S_RegisterSound( "sound/weapons/gasgrenade/cough.wav");
+	cgs.media.knifeThrow = trap_S_RegisterSound( "sound/weapons/knife/knife_throw.wav");
 
 	for ( i = 0 ; i < 4 ; i++ ) {
 		Com_sprintf( name, sizeof( name ), "sound/player/footsteps/step%i.wav", i + 1 );
@@ -1473,7 +1517,7 @@ static void CG_RegisterGraphics( void ) {
 	// powerup shaders
 	cgs.media.quadShader = trap_R_RegisterShader("powerups/quad" );
 	cgs.media.quadWeaponShader = trap_R_RegisterShader("powerups/quadWeapon" );
-	cgs.media.battleSuitShader = trap_R_RegisterShader("powerups/battleSuit" );
+	cgs.media.battleSuitShader = trap_R_RegisterShader("powerups/enviro" );
 	cgs.media.battleWeaponShader = trap_R_RegisterShader("powerups/battleWeapon" );
 	cgs.media.invisShader = trap_R_RegisterShader("powerups/invisibility" );
 //	cgs.media.regenShader = trap_R_RegisterShader("powerups/regen" );
@@ -1484,6 +1528,7 @@ static void CG_RegisterGraphics( void ) {
 	cgs.media.machinegunBrassModel = trap_R_RegisterModel( "models/weapons/shells/m_shell.md3" );
 	cgs.media.panzerfaustBrassModel = trap_R_RegisterModel( "models/weapons/shells/pf_shell.md3" );
 	cgs.media.smallgunBrassModel = trap_R_RegisterModel( "models/weapons/shells/sm_shell.md3" );
+	cgs.media.shotgunBrassModel = trap_R_RegisterModel( "models/weapons/shells/sh_shell.md3" );
 
 	// VR Left Hand Models
 	cgs.media.handModel_fist = trap_R_RegisterModel( "models/weapons/vrhands/v_offhand.md3" );
@@ -1585,7 +1630,6 @@ static void CG_RegisterGraphics( void ) {
 	// cgs.media.mg42muzzleflashgg = trap_R_RegisterModel ("models/weapons2/machinegun/mg42_flash_gg.md3" );
 
 	cgs.media.planemuzzleflash = trap_R_RegisterModel( "models/mapobjects/vehicles/gunflare.md3" );
-	cgs.media.crowbar = trap_R_RegisterModel( "models/weapons2/wrench/wrench.md3" );
 
 	// Rafael shards
 	cgs.media.shardGlass1 = trap_R_RegisterModel( "models/shards/glass1.md3" );
@@ -1623,8 +1667,7 @@ static void CG_RegisterGraphics( void ) {
 
 // code is almost complete for doing this correctly.  will remove when that is complete.
 	CG_LoadingString( " - weapons" );
-	for ( i = WP_KNIFE; i < WP_GAUNTLET; i++ ) {
-//		CG_LoadingString( va("   - %d", i) );
+	for ( i = WP_KNIFE; i < WP_MONSTER_ATTACK3; i++ ) {
 			CG_RegisterWeapon( i, qfalse );
 	}
 
@@ -1898,6 +1941,22 @@ qboolean CG_Asset_Parse( int handle ) {
 				return qfalse;
 			}
 			cgs.media.hintShaders[HINT_LADDER] = trap_R_RegisterShader( tempStr );
+			continue;
+		}
+
+		if ( Q_stricmp( token.string, "friendHint" ) == 0 ) {
+			if ( !PC_String_Parse( handle, &tempStr ) ) {
+				return qfalse;
+			}
+			cgs.media.hintShaders[HINT_PLYR_FRIEND] = trap_R_RegisterShader( tempStr );
+			continue;
+		}
+
+		if ( Q_stricmp( token.string, "speakHint" ) == 0 ) {
+			if ( !PC_String_Parse( handle, &tempStr ) ) {
+				return qfalse;
+			}
+			cgs.media.hintShaders[HINT_PLYR_SPEAK] = trap_R_RegisterShader( tempStr );
 			continue;
 		}
 
@@ -2826,6 +2885,8 @@ void CG_Init( int serverMessageNum, int serverCommandSequence ) {
 	CG_SetConfigValues();
 
 	CG_StartMusic();
+
+	CG_SetupCabinets();
 
 	cg.lightstylesInited = qfalse;
 

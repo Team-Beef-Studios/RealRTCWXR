@@ -52,182 +52,2161 @@ splinePath_t splinePaths[MAX_SPLINE_PATHS];
 int numPathCorners;
 pathCorner_t pathCorners[MAX_PATH_CORNERS];
 
-// NOTE: weapons that share ammo (ex. colt/thompson) need to share max ammo, but not necessarily uses or max clip
-// RealRTCW ammo depends on difficulty level now. So look for the ammo references in g_client.c. Values in bg misc should be the LOWEST to avoid auto pickup bug.
-#define MAX_AMMO_45     150
-#define MAX_AMMO_9MM    150
-#define MAX_AMMO_VENOM  500
-#define MAX_AMMO_MAUSER 150
-#define MAX_AMMO_GARAND 5
-#define MAX_AMMO_FG42   MAX_AMMO_MAUSER
-#define MAX_AMMO_BAR    150
-#define MAX_AMMO_TTAMMO 200
-#define MAX_AMMO_MOSINA 50
-#define MAX_AMMO_BARAMMO    120  
-#define MAX_AMMO_44AMMO     120
-#define MAX_AMMO_M97        24
-#define MAX_AMMO_REVOLVER   24
-#define MAX_AMMO_MG42M      200
-
-//  [0] = weaponindex        - actual weapon name
-//  [1] = maxammo            - max player ammo carrying capacity.
-//  [2] = uses               - how many 'rounds' it takes/costs to fire one cycle.
-//  [3] = maxclip            - max 'rounds' in a clip.
-//  [4] = reloadTime         - time from start of reload until ready to fire.
-//  [5] = fireDelayTime      - time from pressing 'fire' until first shot is fired. (used for delaying fire while weapon is 'readied' in animation)
-//  [6] = nextShotTime       - when firing continuously, this is the time between shots
-//  [7] = nextShotTime2      - alt fire rates
-//  [8] = maxHeat            - max active firing time before weapon 'overheats' (at which point the weapon will fail for a moment)
-//  [9] = coolRate           - how fast the weapon cools down.
-//  [10] = playerDamage       - damage inflicted by player
-//  [11] = aiDamage           - damage inflicted by AI
-// [12] = playerSplashRadius - explosives only
-// [13] = aiSplashRadius     - explosives only
-// [14] = spread             - spread value
-// [15] = aimSpreadScaleadd  - how much spread increasing per shot
-// [16] = spreadScale        - how quickly spread will reduce
-// [17] = weapRecoilDuration - basic recoil value
-// [18] = weapRecoilPitch    - vertical recoil
-// [19] = weapRecoilYaw      - horizontal recoil
-// [20] = soundRange         - ai hearing range for weapon shots
-// [21] = moveSpeed          - player movement speed
-// [22] = twoHand            - is weapon twohanded?
-// [23] = upAngle            - throw range for grenades
-// [24] = mod                - means of death
-
-
 // NOTE: This once-static data is included in both Client and Game modules.
 //       Both now load values into here from weap files.
-ammotable_t ammoTable[] = {
+//       All values are empty because of that
+ammoTable_t ammoTable[WP_NUM_WEAPONS] = {
+    // No weapon
+	{   
+		WP_NONE,             // weaponindex
+	    WEAPON_CLASS_NONE,   // weaponClass
+		WP_NONE,             // weap alt
+		WEAPON_TEAM_NONE,   // weapon team
+	    0,                   // maxammo
+		0,                   // uses
+		0,                   // maxclip
+		0,                   // reloadTime
+		0,                   // reloadTimeFull
+		50,                  // fireDelayTime
+		0,                   // nextShotTime
+		0,                   // nextShotTime2
+		0,                   // maxHeat
+		0,                   // coolRate
+		0,                   // playerDamage
+		0,                   // aiDamage
+		0,                   // playerSplashRadius
+		0,                   // aiSplashRadius
+		0,                   // spread
+		0,                   // aimSpreadScaleadd
+		0.0f,                // spreadScale
+		0,                   // weapRecoilDuration
+		{0, 0},              // weapRecoilPitch
+		{0,0},               // weapRecoilYaw
+		1.00,                // soundRange
+		1.00,                // moveSpeed
+		0,                   // twoHand
+		0,                   // upAngle
+		{0.0, 0.0},          // falloffdistance
+		0,                   // mod     
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,       
+	}, 
 	
-	//	index                maxammo		      uses	   maxclip	 reloadtime   firedelay	 nextshot   nextshot2  heat    cool	   plrdmg    aidmg       plrsplsh    aisplsh     spread      SpreadScaleAdd      spreadScale      recoilDuration   recoilPitch      recoilYaw           soundrange          movespeed           twohand          upAngle         mod                  
-	{   WP_NONE,             0,                   0,       0,        0,           50,        0,         0,         0,      0,      0,        0,          0,          0,          0,          0,                  0.0f,            0,               {0, 0},          {0,0},              1.00,               1.00,               0,               0,              0,                                         }, 
-    
 	// Melee weapons
-	{   WP_KNIFE,            999,                 0,       999,      0,           50,        200,       200,       0,      0,      10,       6,          0,          0,          0,          0,                  0.0f,            0,               {0, 0},          {0,0},              64,                 1.00,               0,               0,              MOD_KNIFE,                                 }, 
-	{   WP_DAGGER,           999,                 0,       999,      0,           50,        200,       200,       0,      0,      10,       10,         0,          0,          0,          0,                  0.0f,            0,               {0, 0},          {0,0},              64,                 1.00,               0,               0,              MOD_DAGGER,                                },  
+	{   
+		WP_KNIFE,             
+	    WEAPON_CLASS_MELEE,
+		WP_NONE,
+		WEAPON_TEAM_COMMON,              
+	    0,                  
+		0,                         
+		0,                  
+		0,                   
+		0,
+		0,                 
+		0,                  
+		0,                  
+		0,                   
+		0,                    
+		0,                   
+		0,                    
+		0,                  
+		0,                   
+		0,                   
+		0,                    
+		0.0f,                 
+		0,                   
+		{0, 0},               
+		{0,0},                
+		0,                   
+		0.00,                 
+		0,                  
+		0,
+		{0.0, 0.0},                            
+		MOD_KNIFE,   
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                    
+	}, 
+    
+	{   
+		WP_DAGGER,             
+	    WEAPON_CLASS_MELEE,
+		WP_NONE,
+		WEAPON_TEAM_COMMON,          
+	    0,                   
+		0,                     
+		0,                   
+		0,
+		0,                    
+		0,                    
+		0,                   
+		0,                   
+		0,                    
+		0,                     
+		0,                   
+		0,                    
+		0,                     
+		0,                    
+		0,                     
+		0,                     
+		0.0f,                  
+		0,                   
+		{0, 0},                
+		{0,0},                 
+		0,                   
+		0.00,                  
+		0,                     
+		0,
+		{0.0, 0.0},                      
+		MOD_DAGGER,     
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                                
+	},  
     
     // One handed pistols
-	{   WP_LUGER,            MAX_AMMO_9MM,        1,       8,        1500,        100,       300,       300,       0,      0,      7,        5,          0,          0,          400,        35,                 0.3f,            50,              {.2f, .1f},      {0,0},              700,                0.95,               0,               0,              MOD_LUGER,                                 },  
-	{   WP_SILENCER,         MAX_AMMO_9MM,        1,       8,        1500,        100,       300,       300,       0,      0,      7,        5,          0,          0,          350,        35,                 0.3f,            50,              {.2f, .1f},      {0,0},              64,                 0.95,               0,               0,              MOD_SILENCER,                              },  
-	{   WP_COLT,             MAX_AMMO_45,         1,       7,        1500,        100,       300,       300,       0,      0,      10,       6,          0,          0,          400,        35,                 0.4f,            50,              {.2f, .1f},      {0,0},              700,                0.95,               0,               0,              MOD_COLT,                                  }, 
-	{   WP_TT33,             MAX_AMMO_TTAMMO,     1,       8,        1600,        100,       350,       350,       0,      0,      8,        7,          0,          0,          450,        35,                 0.3f,            50,              {.2f, .1f},      {0,0},              700,                0.95,               0,               0,              MOD_TT33,                                  }, 
-	{   WP_REVOLVER,         MAX_AMMO_REVOLVER,   1,       6,        1500,        100,       500,       500,       0,      0,      20,       7,          0,          0,          350,        35,                 0.4f,            50,              {.3f, .1f},      {0,0},              1000,               0.95,               0,               0,              MOD_REVOLVER,                              },
-    // SMGs
-	{   WP_MP40,             MAX_AMMO_9MM,        1,       32,       2600,        100,       110,       110,       0,      0,      6,        4,          0,          0,          850,        15,                 0.5f,            30,              {.1f, .1f},      {0,0},              1000,               0.90,               1,               0,              MOD_MP40,                                  },
-	{   WP_THOMPSON,         MAX_AMMO_45,         1,       30,       2400,        100,       90,        90,        0,      0,      9,        5,          0,          0,          950,        15,                 0.4f,            30,              {.2f, .2f},      {0,0},              1000,               0.90,               1,               0,              MOD_THOMPSON,                              }, 
-	{   WP_STEN,             MAX_AMMO_9MM,        1,       32,       3100,        100,       115,       115,       900,    500,    7,        4,          0,          0,          950,        15,                 0.6f,            40,              {.1f, .1f},      {0,0},              64,                 0.90,               1,               0,              MOD_STEN,                                  }, 
-	{   WP_PPSH,             MAX_AMMO_TTAMMO,     1,       71,       2900,        100,       65,        65,        0,      0,      6,        5,          0,          0,          1000,       15,                 0.5f,            30,              {.1f, .1f},      {0,0},              1000,               0.90,               1,               0,              MOD_PPSH,                                  }, 
-	{   WP_MP34,             MAX_AMMO_9MM,        1,       32,       3100,        100,       105,       105,       0,      0,      6,        4,          0,          0,          900,        15,                 0.5f,            30,              {.1f, .1f},      {0,0},              1000,               0.90,               1,               0,              MOD_MP34,                                  },
+	{   
+		WP_LUGER,              
+		WEAPON_CLASS_PISTOL,
+		WP_SILENCER,
+		WEAPON_TEAM_AXIS,          
+		0,          
+		0,                     
+		0,                     
+		0,                 
+		0,                 
+		0,
+		0,                 
+		0,                 
+		0,                    
+		0,                   
+		0,                   
+		0,                    
+		0,                    
+		0,                    
+		0,                  
+		0,                   
+		0.0f,                
+		0,                   
+		{.0f, .0f},           
+		{0,0},              
+		0,                  
+		0.0,                 
+		0,                    
+		0,
+		{0.0, 0.0},                    
+		MOD_LUGER,    
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                                 
+	},  
+
+	{  
+	WP_SILENCER,                
+		WEAPON_CLASS_PISTOL,
+	WP_LUGER,           
+		WEAPON_TEAM_AXIS,       
+		0,        
+		0,                     
+		0,                     
+		0,
+		0,                 
+		0,                  
+		0,                  
+		0,                  
+		0,                    
+		0,                   
+		0,                    
+		0,                     
+		0,                    
+		0,                    
+		0,                
+		0,                  
+		0.0f,                
+		0,                  
+		{.0f, .0f},          
+		{0,0},              
+		0,                  
+		0.0,                
+		0,                   
+		0,
+		{0.0, 0.0},                   
+		MOD_SILENCER,    
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                                
+	},  
+
+	{   
+		WP_COLT,             
+		WEAPON_CLASS_PISTOL,
+    WP_AKIMBO,               
+		WEAPON_TEAM_ALLIES,  
+	    0,         
+		0,                   
+		0,                   
+		0,              
+		0,
+		0,                 
+		0,               
+		0,                
+		0,                  
+		0,                  
+		0,       
+		0,          
+		0,          
+		0,          
+		0,        
+		0,                 
+		0.0f,            
+		0,              
+		{.0f, .0f},      
+		{0,0},              
+		0,               
+		0.00,               
+		0,               
+		0,
+		{0.0, 0.0},             
+		MOD_COLT,   
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                                    
+	}, 
+
+	{   
+		WP_TT33,
+		WEAPON_CLASS_PISTOL,
+		WP_DUAL_TT33,
+		WEAPON_TEAM_SOVIET,             
+		0,     
+		0,       
+		0,        
+		0,
+		0,        
+		0,       
+		0,       
+		0,       
+		0,      
+		0,      
+		0,        
+		0,          
+		0,          
+		0,          
+		0,        
+		0,                 
+		0.0f,           
+		0,              
+		{.0f, .0f},      
+		{0,0},              
+		0,               
+		0.0,               
+		0,               
+		0,
+		{0.0, 0.0},              
+		MOD_TT33,      
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                                 
+	}, 
+
+	{   
+	    WP_REVOLVER,
+		WEAPON_CLASS_PISTOL,
+	WP_NONE,              
+		WEAPON_TEAM_ALLIES,         
+		0,   
+		0,       
+		0,        
+		0,        
+		0,
+		0,       
+		0,       
+		0,       
+		0,      
+		0,      
+		0,       
+		0,          
+		0,          
+		0,          
+		0,        
+		0,                 
+		0.0f,            
+		0,              
+		{.0f, .0f},      
+		{0,0},              
+		0,               
+		0.0,               
+		0,               
+		0,
+		{0.0, 0.0},              
+		MOD_REVOLVER,    
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                               
+	},
+	// SMGs
+	{   
+		WP_MP40,
+		WEAPON_CLASS_SMG,
+	WP_NONE,              
+		WEAPON_TEAM_AXIS,             
+	    0,        
+		0,       
+		0,       
+		0,        
+		0,       
+		0, 
+		0,      
+		0,       
+		0,      
+		0,      
+		0,        
+		0,          
+		0,          
+		0,         
+		0,        
+		0,                 
+		0.0f,            
+		0,              
+		{.0f, .0f},      
+		{0,0},              
+		0,              
+		0.0,               
+		0,               
+		0,
+		{0.0, 0.0},               
+		MOD_MP40,  
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                                     
+	},
+
+	{   
+		WP_THOMPSON,  
+		WEAPON_CLASS_SMG,
+	WP_NONE,         
+		WEAPON_TEAM_ALLIES,       
+		0,         
+		0,       
+		0,       
+		0,        
+		0,       
+		0,
+		0,        
+		0,        
+		0,      
+		0,      
+		0,        
+		0,          
+		0,          
+		0,          
+		0,        
+		0,                 
+		0.0f,            
+		0,              
+		{.0f, .0f},      
+		{0,0},              
+		0,               
+		0.0,               
+		0,               
+		0,
+		{0.0, 0.0},              
+		MOD_THOMPSON,   
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                                
+	}, 
+
+	{   
+		WP_STEN,
+		WEAPON_CLASS_SMG,
+	WP_NONE,              
+		WEAPON_TEAM_ALLIES,             
+		0,        
+		0,       
+		0,       
+		0,        
+		0,       
+		0,
+		0,       
+		0,       
+		0,    
+		0,    
+		0,        
+		0,          
+		0,          
+		0,          
+		0,        
+		0,                 
+		0.0f,            
+		0,              
+		{.0f, .0f},      
+		{0,0},              
+		0,                 
+		0.0,               
+		0,               
+		0,
+		{0.0, 0.0},              
+		MOD_STEN,   
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                                    
+	}, 
+
+	{   
+		WP_PPSH,
+		WEAPON_CLASS_SMG,
+	WP_NONE,              
+		WEAPON_TEAM_SOVIET,             
+		0,     
+		0,       
+		0,
+		0,       
+		0,        
+		0,       
+		0,        
+		0,        
+		0,      
+		0,      
+		0,        
+		0,          
+		0,          
+		0,          
+		0,       
+		0,                 
+		0.0f,            
+		0,              
+		{.0f, .0f},      
+		{0,0},              
+		0,               
+		0.00,               
+		0,               
+		0,
+		{0.0, 0.0},             
+		MOD_PPSH,      
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                                 
+	}, 
+	
+	{   
+		WP_MP34,
+		WEAPON_CLASS_SMG,
+	WP_NONE,             
+		WEAPON_TEAM_AXIS,             
+		0,        
+		0,       
+		0,
+		0,       
+		0,        
+		0,       
+		0,      
+		0,       
+		0,      
+		0,      
+		0,        
+		0,          
+		0,          
+		0,          
+		0,        
+		0,                 
+		0.0f,           
+		0,              
+		{.0f, .0f},      
+		{0,0},              
+		0,               
+		0.0,               
+		0,               
+		0,
+		{0.0, 0.0},               
+		MOD_MP34,    
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                                   
+	},
 	// Rifles
-	{   WP_MAUSER,           MAX_AMMO_MAUSER,     1,       5,        2500,        100,       1400,      1400,      0,      0,      35,       15,         0,          0,          300,        50,                 0.5f,            60,              {1.0f, 1.0f},    {.1f, .1f},         2000,               0.90,               1,               0,              MOD_MAUSER,                                },  
-	{   WP_SNIPERRIFLE,      MAX_AMMO_MAUSER,     1,       5,        3000,        0,         1400,      1400,      0,      0,      35,       15,         0,          0,          300,        0,                  10.0f,           0,               {0,0},           {0,0},              2000,               0.40,               1,               0,              MOD_SNIPERRIFLE,                           }, 
-	{   WP_GARAND,           MAX_AMMO_GARAND,     1,       5,        2500,        100,       1200,      1200,      0,      0,      40,       15,         0,          0,          400,        50,                 0.5f,            50,              {1.0f, 1.0f},    {.1f,.1f},          128,                0.90,               1,               0,              MOD_GARAND,                                },  
-	{   WP_SNOOPERSCOPE,     MAX_AMMO_GARAND,     1,       5,        3000,        0,         1200,      1200,      0,      0,      40,       15,         0,          0,          300,        0,                  8.0f,            0,               {0,0},           {0,0},              128,                0.40,               1,               0,              MOD_SNOOPERSCOPE,                          }, 
-	{   WP_MOSIN,            MAX_AMMO_MOSINA,     1,       5,        2400,        100,       1400,      1400,      0,      0,      35,       15,         0,          0,          300,        50,                 0.5f,            60,              {1.0f, 1.0f},    {.1f, .1f},         2000,               0.90,               1,               0,              MOD_MOSIN,                                 }, 
+	{   
+		WP_MAUSER,
+		WEAPON_CLASS_RIFLE | WEAPON_CLASS_SCOPABLE,
+		WP_SNIPERRIFLE,
+		WEAPON_TEAM_AXIS,           
+		0,     
+		0,       
+		0,        
+		0,
+		0,        
+		0,       
+		0,      
+		0,      
+		0,      
+		0,      
+		0,       
+		0,         
+		0,          
+		0,          
+		0,        
+		0,                 
+		0.0f,            
+		0,              
+		{0.0f, 0.0f},   
+		{.0f, .0f},         
+		0,               
+		0.0,               
+		0,               
+		0,
+		{0.0, 0.0},               
+		MOD_MAUSER,  
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                                   
+	},  
+
+	{   
+	WP_SNIPERRIFLE,              
+		WEAPON_CLASS_RIFLE | WEAPON_CLASS_SCOPED,
+	WP_MAUSER,        
+		WEAPON_TEAM_AXIS,      
+		0,     
+		0,       
+		0,        
+		0,
+		0,        
+		0,         
+		0,      
+		0,      
+		0,      
+		0,      
+		0,       
+		0,         
+		0,          
+		0,          
+		0,        
+		0,                  
+		0.0f,           
+		0,               
+		{0,0},           
+		{0,0},              
+		0,               
+		0.0,               
+		0,               
+		0,
+		{0.0, 0.0},              
+		MOD_SNIPERRIFLE,   
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                             
+	}, 
+
+	{   
+		WP_GARAND,
+		WEAPON_CLASS_RIFLE | WEAPON_CLASS_SCOPABLE,
+		WP_SNOOPERSCOPE,
+		WEAPON_TEAM_ALLIES,           
+		0,     
+		0,       
+		0,
+		0,        
+		0,        
+		0,       
+		0,      
+		0,      
+		0,      
+		0,      
+		0,       
+		0,         
+		0,          
+		0,          
+		0,        
+		0,                 
+		0.0f,            
+		0,              
+		{0.0f, 0.0f},    
+		{.0f,.0f},          
+		0,                
+		0.0,               
+		0,               
+		0,
+		{0.0, 0.0},               
+		MOD_GARAND,     
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                                
+	},  
+
+	{   
+	WP_SNOOPERSCOPE,            
+		WEAPON_CLASS_RIFLE | WEAPON_CLASS_SCOPED,
+	WP_GARAND,
+		WEAPON_TEAM_ALLIES,     
+		0,     
+		0,       
+		0,        
+		0,
+		0,        
+		0,         
+		0,      
+		0,      
+		0,      
+		0,      
+		0,       
+		0,         
+		0,          
+		0,          
+		0,        
+		0,                  
+		0.0f,            
+		0,               
+		{0,0},           
+		{0,0},              
+		0,                
+		0.0,               
+		0,               
+		0,
+		{0.0, 0.0},              
+		MOD_SNOOPERSCOPE,   
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                           
+	}, 
+
+	{   
+		WP_MOSIN,
+		WEAPON_CLASS_RIFLE,
+	WP_NONE, 
+		WEAPON_TEAM_SOVIET,            
+		0,     
+		0,       
+		0,        
+		0,        
+		0,       
+		0,     
+		0,
+		0,      
+		0,      
+		0,      
+		0,       
+		0,         
+		0,          
+		0,          
+		0,        
+		0,                 
+		0.0f,            
+		0,              
+		{0.0f, 0.0f},    
+		{.0f, .0f},         
+		0,               
+		0.0,               
+		0,               
+		0,
+		{0.0, 0.0},               
+		MOD_MOSIN,        
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                             
+	}, 
 	// Semi auto rifles
-	{   WP_M1GARAND,         MAX_AMMO_BARAMMO,    1,       8,        1650,        100,       300,       300,       0,      0,      18,       7,          0,          0,          350,        40,                 0.4f,            40,              {.2f,.2f},       {.1f, .1f},         2000,               0.90,               1,               0,              MOD_M1GARAND,                              }, 
-	{   WP_G43,              MAX_AMMO_MAUSER,     1,       10,       1800,        100,       300,       300,       0,      0,      16,       7,          0,          0,          350,        40,                 0.4f,            40,              {.2f,.2f},       {.1f, .1f},         2000,               0.90,               1,               0,              MOD_G43,                                   },
+	{   
+		WP_M1GARAND,
+		WEAPON_CLASS_RIFLE,
+	WP_M7,
+		WEAPON_TEAM_ALLIES,         
+		0,    
+		0,       
+		0,
+		0,        
+		0,        
+		0,       
+		0,       
+		0,       
+		0,      
+		0,      
+		0,       
+		0,          
+		0,          
+		0,          
+		0,        
+		0,                 
+		0.0f,            
+		0,              
+		{.0f,.0f},       
+		{.0f, .0f},         
+		0,               
+		0.0,               
+		0,               
+		0,
+		{0.0, 0.0},              
+		MOD_M1GARAND,    
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                              
+	}, 
+
+	{   
+		WP_G43,
+		WEAPON_CLASS_RIFLE,
+	WP_NONE,
+		WEAPON_TEAM_AXIS,              
+		0,     
+		0,       
+		0,       
+		0,        
+		0,       
+		0,       
+		0,       
+		0,
+		0,      
+		0,      
+		0,       
+		0,          
+		0,          
+		0,          
+		0,        
+		0,                 
+		0.0f,            
+		0,              
+		{.0f,.0f},       
+		{.0f, .0f},         
+		0,               
+		0.0,               
+		0,               
+		0,
+		{0.0, 0.0},             
+		MOD_G43,     
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                                  
+	},
+
+	{   
+		WP_M1941,
+		WEAPON_CLASS_RIFLE | WEAPON_CLASS_SCOPABLE,
+		WP_M1941SCOPE,
+		WEAPON_TEAM_ALLIES,              
+		0,     
+		0,       
+		0,       
+		0,        
+		0,       
+		0,       
+		0,       
+		0,
+		0,      
+		0,      
+		0,       
+		0,          
+		0,          
+		0,          
+		0,        
+		0,                 
+		0.0f,            
+		0,              
+		{.0f,.0f},       
+		{.0f, .0f},         
+		0,               
+		0.0,               
+		0,               
+		0,
+		{0.0, 0.0},             
+		MOD_M1941,        
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                               
+	},
 	// Assault Rifles
-	{   WP_MP44,             MAX_AMMO_44AMMO,     1,       30,       2600,        100,       105,       170,       0,      0,      9,        6,          0,          0,          800,        15,                 0.6f,            40,              {.1f, .1f},      {0,0},              1500,               0.90,               1,               0,              MOD_MP44,                                  },
-	{   WP_FG42,             MAX_AMMO_FG42,       1,       20,       2000,        100,       190,       120,       0,      0,      12,       6,          0,          0,          600,        15,                 0.7f,            40,              {.1f, .1f},      {0,0},              1500,               0.90,               1,               0,              MOD_FG42,                                  },
-	{   WP_BAR,              MAX_AMMO_BARAMMO,    1,       20,       2250,        100,       200,       100,       0,      0,      16,       6,          0,          0,          700,        15,                 0.6f,            40,              {.1f, .1f},      {0,0},              1500,               0.90,               1,               0,              MOD_BAR,                                   },
-   // Shotguns
-	{   WP_M97,              MAX_AMMO_M97,        1,       6,        2000,        100,       1250,      1250,      0,      0,      10,       9,          0,          0,          4500,       15,                 0.6f,            100,             {.10f, .2f},     {.5f, .5f},         1500,               0.90,               1,               0,              MOD_M97,                                   },
-   // Heavy Weapons
-	{   WP_BROWNING,         MAX_AMMO_BARAMMO,    1,       150,      2600,        100,       65,        65,        2500,   350,    15,       6,          0,          0,          1000,       15,                 0.6f,            75,              {.1f, .1f},      {.1f, .1f},         1500,               0.85,               1,               0,              MOD_BROWNING,                              }, 
-	{   WP_MG42M,            MAX_AMMO_VENOM,      1,       100,      2600,        100,       65,        65,        2500,   350,    15,       6,          0,          0,          1200,       15,                 0.6f,            50,              {.1f, .1f},      {.1f, .1f},         1500,               0.85,               1,               0,              MOD_MG42M,                                 },
-	{   WP_PANZERFAUST,      3,                   1,       1,        1000,        50,        2000,      2000,      0,      0,      250,      100,        300,        200,        0,          30,                 0.6f,            0,               {.0, 0},         {0,0},              1000,               0.85,               1,               0,              MOD_PANZERFAUST,                           },
-	{   WP_FLAMETHROWER,     100,                 1,       100,      1000,        100,       50,        50,        0,      0,      6,        6,          0,          0,          0,          0,                  0.0f,            0,               {0, 0},          {0,0},              1000,               0.85,               1,               0,              MOD_FLAMETHROWER,                          },
+	{   
+		WP_MP44,
+		WEAPON_CLASS_ASSAULT_RIFLE,
+	WP_NONE, 
+		WEAPON_TEAM_AXIS,             
+		0,     
+		0,
+		0,       
+		0,       
+		0,        
+		0,       
+		0,       
+		0,       
+		0,      
+		0,      
+		0,        
+		0,          
+		0,          
+		0,          
+		0,        
+		0,                 
+		0.0f,            
+		0,              
+		{.0f, .0f},      
+		{0,0},              
+		0,               
+		0.0,               
+		0,               
+		0,
+		{0.0, 0.0},               
+		MOD_MP44,     
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                                  
+	},
+
+	{   
+		WP_FG42,
+		WEAPON_CLASS_ASSAULT_RIFLE | WEAPON_CLASS_SCOPABLE,
+	WP_FG42SCOPE,
+		WEAPON_TEAM_AXIS,            
+		0,       
+		0,       
+		0,
+		0,       
+		0,        
+		0,       
+		0,       
+		0,       
+		0,      
+		0,      
+		0,       
+		0,          
+		0,          
+		0,          
+		0,        
+		0,                 
+		0.0f,            
+		0,              
+		{.0f, .0f},      
+		{0,0},              
+		0,               
+		0.0,               
+		0,               
+		0,
+		{0.0, 0.0},               
+		MOD_FG42,    
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                                   
+	},
+
+	{   
+		WP_BAR,
+		WEAPON_CLASS_ASSAULT_RIFLE,
+	WP_NONE, 
+		WEAPON_TEAM_ALLIES,              
+		0,    
+		0,       
+		0,       
+		0,        
+		0,       
+		0,       
+		0,       
+		0,      
+		0,      
+		0,       
+		0,
+		0,          
+		0,          
+		0,          
+		0,        
+		0,                 
+		0.0f,            
+		0,              
+		{.0f, .0f},      
+		{0,0},              
+		0,               
+		0.00,               
+		0,               
+		0,
+		{0.0, 0.0},              
+		MOD_BAR,    
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                                    
+	},
+	// Shotguns
+	{   
+		WP_M97,
+		WEAPON_CLASS_SHOTGUN,
+	WP_NONE,  
+		WEAPON_TEAM_ALLIES,              
+		0,        
+		0,       
+		0,        
+		0,        
+		0,       
+		0,      
+		0,      
+		0,      
+		0,      
+		0,       
+		0,
+		0,          
+		0,          
+		0,          
+		0,       
+		0,                 
+		0.0f,            
+		0,             
+		{.0f, .0f},     
+		{.0f, .0f},         
+		0,               
+		0.0,               
+		0,               
+		0,
+		{0.0, 0.0},              
+		MOD_M97,   
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                                     
+	},
+
+	{   
+		WP_AUTO5,
+		WEAPON_CLASS_SHOTGUN,
+		WP_NONE,
+		WEAPON_TEAM_ALLIES,              
+		0,        
+		0,       
+		0,        
+		0,        
+		0,       
+		0,      
+		0,      
+		0,      
+		0,      
+		0,       
+		0,
+		0,          
+		0,          
+		0,          
+		0,       
+		0,                 
+		0.0f,            
+		0,             
+		{.0f, .0f},     
+		{.0f, .0f},         
+		0,               
+		0.0,               
+		0,               
+		0,
+		{0.0, 0.0},              
+		MOD_AUTO5, 
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                                       
+	},
+	// Heavy Weapons
+	{   
+		WP_BROWNING,
+		WEAPON_CLASS_MG,
+	WP_NONE, 
+		WEAPON_TEAM_ALLIES,         
+		0,    
+		0,       
+		0,      
+		0,        
+		0,       
+		0,        
+		0,        
+		0,   
+		0,    
+		0,
+		0,       
+		0,          
+		0,          
+		0,          
+		0,       
+		0,                 
+		0.0f,            
+		0,              
+		{.0f, .0f},      
+		{.0f, .0f},         
+		0,               
+		0.0,               
+		0,               
+		0,
+		{0.0, 0.0},               
+		MOD_BROWNING, 
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                                  
+	}, 
+
+	{   
+		WP_MG42M,
+		WEAPON_CLASS_MG,
+	WP_NONE, 
+		WEAPON_TEAM_AXIS,           
+		0,      
+		0,       
+		0,
+		0,      
+		0,        
+		0,       
+		0,        
+		0,        
+		0,   
+		0,    
+		0,       
+		0,          
+		0,          
+		0,          
+		0,       
+		0,                 
+		0.0f,            
+		0,              
+		{.0f, .0f},      
+		{.0f, .0f},         
+		0,               
+		0.0,              
+		0,               
+		0,
+		{0.0, 0.0},             
+		MOD_MG42M,   
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                                   
+	},
+
+	{   
+		WP_PANZERFAUST,
+		WEAPON_CLASS_LAUNCHER,
+	WP_NONE, 
+		WEAPON_TEAM_COMMON,      
+		0,                   
+		0,       
+		0,        
+		0,        
+		0,        
+		0,      
+		0,
+		0,      
+		0,      
+		0,      
+		0,      
+		0,        
+		0,        
+		0,        
+		0,          
+		0,                 
+		0.0f,            
+		0,               
+		{.0, 0},         
+		{0,0},              
+		0,               
+		0.0,               
+		0,               
+		0,
+		{0.0, 0.0},               
+		MOD_PANZERFAUST, 
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                               
+	},
+
+	{   
+		WP_FLAMETHROWER,
+		WEAPON_CLASS_BEAM,
+	WP_NONE, 
+		WEAPON_TEAM_COMMON,     
+		0,                 
+		0,       
+		0,      
+		0,        
+		0,
+		0,       
+		0,        
+		0,        
+		0,      
+		0,      
+		0,        
+		0,          
+		0,          
+		0,          
+		0,          
+		0,                 
+		0.0f,            
+		0,               
+		{0, 0},          
+		{0,0},              
+		0,               
+		0.0,               
+		0,               
+		0,
+		{0.0, 0.0},               
+		MOD_FLAMETHROWER,   
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                            
+	},
 	// Secret Weapons
-	{   WP_VENOM,            MAX_AMMO_VENOM,      1,       500,      3000,        750,       45,        45,        5000,   200,    20,       7,          0,          0,          1000,       10,                 0.9f,            50,              {.1f, .1f},      {.1f, .1f},         1000,               0.85,               1,               0,              MOD_VENOM,                                 },  
-	{   WP_TESLA,            50,                  1,       50,       1000,        100,       250,       250,       0,      0,      15,       4,          0,          0,          0,          0,                  0.0f,            0,               {0, 0},          {0,0},              1000,               0.85,               1,               0,              MOD_TESLA,                                 }, 
-   // Explosives
-	{  WP_GRENADE_LAUNCHER,  5,                   1,       5,        1000,        250,       1600,      1600,      0,      0,      170,      170,        310,        310,        0,          0,                  0.0f,            0,               {0, 0},          {0,0},              1500,               0.95,               0,               800,            MOD_GRENADE_LAUNCHER,                      },
-	{  WP_GRENADE_PINEAPPLE, 5,                   1,       5,        1000,        250,       1600,      1600,      0,      0,      220,      220,        270,        270,        0,          0,                  0.0f,            0,               {0, 0},          {0,0},              1500,               0.95,               0,               800,            MOD_GRENADE_PINEAPPLE,                     }, 
-	{   WP_DYNAMITE,         3,                   1,       3,        1000,        250,       1600,      1600,      0,      0,      800,      800,        450,        450,        0,          0,                  0.0f,            0,               {0,0},           {0,0},              3000,               0.95,               0,               400,            MOD_DYNAMITE,                              }, 
-	{   WP_AIRSTRIKE,        999,                 0,       999,      0,           50,        0,         0,         0,      0,      220,      220,        270,        270,        0,          0,                  0.0f,            0,               {0, 0},          {0,0},              1500,               0.95,               0,               700,            0,                                         }, 
-	{   WP_POISONGAS,        5,                   0,       5,        0,           50,        0,         0,         0,      0,      220,      220,        270,        270,        0,          0,                  0.0f,            0,               {0, 0},          {0,0},              1500,               0.95,               0,               700,            MOD_POISONGAS,                             }, 
+	{   
+		WP_VENOM,
+		WEAPON_CLASS_MG,
+	WP_NONE, 
+		WEAPON_TEAM_AXIS,            
+		0,      
+		0,       
+		0,      
+		0,        
+		0, 
+		0,      
+		0,        
+		0,        
+		0,   
+		0,    
+		0,       
+		0,          
+		0,          
+		0,          
+		0,       
+		0,                 
+		0.0f,            
+		0,              
+		{.0f, .0f},      
+		{.0f, .0f},         
+		0,               
+		0.0,               
+		1,               
+		0,
+		{0.0, 0.0},               
+		MOD_VENOM,     
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                                 
+	},  
+
+	{   
+		WP_TESLA,
+		WEAPON_CLASS_BEAM,
+	WP_NONE,   
+		WEAPON_TEAM_AXIS,            
+		0,                  
+		0,
+		0,       
+		0,       
+		0,        
+		0,       
+		0,       
+		0,       
+		0,      
+		0,      
+		0,       
+		0,          
+		0,          
+		0,          
+		0,          
+		0,                  
+		0.0f,            
+		0,               
+		{0, 0},          
+		{0,0},              
+		0,               
+		0.0,               
+		0,               
+		0, 
+		{0.0, 0.0},             
+		MOD_TESLA,   
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                                   
+	}, 
+	// Explosives
+	{  
+		WP_GRENADE_LAUNCHER,
+		WEAPON_CLASS_GRENADE,
+	WP_NONE, 
+		WEAPON_TEAM_AXIS,
+		0,                   
+		0,
+		0,       
+		0,        
+		0,        
+		0,       
+		0,      
+		0,      
+		0,      
+		0,      
+		0,      
+		0,        
+		0,        
+		0,        
+		0,          
+		0,                  
+		0.0f,            
+		0,               
+		{0, 0},          
+		{0,0},              
+		0,               
+		0.0,               
+		0,               
+		0,
+		{0.0, 0.0},             
+		MOD_GRENADE_LAUNCHER,   
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                        
+	},
+
+	{  
+		WP_GRENADE_PINEAPPLE,
+		WEAPON_CLASS_GRENADE,
+	WP_NONE, 
+		WEAPON_TEAM_AXIS | WEAPON_TEAM_SOVIET, 
+		0,                   
+		0,       
+		0,        
+		0,        
+		0,
+		0,       
+		0,      
+		0,      
+		0,      
+		0,      
+		0,      
+		0,        
+		0,        
+		0,        
+		0,          
+		0,                  
+		0.0f,           
+		0,               
+		{0, 0},          
+		{0,0},              
+		0,               
+		0.0,               
+		0,               
+		0, 
+		{0.0, 0.0},            
+		MOD_GRENADE_PINEAPPLE, 
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                         
+	}, 
+
+	{   
+		WP_DYNAMITE,
+		WEAPON_CLASS_GRENADE,
+	WP_NONE, 
+		WEAPON_TEAM_COMMON,         
+		0,                   
+		0,       
+		0,        
+		0,        
+		0,       
+		0,
+		0,      
+		0,      
+		0,      
+		0,      
+		0,      
+		0,        
+		0,        
+		0,        
+		0,          
+		0,                  
+		0.0f,            
+		0,               
+		{0,0},           
+		{0,0},              
+		0,               
+		0.0,               
+		0,               
+		0,
+		{0.0, 0.0},             
+		MOD_DYNAMITE,   
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                                
+	}, 
+
+	{   
+		WP_AIRSTRIKE,
+		WEAPON_CLASS_GRENADE,
+	WP_NONE,          
+		WEAPON_TEAM_COMMON,        
+		0,                 
+		0,      
+		0,      
+		0,           
+		0,        
+		0,         
+		0,         
+		0,
+		0,      
+		0,      
+		0,      
+		0,        
+		0,        
+		0,        
+		0,          
+		0,                  
+		0.0f,            
+		0,               
+		{0, 0},          
+		{0,0},              
+		0,               
+		0.0,               
+		0,               
+		0,
+		{0.0, 0.0},             
+		0,           
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                                   
+	}, 
+
+	{   
+		WP_POISONGAS,
+		WEAPON_CLASS_GRENADE,
+	WP_NONE, 
+		WEAPON_TEAM_COMMON,       
+		0,                   
+		0,       
+		0,        
+		0,           
+		0,        
+		0,         
+		0,
+		0,         
+		0,      
+		0,      
+		0,      
+		0,        
+		0,        
+		0,        
+		0,          
+		0,                  
+		0.0f,            
+		0,               
+		{0, 0},         
+		{0,0},              
+		0,               
+		0.0,               
+		0,               
+		0,
+		{0.0, 0.0},             
+		MOD_POISONGAS, 
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                                 
+	}, 
 	// Misc alt modes
-	{   WP_FG42SCOPE,        MAX_AMMO_FG42,       1,       20,       2000,        100,       180,       180,       0,      0,      12,       6,          0,          0,          250,        5,                  0.7f,            0,               {0,0},           {0,0},              1500,               0.40,               1,               0,              MOD_FG42SCOPE,                             }, 
-	{   WP_AKIMBO,           MAX_AMMO_45,         1,       7,        2700,        100,       200,       200,       0,      0,      10,       6,          0,          0,          500,        35,                 0.5f,            50,              {.2f, .1f},      {0,0},              700,                0.95,               1,               0,              MOD_AKIMBO,                                }, 
-	{   WP_M7,               5,                   1,       1,        3000,        100,       400,       400,       0,      0,      20,       40,         0,          0,          0,          0,                  0.0f,            0,               {0,0},           {0, 0},             1500,               0.90,               1,               0,              MOD_M7,                                    }, 
+	{   
+		WP_FG42SCOPE,
+		WEAPON_CLASS_ASSAULT_RIFLE | WEAPON_CLASS_SCOPED,
+	WP_FG42,   
+		WEAPON_TEAM_AXIS,        
+		0,       
+		0,       
+		0,       
+		0,        
+		0,       
+		0,       
+		0,       
+		0,      
+		0,
+		0,      
+		0,       
+		0,          
+		0,          
+		0,          
+		0,        
+		0,                  
+		0.0f,            
+		0,               
+		{0,0},           
+		{0,0},              
+		0,               
+		0.0,               
+		0,               
+		0, 
+		{0.0, 0.0},             
+		MOD_FG42SCOPE, 
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                                 
+	}, 
+
+	{   
+		WP_AKIMBO,
+		WEAPON_CLASS_AKIMBO,
+	WP_COLT,     
+		WEAPON_TEAM_ALLIES,           
+		0,         
+		0,       
+		0,        
+		0,        
+		0, 
+		0,      
+		0,       
+		0,       
+		0,      
+		0,      
+		0,       
+		0,          
+		0,          
+		0,          
+		0,        
+		0,                 
+		0.0f,            
+		0,              
+		{.0f, .0f},      
+		{0,0},              
+		0,                
+		0.0,               
+		0,               
+		0,  
+		{0.0, 0.0},             
+		MOD_AKIMBO,    
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                                
+    }, 
+
+	{   
+		WP_DUAL_TT33,
+		WEAPON_CLASS_AKIMBO,
+		WP_TT33,
+		WEAPON_TEAM_SOVIET,           
+		0,         
+		0,       
+		0,        
+		0,        
+		0, 
+		0,      
+		0,       
+		0,       
+		0,      
+		0,      
+		0,       
+		0,          
+		0,          
+		0,          
+		0,        
+		0,                 
+		0.0f,            
+		0,              
+		{.0f, .0f},      
+		{0,0},              
+		0,                
+		0.0,               
+		0,               
+		0,  
+		{0.0, 0.0},             
+		MOD_DUAL_TT33,    
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                                
+    }, 
+
+	{   
+		WP_M7,
+		WEAPON_CLASS_RIFLENADE,
+	WP_M1GARAND,      
+		WEAPON_TEAM_ALLIES,               
+		0,                   
+		0,       
+		0, 
+		0,       
+		0,        
+		0,      
+		0,       
+		0,       
+		0,      
+		0,      
+		0,       
+		0,         
+		0,          
+		0,          
+		0,          
+		0,                  
+		0.0f,            
+		0,               
+		{0,0},           
+		{0, 0},             
+		0,               
+		0.0,               
+		0,               
+		0,
+		{0.0, 0.0},               
+		MOD_M7,       
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                                  
+	},
+
+	{   
+		WP_M1941SCOPE,
+		WEAPON_CLASS_RIFLE | WEAPON_CLASS_SCOPED, 
+		WP_M1941,  
+		WEAPON_TEAM_ALLIES,  
+		0,         
+		0,       
+		0,
+		0,        
+		0,        
+		0,         
+		0,      
+		0,      
+		0,      
+		0,      
+		0,       
+		0,        
+		0,          
+		0,          
+		0,        
+		0,                  
+		0.0f,            
+		0,               
+		{0,0},           
+		{0,0},              
+		0,                
+		0.00,               
+		0,               
+		0, 
+		{0.0, 0.0},              
+		MOD_M1941SCOPE,   
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                            
+	}, 
+
     // Currently unused Gothicstein weapons
-	{   WP_P38,              MAX_AMMO_9MM,        1,       8,        1600,        100,       350,       350,       0,      0,      8,        7,          0,          0,          450,        35,                 0.3f,            50,              {.2f, .1f},      {0,0},              700,                0.95,               0,               0,              MOD_P38,                                   }, 
-	{   WP_M30,              MAX_AMMO_M97,        2,       2,        2000,        100,       1000,      1000,      0,      0,      20,       15,         0,          0,          4500,       15,                 0.6f,            100,             {.10f, .2f},     {.5f, .5f},         1500,               0.90,               1,               0,              MOD_M30,                                   }, 
-	{   WP_DELISLE,          MAX_AMMO_45,         1,       7,        2500,        100,       1200,      1200,      0,      0,      40,       30,         0,          0,          420,        50,                 0.5f,            100,             {1.0f, 1.0f},    {.1f, .1f},         128,                0.90,               1,               0,              MOD_DELISLE,                               },  
-	{   WP_DELISLESCOPE,     MAX_AMMO_45,         1,       5,        3000,        0,         1200,      1200,      0,      0,      40,       30,         0,          0,          300,        0,                  8.0f,            0,               {0,0},           {0,0},              128,                0.40,               1,               0,              MOD_DELISLESCOPE,                          }, 
-	{   WP_WELROD,           MAX_AMMO_GARAND,     1,       6,        2000,        100,       2000,      2000,      0,      0,      50,       50,         0,          0,          400,        35,                 0.3f,            70,              {.35f, .15f},    {0,0},              64,                 0.95,               0,               0,              MOD_WELROD,                                },  
-	{   WP_HOLYCROSS,        15,                  1,       15,       1000,        100,       250,       250,       0,      0,      150,      150,        0,          0,          0,          0,                  0.0f,            0,               {0, 0},          {0, 0},             64,                 1.00,               0,               0,              MOD_HOLYCROSS,                             }, 
+	{   
+		WP_P38,
+		WEAPON_CLASS_UNUSED,
+	WP_NONE,                  
+		WEAPON_TEAM_AXIS,             
+		0,        
+		0,       
+		0,        
+		0,        
+		0,       
+		0,       
+		0, 
+		0,      
+		0,      
+		0,      
+		0,        
+		0,          
+		0,          
+		0,          
+		0,        
+		0,                 
+		0.0f,            
+		0,              
+		{.0f, .0f},      
+		{0,0},              
+		0,                
+		0.0,               
+		0,               
+		0,
+		{0.0, 0.0},              
+		MOD_P38,      
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                                  
+	}, 
+
+	{   
+		WP_M30,
+		WEAPON_CLASS_UNUSED,
+	WP_NONE,                 
+		WEAPON_TEAM_COMMON,              
+		0,        
+		0,       
+		0, 
+		0,       
+		0,        
+		0,       
+		0,      
+		0,      
+		0,      
+		0,      
+		0,       
+		0,         
+		0,          
+		0,          
+		0,       
+		0,                 
+		0.0f,            
+		0,             
+		{.0f, .0f},     
+		{.0f, .0f},         
+		0,               
+		0.0,               
+		0,               
+		0,
+		{0.0, 0.0},               
+		MOD_M30,     
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                                   
+	}, 
+
+	{   
+		WP_DELISLE,
+		WEAPON_CLASS_RIFLE | WEAPON_CLASS_SCOPABLE,
+	WP_DELISLESCOPE,            
+		WEAPON_TEAM_ALLIES,          
+		0,         
+		0,       
+		0,        
+		0,
+		0,        
+		0,       
+		0,      
+		0,      
+		0,      
+		0,      
+		0,       
+		0,         
+		0,          
+		0,          
+		0,        
+		0,                 
+		0.0f,            
+		0,             
+		{0.0f, 0.0f},    
+		{.0f, .0f},         
+		0,                
+		0.0,               
+		0,               
+		0,
+		{0.0, 0.0},               
+		MOD_DELISLE,   
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                                 
+	},  
+
+	{   
+		WP_DELISLESCOPE,
+		WEAPON_CLASS_RIFLE | WEAPON_CLASS_SCOPED, 
+	WP_DELISLE, 	   
+		WEAPON_TEAM_ALLIES,  
+		0,         
+		0,       
+		0,
+		0,        
+		0,        
+		0,         
+		0,      
+		0,      
+		0,      
+		0,      
+		0,       
+		0,        
+		0,          
+		0,          
+		0,        
+		0,                  
+		0.0f,            
+		0,               
+		{0,0},           
+		{0,0},              
+		0,                
+		0.00,               
+		0,               
+		0, 
+		{0.0, 0.0},              
+		MOD_DELISLESCOPE,   
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                            
+	}, 
+
+	{   
+		WP_HDM,
+		WEAPON_CLASS_PISTOL,
+		WP_NONE,
+		WEAPON_TEAM_ALLIES,           
+		0,     
+		0,       
+		0,        
+		0,        
+		0,       
+		0,      
+		0,
+		0,      
+		0,      
+		0,      
+		0,       
+		0,         
+		0,          
+		0,          
+		0,        
+		0,                 
+		0.0f,            
+		0,              
+		{.0f, .0f},    
+		{0,0},              
+		0,                 
+		0.0,               
+		0,               
+		0,
+		{0.0, 0.0},               
+		MOD_HDM, 
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                                    
+	}, 
+
+	{   
+		WP_HOLYCROSS,
+		WEAPON_CLASS_BEAM,
+		WP_NONE,
+		WEAPON_TEAM_NONE,        
+		0,                  
+		0,       
+		0,       
+		0,
+		0,        
+		0,       
+		0,       
+		0,       
+		0,      
+		0,      
+		0,      
+		0,        
+		0,          
+		0,          
+		0,          
+		0,                  
+		0.0f,            
+		0,               
+		{0, 0},          
+		{0, 0},             
+		0,                 
+		0.0,               
+		0,               
+		0,
+		{0.0, 0.0},               
+		MOD_HOLYCROSS,      
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                            
+	}, 
+
     // Misc stuff, not actual weapons
-	{   WP_MONSTER_ATTACK1,  999,                 0,       999,      0,           50,        1000,      1000,      0,      0,      0,        0,          0,          0,          0,          0,                  0.0f,            0,               {0,0},           {0,0},              1000,               0,                  0,               0,              0,                                         },  
-	{   WP_MONSTER_ATTACK2,  999,                 0,       999,      0,           50,        250,       250,       0,      0,      0,        0,          0,          0,          0,          0,                  0.0f,            0,               {0,0},           {0,0},              1000,               0,                  0,               0,              0,                                         },  
-	{   WP_MONSTER_ATTACK3,  999,                 0,       999,      0,           50,        250,       250,       0,      0,      0,        0,          0,          0,          0,          0,                  0.0f,            0,               {0,0},           {0,0},              1000,               0,                  0,               0,              0,                                         },  
-	{   WP_GAUNTLET,         999,                 0,       999,      0,           50,        250,       250,       0,      0,      0,        0,          0,          0,          0,          0,                  0.0f,            0,               {0,0},           {0,0},              64,                 0,                  0,               0,              0,                                         } 
+		{   
+		WP_DUMMY_MG42,
+		WEAPON_CLASS_UNUSED,
+		WP_NONE,
+		WEAPON_TEAM_COMMON,             
+		0,     
+		0,
+		0,       
+		0,       
+		0,        
+		0,       
+		0,       
+		0,       
+		0,      
+		0,      
+		0,        
+		0,          
+		0,          
+		0,          
+		0,        
+		0,                 
+		0.0f,            
+		0,              
+		{.0f, .0f},      
+		{0,0},              
+		0,               
+		0.0,               
+		0,               
+		0,
+		{0.0, 0.0},               
+		MOD_MACHINEGUN,   
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                                    
+	},
+	
+	{   
+		WP_MONSTER_ATTACK1,
+		WEAPON_CLASS_NONE,
+		WP_NONE,
+		WEAPON_TEAM_NONE,  
+		999,                 
+		0,       
+		999,      
+		0,           
+		50,        
+		1000,      
+		1000,      
+		0,
+		0,      
+		0,      
+		0,        
+		0,          
+		0,          
+		0,          
+		0,          
+		0,                  
+		0.0f,            
+		0,               
+		{0,0},           
+		{0,0},              
+		1000,               
+		0,                  
+		0,               
+		0,
+		{0.0, 0.0},               
+		0,           
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                                   
+	},
+
+	{   
+		WP_MONSTER_ATTACK2,
+		WEAPON_CLASS_NONE,
+		WP_NONE, 
+		WEAPON_TEAM_NONE, 
+		999,                 
+		0,       
+		999,      
+		0,           
+		50,        
+		250,       
+		250,       
+		0,      
+		0,
+		0,      
+		0,        
+		0,          
+		0,          
+		0,          
+		0,          
+		0,                  
+		0.0f,            
+		0,               
+		{0,0},           
+		{0,0},              
+		1000,               
+		0,                  
+		0,               
+		0, 
+		{0.0, 0.0},            
+		0,      
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                                        
+	}, 
+
+	{   
+		WP_MONSTER_ATTACK3,
+		WEAPON_CLASS_NONE,
+	WP_NONE,            	
+		WEAPON_TEAM_NONE,  
+		999,                 
+		0,       
+		999,      
+		0,           
+		50,        
+		250,       
+		250,      
+		0,
+		0,      
+		0,      
+		0,        
+		0,          
+		0,          
+		0,          
+		0,          
+		0,                  
+		0.0f,            
+		0,               
+		{0,0},           
+		{0,0},              
+		1000,               
+		0,                  
+		0,               
+		0,  
+		{0.0, 0.0},             
+		0,          
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0,                                   
+	},  
 };
 
 // Skill-based ammo parameters
 ammoskill_t ammoSkill[GSKILL_NUM_SKILLS][WP_NUM_WEAPONS];
 
-int weapAlts[] = {
-	WP_NONE,                
-	// Melee Weapons
-	WP_NONE,             
-	WP_NONE,            
-	// One handed pistols
-	WP_SILENCER,                
-	WP_LUGER,           
-    WP_AKIMBO,               
-	WP_NONE,              
-	WP_NONE,            
-	// SMGs
-	WP_NONE,              
-	WP_NONE,         
-	WP_NONE,              
-	WP_NONE,              
-	WP_NONE,             
-	// Rifles
-	WP_SNIPERRIFLE,              
-	WP_MAUSER,        
-	WP_SNOOPERSCOPE,            
-	WP_GARAND,
-	WP_NONE, 
-	// Semi auto rifles
-	WP_M7,
-	WP_NONE,
-	// Assault Rifles
-	WP_NONE, 
-	WP_FG42SCOPE,
-	WP_NONE, 
-	// Shotguns
-	WP_NONE,  
-	// Heavy Weapons
-	WP_NONE, 
-	WP_NONE, 
-	WP_NONE, 
-	WP_NONE, 
-	// Secret Weapons
-	WP_NONE, 
-	WP_NONE,   
-	// Explosives
-	WP_NONE, 
-	WP_NONE, 
-	WP_NONE, 
-	WP_NONE,          
-	WP_NONE, 
-	// Misc Alt modes
-	WP_FG42,   
-	WP_COLT,     
-	WP_M1GARAND,      
-	// Currently inactive Gothicstein weapons                                 
-	WP_NONE,                  
-	WP_NONE,                 
-	WP_DELISLESCOPE,            
-	WP_DELISLE, 	   
-	WP_NONE,            	
-	WP_NONE 
-};
 
+int reloadableWeapons[] = {
+	WP_MP40,        WP_THOMPSON,    WP_STEN,            WP_GARAND,              WP_PANZERFAUST,         WP_FLAMETHROWER,
+	WP_SILENCER,    WP_TT33,        WP_FG42,            WP_REVOLVER,            WP_MG42M,               WP_COLT,
+	WP_LUGER,       WP_MORTAR,      WP_AKIMBO,          WP_PPSH,                WP_M7,                  WP_MP34,
+	WP_MAUSER,      WP_SNIPERRIFLE, WP_SNOOPERSCOPE,    WP_MOSIN,               WP_M1GARAND,            WP_G43,
+	WP_MP44,        WP_BAR,         WP_M97,             WP_FG42SCOPE,           WP_BROWNING,            WP_VENOM,
+	WP_P38,         WP_M30,         WP_DELISLE,         WP_DELISLESCOPE,        WP_TESLA,               WP_M1941,
+	WP_AUTO5,       WP_M1941SCOPE,  WP_DUAL_TT33, -1
+};
 
 // new (10/18/00)
 char *animStrings[] = {
@@ -970,30 +2949,6 @@ model="models/powerups/armor/armor_head1.md3"
 	// WEAPONS
 	//
 
-/*
-weapon_gauntlet
-*/
-	{
-		"weapon_gauntlet",
-		"sound/misc/w_pkup.wav",
-		{
-		"models/weapons2/gauntlet/gauntlet.md3",
-		0, 
-		0
-		},
-		"", 
-		"Gauntlet",             
-		0,
-		IT_WEAPON,
-		WP_GAUNTLET,
-		WP_GAUNTLET,
-		WP_GAUNTLET,
-		WP_GAUNTLET,
-		"",                      
-		"",                      
-		{0,0,0,0,0}
-	},
-
 
 /*QUAKED weapon_knife (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
 -------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
@@ -1180,6 +3135,32 @@ model="models/weapons2/mauser/mauser.md3"
 		{0,0,0,0,0}
 	},
 
+	/*QUAKED weapon_m1941scope (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
+-------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
+model="models/weapons2/mauser/mauser.md3"
+*/
+	{
+		"weapon_m1941scope",
+		"sound/misc/w_pkup.wav",
+		{   
+		"",
+		"",
+		""
+		},
+
+		"icons/iconw_m1941scope_1", 
+		"m1941scope",          
+		50,
+		IT_WEAPON,
+		WP_M1941SCOPE,
+		WP_M1941SCOPE,
+		WP_M1941,
+		WP_M1941,
+		"",                      
+		"",                      
+		{0,0,0,0,0}
+	},
+
 /*QUAKED weapon_sten (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
 -------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
 model="models/weapons2/sten/sten.md3"
@@ -1225,6 +3206,32 @@ dual colts
 		WP_AKIMBO,
 		WP_COLT,
 		WP_AKIMBO,
+		"",                     
+		"",                     
+		{0,0,0,0,0}
+	},
+
+
+/*weapon_akimbo
+dual TT33
+*/
+	{
+		"weapon_dualtt33",
+		"sound/misc/w_pkup.wav",
+		{   
+		"",
+		"",
+		""
+		},
+
+		"icons/iconw_tt33",    
+		"Dual TT33",            
+		50,
+		IT_WEAPON,
+		WP_DUAL_TT33,
+		WP_DUAL_TT33,
+		WP_TT33,
+		WP_DUAL_TT33,
 		"",                     
 		"",                     
 		{0,0,0,0,0}
@@ -1496,7 +3503,7 @@ model="models/weapons2/venom/pu_venom.md3"
 		IT_WEAPON,
 		WP_VENOM,
 		WP_VENOM,
-		WP_VENOM,
+		WP_MG42M,
 		WP_VENOM,
 		"",                      
 		"",                      
@@ -1911,6 +3918,36 @@ model="models/multiplayer/g43/g43_3rd.md3"
 	},
 
 
+/*QUAKED weapon_m1941 (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
+"stand" values:
+	no value:	laying in a default position on it's side (default)
+	2:			upright, barrel pointing up, slightly angled (rack mount)
+-------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
+model="models/multiplayer/m1941/m1941_3rd.md3"
+*/
+	{
+		"weapon_m1941",
+		"sound/misc/w_pkup.wav",
+		{   
+		"",
+		"",
+		""
+		},
+
+		"icons/iconw_m1941",    
+		"m1941",             
+		30,
+		IT_WEAPON,
+		WP_M1941,
+		WP_M1941,
+		WP_M1941,
+		WP_M1941,
+		"",                  
+		"",                  
+		{0,0,0,0,0}
+	},
+
+
 /*QUAKED weapon_m1_garand (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
 "stand" values:
 	no value:	laying in a default position on it's side (default)
@@ -2043,7 +4080,7 @@ model="models/multiplayer/mg42/mg42_3rd.md3"
 		IT_WEAPON,
 		WP_MG42M,
 		WP_MG42M,
-		WP_VENOM,
+		WP_MG42M,
 		WP_MG42M,
 		"",                      
 		"",                      
@@ -2069,7 +4106,7 @@ model="models/multiplayer/mg42/mg42_3rd.md3"
 		IT_WEAPON,
 		WP_BROWNING,
 		WP_BROWNING,
-		WP_BAR,
+		WP_MG42M,
 		WP_BROWNING,
 		"",                      
 		"",                      
@@ -2103,6 +4140,33 @@ model="models/weapons2/m97/m97_3rd.md3"
 	},
 
 
+	/*QUAKED weapon_auto5 (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
+-------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
+model="models/weapons2/m97/m97_3rd.md3"
+*/
+	{
+		"weapon_auto5",
+		"sound/misc/w_pkup.wav",
+		{ 
+		"",
+		"",
+		""
+		},
+
+			"icons/iconw_auto5",  
+			"auto5",            
+			700,
+			IT_WEAPON,
+			WP_AUTO5,
+			WP_AUTO5,
+			WP_M97,
+			WP_AUTO5,
+			"",                      
+			"",                     
+			{ 0,0,0,0,0 }
+	},
+
+
 /*QUAKED weapon_m30 (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
 -------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
 model="models/weapons2/m30/m30_3rd.md3"
@@ -2129,7 +4193,7 @@ model="models/weapons2/m30/m30_3rd.md3"
 			{ 0,0,0,0,0 }
 	},
 
-/*QUAKED weapon_welrod (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
+/*QUAKED weapon_hdm (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
 "stand" values:
 	no value:	laying in a default position on it's side (default)
 	2:			upright, barrel pointing up, slightly angled (rack mount)
@@ -2137,7 +4201,7 @@ model="models/weapons2/m30/m30_3rd.md3"
 model="models/weapons2/p38/luger.md3"
 */
 	{
-		"weapon_welrod",
+		"weapon_hdm",
 		"sound/misc/w_pkup.wav",
 		{   
 		"",
@@ -2145,14 +4209,14 @@ model="models/weapons2/p38/luger.md3"
 		"",
 		},
 
-		"icons/iconw_welrod",    
-		"welrod",              
+		"icons/iconw_hdm",    
+		"hdm",              
 		30,
 		IT_WEAPON,
-		WP_WELROD,
-		WP_WELROD,
-		WP_GARAND,
-		WP_WELROD,
+		WP_HDM,
+		WP_HDM,
+		WP_HDM,
+		WP_HDM,
 		"",                  
 		"",                 
 		{0,0,0,0}
@@ -2476,6 +4540,34 @@ model="models/powerups/ammo/barammo_l.md3"
 		{60,60,45,45,45}	
 	},
 
+/*QUAKED ammo_m1941ammo (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
+used by: M1941
+
+-------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
+model="models/powerups/ammo/barammo.md3"
+*/
+{
+		"ammo_m1941",
+		"sound/misc/am_pkup.wav",
+		{ 
+		"models/powerups/ammo/barammo.md3",
+		0, 
+		0
+		},
+
+		"icons/iconw_luger_1", 
+		"ammo_m1941",           
+		60,
+		IT_AMMO,
+		WP_NONE,
+		WP_M1941,
+		WP_M1941,
+		WP_M1941,
+		"",                 
+		"",                  
+		{40,40,30,30,30}	
+	},
+
 /*QUAKED ammo_44ammo (.3 .3 1) (-16 -16 -16) (16 16 16) SUSPENDED SPIN - RESPAWN
 used by: MP44
 
@@ -2585,7 +4677,7 @@ model="models/powerups/ammo/44ammo_l.md3"
 		WP_REVOLVER,
 		"",                 
 		"",                  
-		{ 6,6,6,6,6 }
+		{ 12,12,12,12,12 }
 	},
 
 
@@ -2947,9 +5039,9 @@ model="models/powerups/ammo/am127mm.md3"
 		100,
 		IT_AMMO,
 		WP_NONE,
-		WP_VENOM,
-		WP_VENOM,
-		WP_VENOM,
+		WP_MG42M,
+		WP_MG42M,
+		WP_MG42M,
 		"",                         
 		"",                        
 		{100,100,100,100,100}
@@ -3215,6 +5307,92 @@ model="models/powerups/holdable/adrenaline.md3"
 		{1,1,1,1,1}
 	},
 
+/*QUAKED holdable_eg_syringe(.3 .3 1) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
+pickup sound : "sound/pickup/holdable/get_adrenaline.wav"
+use sound : "sound/pickup/holdable/use_adrenaline.wav"
+-------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
+model="models/powerups/holdable/eg_syringe.md3"
+*/
+	{
+		"holdable_eg_syringe",
+		"sound/pickup/holdable/get_adrenaline.wav",
+		{
+		"models/powerups/holdable/eg_syringe.md3",
+		0, 
+		0
+		},
+
+		"icons/eg_syringe",            
+		"EG Syringe used",             
+		1,
+		IT_HOLDABLE,
+		WP_NONE,
+		HI_EG_SYRINGE,
+		0,
+		0,
+		"",                              
+		"sound/pickup/holdable/use_adrenaline.wav", 
+		{1,1,1,1,1}
+	},
+
+
+/*QUAKED holdable_bg_syringe(.3 .3 1) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
+pickup sound : "sound/pickup/holdable/get_adrenaline.wav"
+use sound : "sound/pickup/holdable/use_adrenaline.wav"
+-------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
+model="models/powerups/holdable/bg_syringe.md3"
+*/
+	{
+		"holdable_bg_syringe",
+		"sound/pickup/holdable/get_adrenaline.wav",
+		{
+		"models/powerups/holdable/bg_syringe.md3",
+		0, 
+		0
+		},
+
+		"icons/bg_syringe",            
+		"BG Syringe used",             
+		1,
+		IT_HOLDABLE,
+		WP_NONE,
+		HI_BG_SYRINGE,
+		0,
+		0,
+		"",                              
+		"sound/pickup/holdable/use_adrenaline.wav", 
+		{1,1,1,1,1}
+	},
+
+
+/*QUAKED holdable_lp_syringe(.3 .3 1) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
+pickup sound : "sound/pickup/holdable/get_adrenaline.wav"
+use sound : "sound/pickup/holdable/use_adrenaline.wav"
+-------- MODEL FOR RADIANT ONLY - DO NOT SET THIS AS A KEY --------
+model="models/powerups/holdable/lp_syringe.md3"
+*/
+	{
+		"holdable_lp_syringe",
+		"sound/pickup/holdable/get_adrenaline.wav",
+		{
+		"models/powerups/holdable/lp_syringe.md3",
+		0, 
+		0
+		},
+
+		"icons/lp_syringe",            
+		"LP Syringe used",             
+		1,
+		IT_HOLDABLE,
+		WP_NONE,
+		HI_LP_SYRINGE,
+		0,
+		0,
+		"",                              
+		"sound/pickup/holdable/use_adrenaline.wav", 
+		{1,1,1,1,1}
+	},
+
 
 /*QUAKED holdable_bandages(.3 .3 1) (-8 -8 -8) (8 8 8) SUSPENDED SPIN - RESPAWN
 Protection from fatigue
@@ -3336,7 +5514,7 @@ model="models/powerups/holdable/zemphr_book.md3"
 */
 		{
 		"item_quad",
-		"sound/items/quaddamage.wav",
+		"sound/pickup/q3powerups/quaddamage.wav",
 		{
 		"models/powerups/instant/quad.md3",
 		0, 
@@ -3359,7 +5537,7 @@ model="models/powerups/holdable/zemphr_book.md3"
 */
 		{
 		"item_haste",
-		"sound/items/haste.wav",
+		"sound/pickup/q3powerups/haste.wav",
 		{
 		"models/powerups/instant/haste.md3",
 		0, 
@@ -3383,7 +5561,7 @@ model="models/powerups/holdable/zemphr_book.md3"
 */
 		{
 		"item_enviro",
-		"sound/items/protect.wav",
+		"sound/pickup/q3powerups/protect.wav",
 		{
 		"models/powerups/instant/enviro.md3",
 		0, 
@@ -3408,7 +5586,7 @@ model="models/powerups/holdable/zemphr_book.md3"
 */
 		{
 		"item_invis",
-		"sound/items/invisibility.wav",
+		"sound/pickup/q3powerups/invisibility.wav",
 		{
 		"models/powerups/instant/invis.md3",
 		0, 
@@ -3453,6 +5631,32 @@ model="models/powerups/keys/binoculars.md3"
 		0,
 		"",                      
 		"models/keys/key.wav",
+		{0,0,0,0,0}
+	},
+
+
+/*
+weapon_magicammo (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+*/
+	{
+		"weapon_magicammo",
+		"sound/misc/w_pkup.wav",
+		{
+			"models/multiplayer/ammopack/ammopack.md3",
+			"models/multiplayer/ammopack/v_ammopack.md3",
+			"models/multiplayer/ammopack/ammopack_pickup.md3"
+		},
+
+		"icons/iconw_ammopack_1",    // icon
+		"Ammo Pack",             // pickup
+		50, // this should never be picked up
+		IT_WEAPON,
+		WP_NONE,
+		WP_NONE,
+		WP_NONE,
+		WP_NONE,
+		"",                      // precache
+		"",                      // sounds
 		{0,0,0,0,0}
 	},
 
@@ -3625,7 +5829,7 @@ BG_AkimboFireSequence
 qboolean BG_AkimboFireSequence( int weapon, int akimboClip, int coltClip ) {
 	// NOTE: this doesn't work when clips are turned off (dmflags 64)
 
-	if ( weapon != WP_AKIMBO ) {
+	if ( weapon != WP_AKIMBO && weapon != WP_DUAL_TT33 ) {
 		return qfalse;
 	}
 
@@ -3708,6 +5912,19 @@ gitem_t *BG_FindItem( const char *pickupName ) {
 
 	for ( it = bg_itemlist + 1 ; it->classname ; it++ ) {
 		if ( !Q_stricmp( it->pickup_name, pickupName ) ) {
+			return it;
+		}
+	}
+
+	return NULL;
+}
+
+
+gitem_t *BG_FindItemForClassName( const char *className ) {
+	gitem_t *it;
+
+	for ( it = bg_itemlist + 1 ; it->classname ; it++ ) {
+		if ( !Q_stricmp( it->classname, className ) ) {
 			return it;
 		}
 	}
@@ -3820,6 +6037,79 @@ qboolean    BG_PlayerTouchesItem( playerState_t *ps, entityState_t *item, int at
 	}
 
 	return qtrue;
+}
+
+/*
+=================================
+BG_AddMagicAmmo:
+	if numOfClips is 0, no ammo is added, it just return whether any ammo CAN be added;
+	otherwise return whether any ammo was ACTUALLY added.
+
+WARNING: when numOfClips is 0, DO NOT CHANGE ANYTHING under ps.
+=================================
+*/
+// Gordon: setting numOfClips = 0 allows you to check if the client needs ammo, but doesnt give any
+qboolean BG_AddMagicAmmo( playerState_t *ps, int numOfClips ) {
+	int i, weapon;
+	int ammoAdded = qfalse;
+	int maxammo;
+	int clip;
+	int weapNumOfClips;
+
+	// Gordon: now other weapons
+	for ( i = 0; reloadableWeapons[i] >= 0; i++ ) {
+		weapon = reloadableWeapons[i];
+		if ( COM_BitCheck( ps->weapons, weapon ) ) {
+			maxammo = ammoTable[weapon].maxammo;
+
+			// Handle weapons that just use clip, and not ammo
+			if ( weapon == WP_FLAMETHROWER) {
+				clip = BG_FindAmmoForWeapon( weapon );
+				if ( ps->ammoclip[clip] < maxammo ) {
+					// early out
+					if ( !numOfClips ) {
+						return qtrue;
+					}
+
+					ammoAdded = qtrue;
+					ps->ammoclip[clip] = maxammo;
+				}
+			} else if ( weapon == WP_TESLA) {
+				clip = BG_FindAmmoForWeapon( weapon );
+				if ( ps->ammoclip[clip] < maxammo ) {
+					// early out
+					if ( !numOfClips ) {
+						return qtrue;
+					}
+
+					ammoAdded = qtrue;
+					ps->ammoclip[clip] = maxammo;
+				}
+			} else {
+				clip = BG_FindAmmoForWeapon( weapon );
+				if ( ps->ammo[clip] < maxammo ) {
+					// early out
+					if ( !numOfClips ) {
+						return qtrue;
+					}
+					ammoAdded = qtrue;
+
+					if ( weapon == WP_AKIMBO || weapon == WP_DUAL_TT33  ) {
+						weapNumOfClips = numOfClips * 2; // double clips babeh!
+					} else {
+						weapNumOfClips = numOfClips;
+					}
+
+					// add and limit check
+					ps->ammo[clip] += weapNumOfClips * ammoTable[weapon].maxclip;
+					if ( ps->ammo[clip] > maxammo ) {
+						ps->ammo[clip] = maxammo;
+					}
+				}
+			}
+		}
+	}
+	return ammoAdded;
 }
 
 
@@ -4612,6 +6902,28 @@ void BG_EvaluateTrajectoryDelta( const trajectory_t *tr, int atTime, vec3_t resu
 		break;
 	}
 }
+
+void BG_ClipVelocity( vec3_t in, vec3_t normal, vec3_t out, float overbounce ) {
+	float	backoff;
+	float	change;
+	int		i;
+
+	backoff = DotProduct (in, normal);
+
+	if ( backoff < 0 ) {
+		backoff *= overbounce;
+	}
+	else {
+		backoff /= overbounce;
+	}
+
+	for ( i=0 ; i<3 ; i++ ) {
+		change = normal[i]*backoff;
+		out[i] = in[i] - change;
+	}
+}
+
+
 /*
 ============
 BG_GetMarkDir
@@ -4686,6 +6998,8 @@ char *eventnames[] = {
 	"EV_WEAPONSWITCHED", // autoreload
 	"EV_EMPTYCLIP",
 	"EV_FILL_CLIP",
+	"EV_FILL_CLIP_FULL",
+	"EV_FILL_CLIP_AI",
 	"EV_WEAP_OVERHEAT",
 	"EV_CHANGE_WEAPON",
 	"EV_FIRE_WEAPON",
@@ -4789,9 +7103,13 @@ char *eventnames[] = {
 	"EV_SNIPER_SOUND",
 	"EV_POPUP",
 	"EV_POPUPBOOK",
+	"EV_OBJECTIVE_MET",
+	"EV_CHECKPOINT_PASSED",
+	"EV_GAME_SAVED",
 	"EV_GIVEPAGE",
 	"EV_CLOSEMENU",
 	"EV_M97_PUMP", //jaymod
+	"EV_THROWKNIFE",
 	"EV_COUGH",
 	"EV_QUICKGRENS",
 	"EV_MAX_EVENTS"
@@ -5118,7 +7436,7 @@ float BG_SplineLength( splinePath_t* pSpline ) {
 	float dist = 0;
 //	float tension;
 	vec3_t vec[2];
-	vec3_t lastPoint;
+	vec3_t lastPoint = { 0 };
 	vec3_t result;
 
 	for ( i = 0; i <= 1.f; i += granularity ) {
@@ -5514,6 +7832,7 @@ char *BG_GetWeaponFilename( weapon_t weaponNum )
 		case WP_COLT:              return "colt.weap";
 		case WP_AKIMBO:            return "akimbo.weap";
 		case WP_TT33:              return "tt33.weap";
+		case WP_DUAL_TT33:         return "dualtt33.weap";
 		case WP_P38:               return "p38.weap";
 		case WP_REVOLVER:          return "revolver.weap";
 		case WP_THOMPSON:          return "thompson.weap";
@@ -5534,6 +7853,7 @@ char *BG_GetWeaponFilename( weapon_t weaponNum )
 		case WP_MP44:              return "mp44.weap";
 		case WP_BAR:               return "bar.weap";
 		case WP_M97:               return "ithaca.weap";
+		case WP_AUTO5:             return "auto5.weap";
 		case WP_FLAMETHROWER:      return "flamethrower.weap";
 		case WP_PANZERFAUST:       return "panzerfaust.weap";
 		case WP_MG42M:             return "mg42m.weap";
@@ -5546,15 +7866,17 @@ char *BG_GetWeaponFilename( weapon_t weaponNum )
 		case WP_AIRSTRIKE:         return "airstrike.weap";
 		case WP_POISONGAS:         return "poisongas.weap";
 		case WP_M30:               return "m30.weap";
-		case WP_WELROD:            return "welrod.weap";
+		case WP_HDM:               return "hdm.weap";
 		case WP_HOLYCROSS:         return "cross.weap";
 		case WP_DELISLE:           return "delisle.weap";
 		case WP_DELISLESCOPE:      return "delislescope.weap";
+		case WP_DUMMY_MG42:        return "dummy_mg42.weap";
+		case WP_M1941:             return "m1941.weap";
+		case WP_M1941SCOPE:        return "m1941scope.weap";
 		case WP_NONE:
 		case WP_MONSTER_ATTACK1:
 		case WP_MONSTER_ATTACK2:
 		case WP_MONSTER_ATTACK3:
-		case WP_GAUNTLET:
 		case WP_SNIPER:
 		case VERYBIGEXPLOSION:
 		case WP_MORTAR:            return "";
@@ -5611,6 +7933,11 @@ qboolean BG_ParseAmmoTable( int handle, weapon_t weaponNum )
 		} else if ( !Q_stricmp( token.string, "reloadTime" ) ) {
 			if ( !PC_Int_Parse( handle, &ammoTable[weaponNum].reloadTime ) ) {
 				PC_SourceError( handle, "expected reloadTime value" );
+				return qfalse;
+			}
+		} else if ( !Q_stricmp( token.string, "reloadTimeFull" ) ) {
+			if ( !PC_Int_Parse( handle, &ammoTable[weaponNum].reloadTimeFull ) ) {
+				PC_SourceError( handle, "expected reloadTimeFull value" );
 				return qfalse;
 			}
 		} else if ( !Q_stricmp( token.string, "fireDelayTime" ) ) {
@@ -5714,6 +8041,55 @@ qboolean BG_ParseAmmoTable( int handle, weapon_t weaponNum )
 		} else if ( !Q_stricmp( token.string, "upAngle" ) ) {
 			if ( !PC_Int_Parse( handle, &ammoTable[weaponNum].upAngle ) ) {
 				PC_SourceError( handle, "expected upAngle value" );
+				return qfalse;
+			}
+		} else if ( !Q_stricmp( token.string, "falloffDistance" ) ) {
+			if ( !PC_Float_Parse( handle, &ammoTable[weaponNum].falloffDistance[0] ) ) {
+				PC_SourceError( handle, "expected falloffdistance.min value" );
+				return qfalse;
+			}
+			if ( !PC_Float_Parse( handle, &ammoTable[weaponNum].falloffDistance[1] ) ) {
+				PC_SourceError( handle, "expected falloffdistance.max value" );
+				return qfalse;
+			}
+		} else if ( !Q_stricmp( token.string, "shotgunReloadStart" ) ) {
+			if ( !PC_Int_Parse( handle, &ammoTable[weaponNum].shotgunReloadStart ) ) {
+				PC_SourceError( handle, "expected shotgunReloadStart value" );
+				return qfalse;
+			}
+		} else if ( !Q_stricmp( token.string, "shotgunReloadLoop" ) ) {
+			if ( !PC_Int_Parse( handle, &ammoTable[weaponNum].shotgunReloadLoop ) ) {
+				PC_SourceError( handle, "expected shotgunReloadLoop value" );
+				return qfalse;
+			}
+		} else if ( !Q_stricmp( token.string, "shotgunReloadEnd" ) ) {
+			if ( !PC_Int_Parse( handle, &ammoTable[weaponNum].shotgunReloadEnd ) ) {
+				PC_SourceError( handle, "expected shotgunReloadEnd value" );
+				return qfalse;
+			}
+		} else if ( !Q_stricmp( token.string, "shotgunPumpStart" ) ) {
+			if ( !PC_Int_Parse( handle, &ammoTable[weaponNum].shotgunPumpStart ) ) {
+				PC_SourceError( handle, "expected shotgunPumpStart value" );
+				return qfalse;
+			}
+		} else if ( !Q_stricmp( token.string, "shotgunPumpLoop" ) ) {
+			if ( !PC_Int_Parse( handle, &ammoTable[weaponNum].shotgunPumpLoop ) ) {
+				PC_SourceError( handle, "expected shotgunPumpLoop value" );
+				return qfalse;
+			}
+		} else if ( !Q_stricmp( token.string, "shotgunPumpEnd" ) ) {
+			if ( !PC_Int_Parse( handle, &ammoTable[weaponNum].shotgunPumpEnd  ) ) {
+				PC_SourceError( handle, "expected shotgunPumpEnd value" );
+				return qfalse;
+			}
+		} else if ( !Q_stricmp( token.string, "brassDelayEmpty" ) ) {
+			if ( !PC_Int_Parse( handle, &ammoTable[weaponNum].brassDelayEmpty  ) ) {
+				PC_SourceError( handle, "expected brassDelayEmpty value" );
+				return qfalse;
+			}
+		} else if ( !Q_stricmp( token.string, "brassDelay" ) ) {
+			if ( !PC_Int_Parse( handle, &ammoTable[weaponNum].brassDelay  ) ) {
+				PC_SourceError( handle, "expected brassDelay value" );
 				return qfalse;
 			}
 		} else {

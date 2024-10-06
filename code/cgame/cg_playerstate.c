@@ -73,6 +73,7 @@ void CG_CheckAmmo( void ) {
 		case WP_LUGER:
 		case WP_COLT:
 		case WP_AKIMBO:
+		case WP_DUAL_TT33:
 		case WP_SILENCER:
 		case WP_FG42:
 		case WP_FG42SCOPE:
@@ -88,7 +89,7 @@ void CG_CheckAmmo( void ) {
 		case WP_PPSH:
 		case WP_TT33:
 		case WP_P38:
-		case WP_WELROD:
+		case WP_HDM:
 		case WP_MOSIN:
 		case WP_G43:
 	    case WP_M1GARAND:
@@ -96,11 +97,13 @@ void CG_CheckAmmo( void ) {
 		case WP_MP44:
 		case WP_MG42M:
 		case WP_M97:
+		case WP_AUTO5:
 		case WP_REVOLVER:
 		case WP_BROWNING:
 		case WP_M30:
 		case WP_HOLYCROSS:
 		case WP_DELISLE:
+		case WP_M1941:
 		default:
 			total += cg.snap->ps.ammo[BG_FindAmmoForWeapon( i )] * 1000;
 		}
@@ -267,6 +270,7 @@ void CG_Respawn( void ) {
 	cg.pmext.bAutoReload = ( cg_autoReload.integer > 0 ); // autoreload
 
 	cg.centerPrintTime = 0;     //----(SA)	reset centerprint counter so previous messages don't re-appear
+	cg.subtitlePrintTime = 0;     //----(SA)	reset centerprint counter so previous messages don't re-appear
 	cg.cursorHintIcon = 0;
 	cg.cursorHintTime = 0;
 	cg.yougotmailTime = 0;

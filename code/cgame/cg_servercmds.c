@@ -98,29 +98,23 @@ static void CG_ParseTeamInfo( void ) {
 	int i;
 	int client;
 
-	numSortedTeamPlayers = atoi( CG_Argv( 1 ) );
-	if( numSortedTeamPlayers < 0 || numSortedTeamPlayers > TEAM_MAXOVERLAY )
-	{
-		CG_Error( "CG_ParseTeamInfo: numSortedTeamPlayers out of range (%d)",
-				numSortedTeamPlayers );
-		return;
-	}
+	// NERVE - SMF
+	cg.identifyClientNum = atoi( CG_Argv( 1 ) );
+	cg.identifyClientHealth = atoi( CG_Argv( 2 ) );
+	// -NERVE - SMF
+
+	numSortedTeamPlayers = atoi( CG_Argv( 3 ) );
 
 	for ( i = 0 ; i < numSortedTeamPlayers ; i++ ) {
-		client = atoi( CG_Argv( i * 6 + 2 ) );
-		if( client < 0 || client >= MAX_CLIENTS )
-		{
-		  CG_Error( "CG_ParseTeamInfo: bad client number: %d", client );
-		  return;
-		}
+		client = atoi( CG_Argv( i * 5 + 4 ) );
 
 		sortedTeamPlayers[i] = client;
 
-		cgs.clientinfo[ client ].location = atoi( CG_Argv( i * 6 + 3 ) );
-		cgs.clientinfo[ client ].health = atoi( CG_Argv( i * 6 + 4 ) );
-		cgs.clientinfo[ client ].armor = atoi( CG_Argv( i * 6 + 5 ) );
-		cgs.clientinfo[ client ].curWeapon = atoi( CG_Argv( i * 6 + 6 ) );
-		cgs.clientinfo[ client ].powerups = atoi( CG_Argv( i * 6 + 7 ) );
+		cgs.clientinfo[ client ].location = atoi( CG_Argv( i * 5 + 5 ) );
+		cgs.clientinfo[ client ].health = atoi( CG_Argv( i * 5 + 6 ) );
+		cgs.clientinfo[ client ].powerups = atoi( CG_Argv( i * 5 + 7 ) );
+
+		cg_entities[ client ].currentState.teamNum = atoi( CG_Argv( i * 5 + 8 ) );
 	}
 }
 
@@ -621,6 +615,7 @@ static void CG_MapRestart( void ) {
 	memset( &cg.lastWeapSelInBank[0], 0, MAX_WEAP_BANKS * sizeof( int ) );  // clear weapon bank selections
 
 	cg.centerPrintTime = 0; // reset centerprint counter so previous messages don't re-appear
+	cg.subtitlePrintTime = 0; // reset subtitleprint counter so previous messages don't re-appear
 	cg.itemPickupTime = 0;  // reset item pickup counter so previous messages don't re-appear
 	cg.cursorHintFade = 0;  // reset cursor hint timer
 	cg.yougotmailTime = 0;  // reset
@@ -818,13 +813,18 @@ static void CG_ServerCommand( void ) {
 
 	if ( !strcmp( cmd, "cpst" )) {    // dynamite print (what a hack :(
 		if (cg_drawSubtitles.value != 0) {
-			CG_SubtitlePrint( CG_Argv( 1 ), SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.27 ), 6 );
+			CG_SubtitlePrint( CG_Argv( 1 ), SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.25 ), cg_subtitleSize.integer );
 		}
 		return;
 	}
 
 	if ( !strcmp( cmd, "cp" ) ) {
 		CG_CenterPrint( CG_Argv( 1 ), SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.25 ), SMALLCHAR_WIDTH );
+		return;
+	}
+
+	if ( !strcmp( cmd, "cptop" ) ) {
+		CG_CenterPrint( CG_Argv( 1 ), SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.90 ), 9 );
 		return;
 	}
 

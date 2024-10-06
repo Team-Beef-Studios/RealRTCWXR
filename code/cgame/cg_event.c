@@ -132,6 +132,15 @@ static void CG_UseItem( centity_t *cent ) {
 				case HI_ADRENALINE:
 					CG_CenterPrint( "usedadrenaline", SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.25 ), SMALLCHAR_WIDTH );
 					break;
+				case HI_EG_SYRINGE:
+					CG_CenterPrint( "usedeg_syringe", SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.25 ), SMALLCHAR_WIDTH );
+					break;
+				case HI_BG_SYRINGE:
+					CG_CenterPrint( "usedbg_syringe", SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.25 ), SMALLCHAR_WIDTH );
+					break;
+			    case HI_LP_SYRINGE:
+					CG_CenterPrint( "usedlp_syringe", SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.25 ), SMALLCHAR_WIDTH );
+					break;
 				case HI_BANDAGES:
 					CG_CenterPrint( "usedbandages", SCREEN_HEIGHT - ( SCREEN_HEIGHT * 0.25 ), SMALLCHAR_WIDTH );
 					break;
@@ -163,6 +172,9 @@ static void CG_UseItem( centity_t *cent ) {
 		break;
 
 	case HI_ADRENALINE:
+	case HI_EG_SYRINGE:
+	case HI_BG_SYRINGE:
+	case HI_LP_SYRINGE:
 		trap_S_StartSound( NULL, es->number, CHAN_BODY, cgs.media.adrenalineSound );
 		break;
 	case HI_BANDAGES:
@@ -207,6 +219,12 @@ static void CG_ItemPickup( int itemNum ) {
 			}
 		}
 
+		if ( weapon == WP_TT33 ) {
+			if ( COM_BitCheck( cg.snap->ps.weapons, weapon ) ) {
+				weapon = WP_DUAL_TT33; // you have TT33, now get DUAL TT33(second)
+			}
+		}
+
 		if ( cg_autoswitch.integer && cg.predictedPlayerState.weaponstate != WEAPON_RELOADING ) {
 
 			//	0 - "Off"
@@ -217,7 +235,7 @@ static void CG_ItemPickup( int itemNum ) {
 			//	5 - "New and Better"
 
 			// don't ever autoswitch to secondary fire weapons
-			if ( weapon != WP_SNIPERRIFLE && weapon != WP_SNOOPERSCOPE && weapon != WP_FG42SCOPE && weapon != WP_DELISLESCOPE ) {  //----(SA)	modified
+			if ( weapon != WP_SNIPERRIFLE && weapon != WP_SNOOPERSCOPE && weapon != WP_FG42SCOPE && weapon != WP_DELISLESCOPE && weapon != WP_M1941SCOPE ) {  //----(SA)	modified
 
 				// no weap currently selected, always just select the new one
 				if ( !cg.weaponSelect ) {
@@ -1260,7 +1278,6 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 	const char      *s;
 	int clientNum;
 	clientInfo_t    *ci;
-	//char	tempStr[MAX_QPATH];
 
 	// JPW NERVE copied here for mg42 SFX event
 	vec3_t porg, gorg, norm;    // player/gun origin
@@ -1308,7 +1325,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			} else if ( cent->currentState.aiChar == AICHAR_PROTOSOLDIER ) {
 				trap_S_StartSound( NULL, es->number, CHAN_BODY, cgs.media.footsteps[ FOOTSTEP_PROTOSOLDIER_STEP ][footstepcnt] );
 				CG_StartShakeCamera( 0.05, 400, es->pos.trBase, 512 );
-			} else if ( cent->currentState.aiChar == AICHAR_SUPERSOLDIER ) {
+			} else if ( cent->currentState.aiChar == AICHAR_SUPERSOLDIER || cent->currentState.aiChar == AICHAR_SUPERSOLDIER_LAB ) {
 				trap_S_StartSound( NULL, es->number, CHAN_BODY, cgs.media.footsteps[ FOOTSTEP_SUPERSOLDIER_STEP ][footstepcnt] );
 				CG_StartShakeCamera( 0.08, 500, es->pos.trBase, 800 );
 			} else if ( cent->currentState.aiChar == AICHAR_HEINRICH ) {
@@ -1333,7 +1350,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			} else if ( cent->currentState.aiChar == AICHAR_PROTOSOLDIER ) {
 				trap_S_StartSound( NULL, es->number, CHAN_BODY, cgs.media.footsteps[ FOOTSTEP_PROTOSOLDIER_METAL ][footstepcnt] );
 				CG_StartShakeCamera( 0.05, 400, es->pos.trBase, 512 );
-			} else if ( cent->currentState.aiChar == AICHAR_SUPERSOLDIER || cent->currentState.aiChar == AICHAR_HEINRICH ) {
+			} else if ( cent->currentState.aiChar == AICHAR_SUPERSOLDIER || cent->currentState.aiChar == AICHAR_HEINRICH  || cent->currentState.aiChar == AICHAR_SUPERSOLDIER_LAB ) {
 				trap_S_StartSound( NULL, es->number, CHAN_BODY, cgs.media.footsteps[ FOOTSTEP_SUPERSOLDIER_METAL ][0] );
 				CG_StartShakeCamera( 0.08, 500, es->pos.trBase, 800 );
 			} else if ( cent->currentState.aiChar == AICHAR_HELGA ) {
@@ -1357,7 +1374,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			} else if ( cent->currentState.aiChar == AICHAR_PROTOSOLDIER ) {
 				trap_S_StartSound( NULL, es->number, CHAN_BODY, cgs.media.footsteps[ FOOTSTEP_PROTOSOLDIER_WOOD ][footstepcnt] );
 				CG_StartShakeCamera( 0.05, 400, es->pos.trBase, 512 );
-			} else if ( cent->currentState.aiChar == AICHAR_SUPERSOLDIER || cent->currentState.aiChar == AICHAR_HEINRICH ) {
+			} else if ( cent->currentState.aiChar == AICHAR_SUPERSOLDIER || cent->currentState.aiChar == AICHAR_HEINRICH  || cent->currentState.aiChar == AICHAR_SUPERSOLDIER_LAB ) {
 				trap_S_StartSound( NULL, es->number, CHAN_BODY, cgs.media.footsteps[ FOOTSTEP_SUPERSOLDIER_WOOD ][footstepcnt] );
 				CG_StartShakeCamera( 0.08, 500, es->pos.trBase, 800 );
 			} else if ( cent->currentState.aiChar == AICHAR_HELGA ) {
@@ -1379,7 +1396,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			//else
 			if ( cent->currentState.aiChar == AICHAR_PROTOSOLDIER ) {
 				trap_S_StartSound( NULL, es->number, CHAN_BODY, cgs.media.footsteps[ FOOTSTEP_PROTOSOLDIER_GRASS ][footstepcnt] );
-			} else if ( cent->currentState.aiChar == AICHAR_SUPERSOLDIER || cent->currentState.aiChar == AICHAR_HEINRICH ) {
+			} else if ( cent->currentState.aiChar == AICHAR_SUPERSOLDIER || cent->currentState.aiChar == AICHAR_HEINRICH  || cent->currentState.aiChar == AICHAR_SUPERSOLDIER_LAB ) {
 				trap_S_StartSound( NULL, es->number, CHAN_BODY, cgs.media.footsteps[ FOOTSTEP_SUPERSOLDIER_GRASS ][footstepcnt] );
 			} else if ( cent->currentState.aiChar == AICHAR_HELGA ) {
 				CG_SoundPlayIndexedScript( cgs.media.footsteps[FOOTSTEP_BEAST][0], NULL, es->number );
@@ -1399,7 +1416,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 				trap_S_StartSound( NULL, es->number, CHAN_BODY, cgs.media.footsteps[ FOOTSTEP_ZOMBIE_GRAVEL ][footstepcnt] );
 			} else if ( cent->currentState.aiChar == AICHAR_PROTOSOLDIER ) {
 				trap_S_StartSound( NULL, es->number, CHAN_BODY, cgs.media.footsteps[ FOOTSTEP_PROTOSOLDIER_GRAVEL][footstepcnt] );
-			} else if ( cent->currentState.aiChar == AICHAR_SUPERSOLDIER || cent->currentState.aiChar == AICHAR_HEINRICH ) {
+			} else if ( cent->currentState.aiChar == AICHAR_SUPERSOLDIER || cent->currentState.aiChar == AICHAR_HEINRICH  || cent->currentState.aiChar == AICHAR_SUPERSOLDIER_LAB ) {
 				trap_S_StartSound( NULL, es->number, CHAN_BODY, cgs.media.footsteps[ FOOTSTEP_SUPERSOLDIER_GRAVEL][footstepcnt] );
 			} else if ( cent->currentState.aiChar == AICHAR_HELGA ) {
 				CG_SoundPlayIndexedScript( cgs.media.footsteps[FOOTSTEP_BEAST][0], NULL, es->number );
@@ -1734,6 +1751,19 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		}
 		break;
 
+	case EV_FILL_CLIP_FULL:
+		DEBUGNAME( "EV_FILL_CLIP_FULL" );
+		if ( cg_weapons[es->weapon].reloadFullSound ) {
+			trap_S_StartSound( NULL, es->number, CHAN_WEAPON, cg_weapons[es->weapon].reloadFullSound ); // JPW NERVE following sherman's SP fix, should allow killing reload sound when player dies
+		}
+		break;
+	case EV_FILL_CLIP_AI:
+		DEBUGNAME( "EV_FILL_CLIP_AI" );
+		if ( cg_weapons[es->weapon].reloadSound ) {
+			trap_S_StartSound( NULL, es->number, CHAN_WEAPON, cg_weapons[es->weapon].reloadSoundAi );
+		}
+		break;
+
 	case EV_M97_PUMP:
 		DEBUGNAME("EV_M97_PUMP");
 		// Jaymod
@@ -1778,6 +1808,9 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		case WP_DELISLESCOPE:
 			newweap = WP_DELISLE;
 			break;
+		case WP_M1941SCOPE:
+			newweap = WP_M1941;
+			break;
 		case WP_FG42SCOPE:
 			newweap = WP_FG42;
 			break;
@@ -1791,13 +1824,9 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 
 	}
 	break;
-
-//----(SA)	added
 	case EV_SUGGESTWEAP:
 		CG_WeaponSuggest( es->eventParm );
 		break;
-//----(SA)	end
-
 	case EV_FIRE_WEAPON_MG42:
 		trap_S_StartSound( NULL, cent->currentState.number, CHAN_WEAPON, hWeaponSnd );
 // JPW NERVE -- nasty kludge because there's no WP_MG42 struct to hold echosound, so we pull it from GM's predefined globals hweaponSnd & hEchoweaponsnd
@@ -1805,18 +1834,19 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		VectorCopy( cg.refdef.vieworg, porg );
 		VectorSubtract( gorg, porg, norm );
 		gdist = VectorNormalize( norm );
-		if ( gdist > 512 && gdist < 4096 ) {
+		if ( gdist > SOUND_FAR_ECHO_DISTANCE && gdist < SOUND_MAX_WEAPON_DISTANCE ) {
 			VectorMA( cg.refdef.vieworg, 64, norm, gorg );
 			trap_S_StartSoundEx( gorg, cent->currentState.number, CHAN_WEAPON, hWeaponEchoSnd, SND_NOCUT );
 		}
 // jpw
 		DEBUGNAME( "EV_FIRE_WEAPON" );
-		CG_FireWeapon( cent );
+		CG_FireWeapon( cent,event );
 		break;
 	case EV_FIRE_WEAPON:
 	case EV_FIRE_WEAPONB:
 		DEBUGNAME( "EV_FIRE_WEAPON" );
-		CG_FireWeapon( cent );
+
+		CG_FireWeapon( cent, event );
 		if ( event == EV_FIRE_WEAPONB ) {  // akimbo firing colt
 			cent->akimboFire = qtrue;
 		} else {
@@ -1825,16 +1855,12 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		break;
 	case EV_FIRE_WEAPON_LASTSHOT:
 		DEBUGNAME( "EV_FIRE_WEAPON_LASTSHOT" );
-		CG_FireWeapon( cent );
+		CG_FireWeapon( cent, event );
 		break;
-
-//----(SA)	added
 	case EV_GRENADE_SUICIDE:
 		DEBUGNAME( "EV_GRENADE_SUICIDE" );
 		CG_MissileHitWall( WP_GRENADE_LAUNCHER, 0, position, dir, 0 );  // (SA) modified to send missilehitwall surface parameters
 		break;
-//----(SA)	end
-//----(SA)	added
 	case EV_NOFIRE_UNDERWATER:
 		DEBUGNAME( "EV_NOFIRE_UNDERWATER" );
 		if ( es->number == cg.snap->ps.clientNum ) {   // reset client-side weapon animation
@@ -1844,7 +1870,6 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			trap_S_StartSound( NULL, es->number, CHAN_WEAPON, cgs.media.noFireUnderwater );
 		}
 		break;
-//----(SA)	end
 	case EV_USE_ITEM0:
 		DEBUGNAME( "EV_USE_ITEM0" );
 		CG_UseItem( cent );
@@ -1995,7 +2020,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 	case EV_MISSILE_MISS:
 		DEBUGNAME( "EV_MISSILE_MISS" );
 		ByteToDir( es->eventParm, dir );
-		CG_MissileHitWall( es->weapon, 0, position, dir, 0 );   // (SA) modified to send missilehitwall surface parameters
+		CG_MissileHitWall( es->weapon, 0, position, dir, 0 ); 
 		break;
 
 	case EV_MISSILE_MISS_LARGE:
@@ -2060,7 +2085,16 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 	case EV_CLOSEMENU:
 		Menus_CloseAll();
 		break;
-
+	case EV_OBJECTIVE_MET:
+		trap_Cvar_Set( "cg_youGotMail", "2" ); 
+		cg.yougotmailTime = cg.time;
+	break;
+	case EV_CHECKPOINT_PASSED:
+		cg.checkpointTime = cg.time;
+	break;
+	case EV_GAME_SAVED:
+		cg.gameSavedTime = cg.time;
+	break;
 	case EV_GIVEPAGE:
 	{
 		int havepages = cg_notebookpages.integer;
@@ -2187,10 +2221,22 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			break;
 		}
 		break;
-
+	case EV_BOUNCE_SOUND:
+		DEBUGNAME("EV_BOUNCE_SOUND");
+		if (cg_weaponBounceSound.integer){
+			weaponInfo_t	*weapon = &cg_weapons[es->weapon];
+			if ( (!es->eventParm && weapon->bounceSound))
+			trap_S_StartSound( NULL, es->number, CHAN_WEAPON, weapon->bounceSound );
+		}
+		break;
 	case EV_OBITUARY:
 		DEBUGNAME( "EV_OBITUARY" );
 		CG_Obituary( es );
+		break;
+	case EV_THROWKNIFE:
+		DEBUGNAME("EV_THROWKNIFE");
+		CG_FireWeapon( cent, event );
+		trap_S_StartSound( NULL, cent->currentState.number, CHAN_WEAPON, cgs.media.knifeThrow );
 		break;
 
 		//
@@ -2210,7 +2256,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			cg.powerupActive = PW_BATTLESUIT;
 			cg.powerupTime = cg.time;
 		}
-		trap_S_StartSound( NULL, es->number, CHAN_ITEM, trap_S_RegisterSound( "sound/items/protect3.wav" ) );
+		//trap_S_StartSound( NULL, es->number, CHAN_ITEM, trap_S_RegisterSound( "sound/items/protect3.wav" ) );
 		break;
 	case EV_POWERUP_REGEN:
 		DEBUGNAME( "EV_POWERUP_REGEN" );

@@ -791,7 +791,7 @@ static void CG_DrawStatusBar( void ) {
 			}
 
 			// don't draw ammo value for knife
-			if ( cg.predictedPlayerState.weapon != WP_KNIFE || cg.predictedPlayerState.weapon != WP_DAGGER ) {
+			if ( cg.predictedPlayerState.weapon != WP_DAGGER ) {
 				if ( cgs.dmflags & DF_NO_WEAPRELOAD ) {
 					CG_DrawBigString2( ( 580 - 23 + 35 ) + wideOffset, STATUSBARHEIGHT, va( "%d.", value ), cg_hudAlpha.value );
 				} else if ( value ) {
@@ -1315,6 +1315,51 @@ static void CG_DrawLowerRight( void ) {
 
 //----(SA)	modified
 //----(SA)	modified
+
+/*
+===================
+CG_DrawCheckpointString
+===================
+*/
+static void CG_DrawCheckpointString ( void ) {
+	float    *color;
+
+	color = CG_FadeColor( cg.checkpointTime, CHECKPOINT_PASSED_TIME );
+
+	if ( !color ) {
+		return;
+	}
+
+	trap_R_SetColor( color );
+
+	if ( cg_drawCheckpoint.integer == 1 ) 
+	{
+	CG_DrawStringExt2( -25, 100, CG_translateString( "checkpointsaved" ), color, qfalse, qtrue, 10, 10, 0 );
+	}
+
+}
+
+/*
+===================
+CG_DrawGameSavedString
+===================
+*/
+static void CG_DrawGameSavedString ( void ) {
+	float    *color;
+
+	color = CG_FadeColor( cg.gameSavedTime, GAME_SAVED_TIME );
+
+	if ( !color ) {
+		return;
+	}
+
+	trap_R_SetColor( color );
+
+	CG_DrawStringExt2( -25, 115, CG_translateString( "gamesaved" ), color, qfalse, qtrue, 10, 10, 0 );
+
+}
+
+
 /*
 ===================
 CG_DrawPickupItem
@@ -1358,9 +1403,9 @@ static void CG_DrawPickupItem( void ) {
 			color[3] = fadeColor[0];
 			w = CG_DrawStrlen( pickupText ) * 10;
 #ifdef LOCALISATION
-			CG_DrawStringExt2( 320 - ( w / 2 ), 420, CG_TranslateString( pickupText ), color, qfalse, qtrue, 10, 10, 0 );
+			CG_DrawStringExt2( 640 - ( w / 2 ), 375, CG_TranslateString( pickupText ), color, qfalse, qtrue, 10, 10, 0 );
 #else
-			CG_DrawStringExt2( 320 - ( w / 2 ), 420, pickupText, color, qfalse, qtrue, 10, 10, 0 );
+			CG_DrawStringExt2( 640 - ( w / 2 ), 375, pickupText, color, qfalse, qtrue, 10, 10, 0 );
 #endif
 
 			trap_R_SetColor( NULL );
@@ -1414,19 +1459,6 @@ void CG_DrawHoldableItem_old( void ) {
 		CG_DrawPic( 606 - 4, 366 - 4, 32, 32, cgs.media.selectShader );
 	}
 }
-/*
-		if(cg.holdableSelect == HI_WINE) {
-			if(value > 3)
-				value = 3;	// 3 stages to icon, just draw full if beyond 'full'
-
-			CG_DrawPic( 598 + 16, 366, 16, 32, cg_items[item - bg_itemlist].icons[2-(value-1)] );
-			CG_DrawPic( (598 + 16)-4, 366-4, 24, 40, cgs.media.selectShader );
-
-		} else {
-			CG_DrawPic( 598, 366, 32, 32, cg_items[item - bg_itemlist].icons[0] );
-			CG_DrawPic( 598-4, 366-4, 40, 40, cgs.media.selectShader );
-		}
-*/
 
 /*
 ===================
@@ -1778,36 +1810,51 @@ for a few moments
 void CG_SubtitlePrint( const char *str, int y, int charWidth ) {
 	char   *s;
 	int len;
-//----(SA)	added translation lookup
-	Q_strncpyz( cg.centerPrint, CG_translateTextString( (char*)str ), sizeof( cg.centerPrint ) );
-//----(SA)	end
+
+
+    // Translate the input string
+    const char* translated = CG_translateTextString(str);
+
+    // Check if the translated string is "IGNORED_SUBTITLE", indicating an ignored subtitle
+    if (strcmp(translated, "IGNORED_SUBTITLE") == 0) {
+        // If it is, return immediately to prevent the subtitle from being displayed
+        return;
+    }
+
+    // Copy the translated string to cg.subtitlePrint
+    Q_strncpyz(cg.subtitlePrint, translated, sizeof(cg.subtitlePrint));
 
 
 	
-	cg.centerPrintY = y;
-	cg.centerPrintCharWidth = charWidth;
+	cg.subtitlePrintY = y;
+	cg.subtitlePrintCharWidth = charWidth;
 
 	// count the number of lines for centering
-	cg.centerPrintLines = 1;
-	s = cg.centerPrint;
+	cg.subtitlePrintLines = 1;
+	s = cg.subtitlePrint;
 	while ( *s ) {
 		if ( *s == '\n' ) {
-			cg.centerPrintLines++;
+			cg.subtitlePrintLines++;
 		}
 		if ( !Q_strncmp( s, "\\n", 1 ) ) {
-			cg.centerPrintLines++;
+			cg.subtitlePrintLines++;
 			s++;
 		}
 		s++;
 	}
-	len = CG_DrawStrlen(cg.centerPrint);
-	if (len > 85) {
-		cg.centerPrintTime = cg.time + len * 230;
-	} else if (len > 50) {
-		cg.centerPrintTime = cg.time + len * 125;
-	} else {
-		cg.centerPrintTime = cg.time;
+    // Calculate the number of characters in the message
+    len = CG_DrawStrlen(cg.subtitlePrint);
+	// Calculate the display time based on an average reading speed of 17 characters per second
+    int displayTime = (len / 17.0) * 1000; // Convert to milliseconds
+
+	// Ensure the display time is at least a certain minimum value to prevent very short messages from disappearing too quickly
+    int minDisplayTime = 2000; // 2 seconds
+    if (displayTime < minDisplayTime) {
+       displayTime = minDisplayTime;
 	}
+
+	// Set the time at which the message should disappear
+    cg.subtitlePrintTime = cg.time + displayTime;
 }
 
 /*
@@ -1871,6 +1918,79 @@ static void CG_DrawCenterString( void ) {
 		}
 		start++;
 	}
+
+	trap_R_SetColor( NULL );
+}
+
+/*
+===================
+CG_DrawSubtitleString
+===================
+*/
+static void CG_DrawSubtitleString( void ) {
+	char    *start;
+	int l;
+	int x, y, w;
+	float   *color;
+
+	if ( !cg.subtitlePrintTime ) {
+		return;
+	}
+
+	color = CG_FadeColor( cg.subtitlePrintTime, 1000 * cg_centertime.value );
+	if ( !color ) {
+		return;
+	}
+
+	if ( cg_fixedAspect.integer ) {
+		CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
+	}
+
+	trap_R_SetColor( color );
+
+	start = cg.subtitlePrint;
+
+	y = cg.subtitlePrintY - cg.subtitlePrintLines * BIGCHAR_HEIGHT / 2;
+
+while ( 1 ) {
+    char linebuffer[1024]; // Buffer size
+
+    for ( l = 0; l < 50; l++ ) { // Line length limit
+        if ( !start[l] || start[l] == '\n' || !Q_strncmp( &start[l], "\\n", 1 ) ) {
+            break;
+        }
+        linebuffer[l] = start[l];
+        if (l >= 49 && start[l+1] != ' ' && start[l+1] != '\0') { // Check if the next character is a space or end of string
+            while(l > 0 && linebuffer[l] != ' ') { // Move back to the last space
+                l--;
+            }
+            break;
+        }
+    }
+    linebuffer[l] = 0;
+
+    w = cg.subtitlePrintCharWidth * CG_DrawStrlen( linebuffer );
+
+    x = ( SCREEN_WIDTH - w ) / 2;
+
+
+    if ( cg_subtitleShadow.integer ) {
+       CG_DrawStringExt( x, y, linebuffer, color, qfalse, qtrue, cg.subtitlePrintCharWidth, (int)( cg.subtitlePrintCharWidth * 1.5 ), 0 );
+	} else {
+       CG_DrawStringExt( x, y, linebuffer, color, qfalse, qfalse, cg.subtitlePrintCharWidth, (int)( cg.subtitlePrintCharWidth * 1.5 ), 0 );
+	}
+
+    y += cg.subtitlePrintCharWidth * 2;
+
+    // Skip processed characters and newline characters
+    start += l;
+    while ( *start && ( *start == '\n' || !Q_strncmp( start, "\\n", 1 ) ) ) {
+        start++;
+    }
+    if ( !*start ) {
+        break;
+    }
+}
 
 	trap_R_SetColor( NULL );
 }
@@ -1969,6 +2089,71 @@ static void CG_DrawWeapReticle( void ) {
 		CG_FillRect( 380, 239, 177, 2, color );  // right
 
 	} else if ( weap == WP_DELISLESCOPE ) {
+		// sides
+		if ( cg_fixedAspect.integer ) {
+			if ( cgs.glconfig.vidWidth * 480.0 > cgs.glconfig.vidHeight * 640.0 ) {
+				mask = 0.5 * ( ( cgs.glconfig.vidWidth - ( cgs.screenXScale * 480.0 ) ) / cgs.screenXScale );
+
+				CG_SetScreenPlacement(PLACE_LEFT, PLACE_CENTER);
+				CG_FillRect( 0, 0, mask, 480, color );
+				CG_SetScreenPlacement(PLACE_RIGHT, PLACE_CENTER);
+				CG_FillRect( 640 - mask, 0, mask, 480, color );
+			} else if ( cgs.glconfig.vidWidth * 480.0 < cgs.glconfig.vidHeight * 640.0 ) {
+				// sides with letterbox
+				lb = 0.5 * ( ( cgs.glconfig.vidHeight - ( cgs.screenYScale * 480.0 ) ) / cgs.screenYScale );
+
+				CG_SetScreenPlacement(PLACE_LEFT, PLACE_CENTER);
+				CG_FillRect( 0, 0, 80, 480, color );
+				CG_SetScreenPlacement(PLACE_RIGHT, PLACE_CENTER);
+				CG_FillRect( 560, 0, 80, 480, color );
+
+				CG_SetScreenPlacement(PLACE_LEFT, PLACE_BOTTOM);
+				CG_FillRect( 0, 480 - lb, 640, lb, color );
+				CG_SetScreenPlacement(PLACE_LEFT, PLACE_TOP);
+				CG_FillRect( 0, 0, 640, lb, color );
+			} else {
+				// resolution is 4:3
+				CG_SetScreenPlacement(PLACE_LEFT, PLACE_CENTER);
+				CG_FillRect( 0, 0, 80, 480, color );
+				CG_SetScreenPlacement(PLACE_RIGHT, PLACE_CENTER);
+				CG_FillRect( 560, 0, 80, 480, color );
+			}
+		} else {
+			CG_FillRect( 0, 0, 80, 480, color );
+			CG_FillRect( 560, 0, 80, 480, color );
+		}
+
+		// center
+		if ( cg_fixedAspect.integer ) {
+			CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
+		}
+
+		if ( cgs.media.reticleShaderSimpleQ ) {
+			if ( cg_fixedAspect.integer ) {
+				trap_R_DrawStretchPic( x, lb * cgs.screenYScale, w, h, 0, 0, 1, 1, cgs.media.reticleShaderSimpleQ );         // tl
+				trap_R_DrawStretchPic( x + w, lb * cgs.screenYScale, w, h, 1, 0, 0, 1, cgs.media.reticleShaderSimpleQ );     // tr
+				trap_R_DrawStretchPic( x, h + lb * cgs.screenYScale, w, h, 0, 1, 1, 0, cgs.media.reticleShaderSimpleQ );     // bl
+				trap_R_DrawStretchPic( x + w, h + lb * cgs.screenYScale, w, h, 1, 1, 0, 0, cgs.media.reticleShaderSimpleQ ); // br
+			} else {
+				trap_R_DrawStretchPic( x, 0, w, h, 0, 0, 1, 1, cgs.media.reticleShaderSimpleQ );      // tl
+				trap_R_DrawStretchPic( x + w, 0, w, h, 1, 0, 0, 1, cgs.media.reticleShaderSimpleQ );  // tr
+				trap_R_DrawStretchPic( x, h, w, h, 0, 1, 1, 0, cgs.media.reticleShaderSimpleQ );      // bl
+				trap_R_DrawStretchPic( x + w, h, w, h, 1, 1, 0, 0, cgs.media.reticleShaderSimpleQ );  // br
+			}
+		}
+
+		if ( cg_drawCrosshairReticle.integer ) {
+			CG_FillRect( 80, 239, 480, 1, color );	// horiz
+			CG_FillRect( 319, 0, 1, 480, color );   // vert
+		}
+
+		// hairs
+		CG_FillRect( 84, 239, 177, 2, color );   // left
+		CG_FillRect( 320, 242, 1, 58, color );   // center top
+		CG_FillRect( 319, 300, 2, 178, color );  // center bot
+		CG_FillRect( 380, 239, 177, 2, color );  // right
+
+	} else if ( weap == WP_M1941SCOPE ) {
 		// sides
 		if ( cg_fixedAspect.integer ) {
 			if ( cgs.glconfig.vidWidth * 480.0 > cgs.glconfig.vidHeight * 640.0 ) {
@@ -2332,6 +2517,7 @@ static void CG_DrawCrosshair( void ) {
 	case WP_SNOOPERSCOPE:
 	case WP_FG42SCOPE:
 	case WP_DELISLESCOPE:
+	case WP_M1941SCOPE:
 		if ( !( cg.snap->ps.eFlags & EF_MG42_ACTIVE ) ) {
 			CG_DrawWeapReticle();
 			return;
@@ -2359,6 +2545,15 @@ static void CG_DrawCrosshair( void ) {
 
 	if ( cg.weaponSelect == WP_DELISLE ) {
 		if ( COM_BitCheck( cg.predictedPlayerState.weapons, WP_DELISLESCOPE ) ) {
+		if ( !cg_snipersCrosshair.integer ) 
+	    {
+		return;
+	    }
+		}
+	}
+
+	if ( cg.weaponSelect == WP_M1941 ) {
+		if ( COM_BitCheck( cg.predictedPlayerState.weapons, WP_M1941SCOPE ) ) {
 		if ( !cg_snipersCrosshair.integer ) 
 	    {
 		return;
@@ -2522,6 +2717,7 @@ static void CG_DrawCrosshair3D( void ) {
 	case WP_SNOOPERSCOPE:
 	case WP_FG42SCOPE:
 	case WP_DELISLESCOPE:
+	case WP_M1941SCOPE:
 		if ( !( cg.snap->ps.eFlags & EF_MG42_ACTIVE ) ) {
 			CG_DrawWeapReticle();
 			return;
@@ -2549,6 +2745,15 @@ static void CG_DrawCrosshair3D( void ) {
 
 	if ( cg.weaponSelect == WP_DELISLE ) {
 		if ( COM_BitCheck( cg.predictedPlayerState.weapons, WP_DELISLESCOPE ) ) {
+		if ( !cg_snipersCrosshair.integer ) 
+	    {
+		return;
+	    }
+		}
+	}
+
+		if ( cg.weaponSelect == WP_M1941) {
+		if ( COM_BitCheck( cg.predictedPlayerState.weapons, WP_M1941SCOPE ) ) {
 		if ( !cg_snipersCrosshair.integer ) 
 	    {
 		return;
@@ -2672,9 +2877,48 @@ static void CG_DrawDynamiteStatus( void ) {
 	w = CG_DrawStrlen( name ) * BIGCHAR_WIDTH;
 
 	color[3] *= cg_hudAlpha.value;
-	CG_DrawBigStringColor( 320 - w / 2, 170, name, color );
+	CG_DrawBigStringColor( 300 - w / 2, 170, name, color );
 
 	trap_R_SetColor( NULL );
+}
+
+/*
+=================
+CG_ScanForCrosshairEntity
+=================
+*/
+static void CG_ScanForCrosshairEntity( void ) {
+	trace_t trace;
+	vec3_t start, end;
+	//int content;
+
+	VectorCopy( cg.refdef.vieworg, start );
+	VectorMA( start, 4096, cg.refdef.viewaxis[0], end );  
+
+	CG_Trace( &trace, start, vec3_origin, vec3_origin, end,
+			  cg.snap->ps.clientNum, CONTENTS_SOLID | CONTENTS_BODY | CONTENTS_ITEM );
+
+	if ( trace.entityNum >= MAX_CLIENTS ) {
+		return;
+	}
+
+	// if the player is in fog, don't show it
+	/*content = trap_CM_PointContents( trace.endpos, 0 );
+	if ( content & CONTENTS_FOG ) {
+		return;
+	}*/
+
+	// if the player is invisible, don't show it
+	if ( cg_entities[ trace.entityNum ].currentState.powerups & ( 1 << PW_INVIS ) ) {
+		return;
+	}
+
+	// update the fade timer
+	cg.crosshairClientNum = trace.entityNum;
+	cg.crosshairClientTime = cg.time;
+	if ( cg.crosshairClientNum != cg.identifyClientNum && cg.crosshairClientNum != ENTITYNUM_WORLD ) {
+		cg.identifyClientRequest = cg.crosshairClientNum;
+	}
 }
 
 
@@ -2707,7 +2951,49 @@ CG_DrawCrosshairNames
 =====================
 */
 static void CG_DrawCrosshairNames( void ) {
+	float       *color;
+	char        *name;
+	float w;
+
+	const char  *s;
+
+	if ( cg_drawCrosshair.integer < 0 ) {
+		return;
+	}
+	if ( !cg_drawCrosshairNames.integer ) {
+		return;
+	}
+	if ( cg.renderingThirdPerson ) {
+		return;
+	}
+
+	// scan the known entities to see if the crosshair is sighted on one
+	CG_ScanForCrosshairEntity();
+
+	// draw the name of the player being looked at
+	color = CG_FadeColor( cg.crosshairClientTime, 100 );
+
+	if ( !color ) {
+		trap_R_SetColor( NULL );
+		return;
+	}
+
+	if ( cg.crosshairClientNum > MAX_CLIENTS ) {
 return;
+}
+
+	name = cgs.clientinfo[ cg.crosshairClientNum ].translation;
+
+	s = va( "%s", name );
+	if ( !s ) {
+		return;
+	}
+	w = CG_DrawStrlen( s ) * SMALLCHAR_WIDTH;
+
+	// draw the name and class
+	CG_DrawSmallStringColor( 370 - w / 2, 190, s, color );
+
+	trap_R_SetColor( NULL );
 }
 
 
@@ -2764,6 +3050,7 @@ CG_DrawIntermission
 static void CG_DrawIntermission( void ) {
 
 	CG_DrawCenterString();
+	CG_DrawSubtitleString();
 	return;
 
 	//cg.scoreFadeTime = cg.time;
@@ -3439,6 +3726,8 @@ static void CG_Draw2D(stereoFrame_t stereoFrame) {
 	if ( cg_nohudChallenge.integer ) {
 		CG_DrawFlashBlend();    // (for fades)
 		CG_DrawWeapReticle();   // (for scopes)
+		CG_DrawCrosshair();
+		CG_DrawHoldableSelect();
 	if ( cg.zoomedBinoc ) {
 		CG_DrawBinocReticle();  // (for binocs)
 		return;
@@ -3502,6 +3791,8 @@ if ( !cg_oldWolfUI.integer ) {
 			CG_DrawWeaponSelect();
 			CG_DrawHoldableSelect();
 			CG_DrawPickupItem();
+			CG_DrawCheckpointString();
+			CG_DrawGameSavedString();
 			CG_DrawReward();
 		}
 	}
@@ -3527,7 +3818,7 @@ if ( !cg_oldWolfUI.integer ) {
 	// don't draw center string if scoreboard is up
 	if ( !CG_DrawScoreboard() ) {
 		CG_DrawCenterString();
-
+		CG_DrawSubtitleString();
 		CG_DrawObjectiveInfo();     // NERVE - SMF
 	}
 

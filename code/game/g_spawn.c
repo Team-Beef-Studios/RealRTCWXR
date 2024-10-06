@@ -184,6 +184,8 @@ field_t fields[] = {
 
 	{"scriptName",       FOFS( scriptName ),           F_STRING},
 
+	{"stringname",       FOFS( translation ),          F_STRING},
+	{"canSpeak",         FOFS( canSpeak ),             F_INT},
 	{NULL}
 };
 
@@ -222,6 +224,12 @@ void SP_trigger_multiple( gentity_t *ent );
 void SP_trigger_push( gentity_t *ent );
 void SP_trigger_teleport( gentity_t *ent );
 void SP_trigger_hurt( gentity_t *ent );
+
+void SP_misc_cabinet_supply( gentity_t* self );
+void SP_trigger_ammo( gentity_t *ent );
+
+void SP_misc_cabinet_health( gentity_t* self );
+void SP_trigger_heal( gentity_t *ent );   
 
 //---- (SA) Wolf triggers
 void SP_trigger_once( gentity_t *ent );
@@ -311,6 +319,7 @@ void SP_ai_boss_heinrich( gentity_t *ent ); //----(SA)	added
 void SP_ai_eliteguard( gentity_t *ent );
 void SP_ai_dog( gentity_t* ent );
 void SP_ai_supersoldier( gentity_t *ent );
+void SP_ai_supersoldier_lab( gentity_t *ent );
 void SP_ai_priest( gentity_t *ent );
 void SP_ai_xshepherd( gentity_t *ent );
 void SP_ai_blackguard( gentity_t *ent );
@@ -580,6 +589,7 @@ spawn_t spawns[] = {
 	{"ai_eliteguard", SP_ai_eliteguard},
 	{"ai_dog", SP_ai_dog},
 	{"ai_supersoldier", SP_ai_supersoldier},
+	{"ai_supersoldier_lab", SP_ai_supersoldier_lab},
 	{"ai_priest", SP_ai_priest},
 	{"ai_xshepherd", SP_ai_xshepherd},
 	{"ai_protosoldier", SP_ai_protosoldier},
@@ -668,6 +678,12 @@ spawn_t spawns[] = {
 
 	//----(SA)	light coronas
 	{"corona",       SP_corona},
+
+	{"misc_cabinet_supply", SP_misc_cabinet_supply},
+	{"trigger_ammo", SP_trigger_ammo},
+
+	{"misc_cabinet_health", SP_misc_cabinet_health},
+	{"trigger_heal", SP_trigger_heal},
 
 	{"test_gas", SP_gas},
 	{"trigger_flagonly", SP_trigger_flagonly},               // DHM - Nerve
@@ -855,6 +871,12 @@ void G_SpawnGEntityFromSpawnVars( void ) {
 			G_FreeEntity( ent );
 			return;
 		}
+
+	if ( ent->targetname && *ent->targetname ) {
+		ent->targetnamehash = BG_StringHashValue( ent->targetname );
+	} else {
+		ent->targetnamehash = -1;
+	}
 
 	// move editor origin to pos
 	VectorCopy( ent->s.origin, ent->s.pos.trBase );

@@ -350,7 +350,7 @@ int R_CullLocalBox(vec3_t localBounds[2]) {
 
 	// check against frustum planes
 	anyBack = 0;
-	for ( i = 0 ; i < 4 ; i++ ) {
+	for ( i = 0 ; i < MAX_FRUSTUM; i++ ) {
 		frust = &tr.viewParms.frustum[i];
 
 		front = back = 0;

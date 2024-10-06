@@ -34,8 +34,6 @@ If you have questions concerning this license or the applicable additional terms
 
 #define STEPSIZE        18
 
-#define JUMP_VELOCITY   270
-
 #define TIMER_LAND      130
 #define TIMER_GESTURE   ( 34 * 66 + 50 )
 
@@ -70,7 +68,6 @@ extern pml_t pml;
 
 // movement parameters
 extern float pm_stopspeed;
-//extern	float	pm_duckScale;
 
 //----(SA)	modified
 extern float pm_waterSwimScale;

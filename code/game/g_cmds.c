@@ -317,8 +317,8 @@ void Cmd_Give_f( gentity_t *ent ) {
 	}
 
 	if ( give_all || Q_stricmp( name, "holdable" ) == 0 ) {
-		ent->client->ps.stats[STAT_HOLDABLE_ITEM] = ( 1 << ( HI_BOOK3 - 1 ) ) - 1 - ( 1 << HI_NONE );
-		for ( i = 1 ; i <= HI_BOOK3 ; i++ ) {
+		ent->client->ps.stats[STAT_HOLDABLE_ITEM] = ( 1 << ( HI_LP_SYRINGE - 1 ) ) - 1 - ( 1 << HI_NONE );
+		for ( i = 1 ; i <= HI_LP_SYRINGE ; i++ ) {
 			ent->client->ps.holdable[i] = 10;
 		}
 
@@ -1248,6 +1248,7 @@ void Cmd_StopCamera_f( gentity_t *ent ) {
 		while ( ( sp = G_Find( sp, FOFS( classname ), "info_player_deathmatch" ) ) ) { // info_player_start becomes info_player_deathmatch in it's spawn functon
 			if ( Distance( ent->s.pos.trBase, sp->s.origin ) < 256 && trap_InPVS( ent->s.pos.trBase, sp->s.origin ) ) {
 				G_SaveGame( NULL );
+				G_SaveGame( "lastcheckpoint" );
 				break;
 			}
 		}
@@ -1470,6 +1471,7 @@ void Cmd_Activate_f( gentity_t *ent ) {
 					case WP_SNOOPERSCOPE:
 					case WP_FG42SCOPE:
 					case WP_DELISLESCOPE:
+					case WP_M1941SCOPE:
 						return;
 
 					default:
@@ -1982,6 +1984,7 @@ void ClientDamage( gentity_t *clent, int entnum, int enemynum, int id ) {
 
 		if (    ( ent->aiCharacter == AICHAR_PROTOSOLDIER ) ||
 				( ent->aiCharacter == AICHAR_SUPERSOLDIER ) ||
+				( ent->aiCharacter == AICHAR_SUPERSOLDIER_LAB ) ||
 				( ent->aiCharacter == AICHAR_LOPER ) || 
 				( ent->aiCharacter == AICHAR_PRIEST ) ) {
 			break;

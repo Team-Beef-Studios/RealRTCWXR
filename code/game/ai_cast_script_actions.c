@@ -1051,12 +1051,19 @@ qboolean AICast_ScriptAction_SetAmmo( cast_state_t *cs, char *params ) {
 
 	if ( weapon != WP_NONE ) {
 		// give them the ammo
-
-		if ( atoi( token ) ) {
+		if (Q_strcasecmp(token, "full") == 0) {
+        // Set the ammo amount to the maximum ammo size for the weapon
+        int amt = ammoTable[BG_FindAmmoForWeapon( weapon )].maxammo;
+        Add_Ammo( &g_entities[cs->entityNum], weapon, amt, qtrue );
+    } else if ( atoi( token ) ) {
 			int amt;
 			amt = atoi( token );
 			if ( amt > 50 + ammoTable[BG_FindAmmoForWeapon( weapon )].maxammo ) {
+				if ( cs->aiCharacter ) { 
 				amt = 999;  // unlimited
+				} else {
+					amt = ammoTable[BG_FindAmmoForWeapon( weapon )].maxammo;
+				}
 			}
 			Add_Ammo( &g_entities[cs->entityNum], weapon, amt, qtrue );
 		} else {
@@ -1117,6 +1124,10 @@ qboolean AICast_ScriptAction_SetClip( cast_state_t *cs, char *params ) {
 	}
 
 	if ( weapon != WP_NONE ) {
+		if (Q_strcasecmp(token, "full") == 0) {
+        // Set the clip amount to the maximum clip size for the weapon
+        g_entities[cs->entityNum].client->ps.ammoclip[BG_FindClipForWeapon( weapon )] = ammoTable[weapon].maxclip;
+    } else {
 
 		int spillover = atoi( token ) - ammoTable[weapon].maxclip;
 
@@ -1128,6 +1139,7 @@ qboolean AICast_ScriptAction_SetClip( cast_state_t *cs, char *params ) {
 			// set the clip amount to the exact specified value
 			g_entities[cs->entityNum].client->ps.ammoclip[weapon] = atoi( token );
 		}
+	}
 
 	} else {
 //		G_Printf( "--SCRIPTER WARNING-- AI Scripting: setclip: unknown weapon \"%s\"\n", params );
@@ -1224,6 +1236,46 @@ qboolean AICast_ScriptAction_SelectWeapon( cast_state_t *cs, char *params ) {
 	return qtrue;
 }
 
+
+/*
+==============
+AICast_ScriptAction_SetMoveSpeed
+	syntax: setmovespeed <value>
+==============
+*/
+qboolean AICast_ScriptAction_SetMoveSpeed( cast_state_t *cs, char *params ) {
+    gentity_t *ent;
+
+	ent = &g_entities[cs->entityNum];
+
+	if ( !params || !params[0] ) {
+		G_Error( "AI Scripting: setmovespeed requires a movespeed value" );
+	}
+
+	if ( !Q_stricmp( params, "veryfast" ) ) {
+		ent->client->ps.runSpeedScale = DEFAULT_RUN_SPEED_SCALE * 1.5;
+		ent->client->ps.sprintSpeedScale = DEFAULT_SPRINT_SPEED_SCALE * 1.5;
+		ent->client->ps.crouchSpeedScale = DEFAULT_CROUCH_SPEED_SCALE * 1.5;
+	} else if ( !Q_stricmp ( params, "fast" )) {
+		ent->client->ps.runSpeedScale = DEFAULT_RUN_SPEED_SCALE * 1.3;
+		ent->client->ps.sprintSpeedScale = DEFAULT_SPRINT_SPEED_SCALE * 1.3;
+		ent->client->ps.crouchSpeedScale = DEFAULT_CROUCH_SPEED_SCALE * 1.3;
+	} else if ( !Q_stricmp ( params, "default" )) {
+		ent->client->ps.runSpeedScale = DEFAULT_RUN_SPEED_SCALE * 1.0;
+		ent->client->ps.sprintSpeedScale = DEFAULT_SPRINT_SPEED_SCALE * 1.0;
+		ent->client->ps.crouchSpeedScale = DEFAULT_CROUCH_SPEED_SCALE * 1.0;
+	} else if ( !Q_stricmp ( params, "slow" )) {
+		ent->client->ps.runSpeedScale = DEFAULT_RUN_SPEED_SCALE * 0.7;
+		ent->client->ps.sprintSpeedScale = DEFAULT_SPRINT_SPEED_SCALE * 0.7;
+		ent->client->ps.crouchSpeedScale = DEFAULT_CROUCH_SPEED_SCALE * 0.9;
+	} else if ( !Q_stricmp ( params, "veryslow" )) {
+		ent->client->ps.runSpeedScale = DEFAULT_RUN_SPEED_SCALE * 0.5;
+		ent->client->ps.sprintSpeedScale = DEFAULT_SPRINT_SPEED_SCALE * 0.5;
+		ent->client->ps.crouchSpeedScale = DEFAULT_CROUCH_SPEED_SCALE * 0.9;
+	}
+
+	return qtrue;
+}
 
 
 //----(SA)	added
@@ -1391,6 +1443,13 @@ qboolean AICast_ScriptAction_GiveWeapon( cast_state_t *cs, char *params ) {
 		}
 	}
 
+	if ( weapon == WP_TT33 ) {
+		// if you had the colt already, now you've got two!
+		if ( COM_BitCheck( g_entities[cs->entityNum].client->ps.weapons, WP_TT33 ) ) {
+			weapon = WP_DUAL_TT33;
+		}
+	}
+
 	if ( weapon != WP_NONE ) {
 		COM_BitSet( g_entities[cs->entityNum].client->ps.weapons, weapon );
 
@@ -1410,14 +1469,22 @@ qboolean AICast_ScriptAction_GiveWeapon( cast_state_t *cs, char *params ) {
 		if ( weapon == WP_DELISLESCOPE ) {
 			COM_BitSet( g_entities[cs->entityNum].client->ps.weapons, WP_DELISLE );
 		}
+		if ( weapon == WP_M1941SCOPE ) {
+			COM_BitSet( g_entities[cs->entityNum].client->ps.weapons, WP_M1941 );
+		}
 //----(SA)	end
 
 		// monsters have full ammo for their attacks
 		// knife gets infinite ammo too
-		if ( !Q_strncasecmp( params, "monsterattack", 13 ) || weapon == WP_KNIFE || weapon == WP_DAGGER ) {
+		if ( !Q_strncasecmp( params, "monsterattack", 13 ) || weapon == WP_DAGGER ) {
 			g_entities[cs->entityNum].client->ps.ammo[BG_FindAmmoForWeapon( weapon )] = 999;
 			Fill_Clip( &g_entities[cs->entityNum].client->ps, weapon );    
 		}
+
+		if (  weapon == WP_KNIFE ) {
+			Add_Ammo(&g_entities[cs->entityNum], WP_KNIFE, 1, qtrue );
+		}
+
 		// conditional flags
 		if ( ent->aiCharacter == AICHAR_ZOMBIE ) {
 			if ( COM_BitCheck( ent->client->ps.weapons, WP_MONSTER_ATTACK1 ) ) {
@@ -1443,6 +1510,8 @@ qboolean AICast_ScriptAction_GiveWeaponFull( cast_state_t *cs, char *params ) {
 	int weapon;
 	int i;
 	gentity_t   *ent = &g_entities[cs->entityNum];
+
+	int maxAmmo = sizeof(ammoTable) / sizeof(ammoTable[0]);
 	
 	weapon = WP_NONE;
 
@@ -1465,40 +1534,195 @@ qboolean AICast_ScriptAction_GiveWeaponFull( cast_state_t *cs, char *params ) {
 		}
 	}
 
+    // Weapon randomizer
+
 	if ( !Q_strcasecmp (params, "weapon_random") ) 
 	{
-	weapon = ammoTable[3 + rand() % 29].weaponindex;
+		int wpnIndices[MAX_WEAPONS];
+	    int numWpns = 0;
+        
+		   // Find all weapons
+           for (int i = 0; i < maxAmmo; i++) {
+                if (ammoTable[i].weaponClass != WEAPON_CLASS_UNUSED || ammoTable[i].weaponClass != WEAPON_CLASS_MELEE || ammoTable[i].weaponClass != WEAPON_CLASS_AKIMBO || ammoTable[i].weaponClass != WEAPON_CLASS_GRENADE )
+				{
+                   wpnIndices[numWpns] = i;
+                   numWpns++;
+                }
+            }
+
+	      // Select a random weapon
+          if (numWpns > 0) 
+		  {
+            int randomIndex = rand() % numWpns;
+            weapon = ammoTable[wpnIndices[randomIndex]].weaponindex;
+          }
 	}
 
 	if ( !Q_strcasecmp (params, "pistol_random") ) 
 	{
-	weapon = ammoTable[3 + rand() % 7].weaponindex;
+		int pistolIndices[MAX_WEAPONS];
+	    int numPistols = 0;
+        
+		   // Find all pistols
+           for (int i = 0; i < maxAmmo; i++) {
+                if (ammoTable[i].weaponClass == WEAPON_CLASS_PISTOL)
+				{
+                   pistolIndices[numPistols] = i;
+                   numPistols++;
+                }
+            }
+
+	      // Select a random pistol
+          if (numPistols > 0) 
+		  {
+            int randomIndex = rand() % numPistols;
+            weapon = ammoTable[pistolIndices[randomIndex]].weaponindex;
+          }
+
 	}
 
 	if ( !Q_strcasecmp (params, "smg_random") ) 
 	{
-	weapon = ammoTable[8 + rand() % 12].weaponindex;
+		int smgIndices[MAX_WEAPONS];
+	    int numSmgs = 0;
+        
+		   // Find all SMGs
+           for (int i = 0; i < maxAmmo; i++) {
+                if (ammoTable[i].weaponClass == WEAPON_CLASS_SMG)
+				{
+                   smgIndices[numSmgs] = i;
+                   numSmgs++;
+                }
+            }
+
+	      // Select a random SMG
+          if (numSmgs > 0) 
+		  {
+            int randomIndex = rand() % numSmgs;
+            weapon = ammoTable[smgIndices[randomIndex]].weaponindex;
+          }
 	}
 
 	if ( !Q_strcasecmp (params, "rifle_random") ) 
 	{
-	weapon = ammoTable[13 + rand() % 19].weaponindex;
-	}
+		int rifleIndices[MAX_WEAPONS];
+	    int numRifles = 0;
+        
+		   // Find all Rifles
+           for (int i = 0; i < maxAmmo; i++) {
+                if (ammoTable[i].weaponClass == WEAPON_CLASS_RIFLE || ammoTable[i].weaponClass == WEAPON_CLASS_ASSAULT_RIFLE)
+				{
+                   rifleIndices[numRifles] = i;
+                   numRifles++;
+                }
+            }
 
-	if ( !Q_strcasecmp (params, "ar_random") ) 
-	{
-	weapon = ammoTable[20 + rand() % 22].weaponindex;
+	      // Select a random Rifle
+          if (numRifles > 0) 
+		  {
+            int randomIndex = rand() % numRifles;
+            weapon = ammoTable[rifleIndices[randomIndex]].weaponindex;
+          }
 	}
 
 	if ( !Q_strcasecmp (params, "heavy_random") ) 
 	{
-	weapon = ammoTable[23 + rand() % 29].weaponindex;
+		int heavyIndices[MAX_WEAPONS];
+	    int numHeavies = 0;
+        
+		   // Find all Heavy weapons
+           for (int i = 0; i < maxAmmo; i++) {
+                if (ammoTable[i].weaponClass == WEAPON_CLASS_MG || ammoTable[i].weaponClass == WEAPON_CLASS_LAUNCHER || ammoTable[i].weaponClass == WEAPON_CLASS_BEAM || ammoTable[i].weaponClass == WEAPON_CLASS_SHOTGUN  )
+				{
+                   heavyIndices[numHeavies] = i;
+                   numHeavies++;
+                }
+            }
+
+	      // Select a random Heavy weapon
+          if (numHeavies > 0) 
+		  {
+            int randomIndex = rand() % numHeavies;
+            weapon = ammoTable[heavyIndices[randomIndex]].weaponindex;
+          }
 	}
 
+	if ( !Q_strcasecmp (params, "axis_random") ) 
+	{
+		int axisIndices[MAX_WEAPONS];
+	    int numAxis = 0;
+        
+		   // Find all Axis Weapons
+           for (int i = 0; i < maxAmmo; i++) {
+                if ( (ammoTable[i].weaponTeam == WEAPON_TEAM_AXIS || ammoTable[i].weaponTeam == WEAPON_TEAM_COMMON) && ammoTable[i].weaponClass != WEAPON_CLASS_UNUSED && ammoTable[i].weaponClass != WEAPON_CLASS_GRENADE )
+				{
+                   axisIndices[numAxis] = i;
+                   numAxis++;
+                }
+            }
+
+	      // Select a random Axis weapon
+          if (numAxis > 0) 
+		  {
+            int randomIndex = rand() % numAxis;
+            weapon = ammoTable[axisIndices[randomIndex]].weaponindex;
+          }
+	}
+
+	if ( !Q_strcasecmp (params, "allies_random") ) 
+	{
+		int alliesIndices[MAX_WEAPONS];
+	    int numAllies = 0;
+        
+		   // Find all Allied Weapons
+           for (int i = 0; i < maxAmmo; i++) {
+                if ( (ammoTable[i].weaponTeam == WEAPON_TEAM_ALLIES || ammoTable[i].weaponTeam == WEAPON_TEAM_COMMON) && ammoTable[i].weaponClass != WEAPON_CLASS_UNUSED && ammoTable[i].weaponClass != WEAPON_CLASS_GRENADE )
+				{
+                   alliesIndices[numAllies] = i;
+                   numAllies++;
+                }
+            }
+
+	      // Select a random Allied weapon
+          if (numAllies > 0) 
+		  {
+            int randomIndex = rand() % numAllies;
+            weapon = ammoTable[alliesIndices[randomIndex]].weaponindex;
+          }
+	}
+
+if ( !Q_strcasecmp (params, "soviet_random") ) 
+	{
+		int sovietIndices[MAX_WEAPONS];
+	    int numSoviet = 0;
+        
+		   // Find all Soviet Weapons
+           for (int i = 0; i < maxAmmo; i++) {
+                if ( (ammoTable[i].weaponTeam == WEAPON_TEAM_SOVIET || ammoTable[i].weaponTeam == WEAPON_TEAM_COMMON) && ammoTable[i].weaponClass != WEAPON_CLASS_UNUSED && ammoTable[i].weaponClass != WEAPON_CLASS_GRENADE )
+				{
+                   sovietIndices[numSoviet] = i;
+                   numSoviet++;
+                }
+            }
+
+	      // Select a random Soviet weapon
+          if (numSoviet > 0) 
+		  {
+            int randomIndex = rand() % numSoviet;
+            weapon = ammoTable[sovietIndices[randomIndex]].weaponindex;
+          }
+	}
+
+	// if you had the colt already, now you've got two!
 	if ( weapon == WP_COLT ) {
-		// if you had the colt already, now you've got two!
 		if ( COM_BitCheck( g_entities[cs->entityNum].client->ps.weapons, WP_COLT ) ) {
 			weapon = WP_AKIMBO;
+		}
+	}
+
+	if ( weapon == WP_TT33 ) {
+		if ( COM_BitCheck( g_entities[cs->entityNum].client->ps.weapons, WP_TT33 ) ) {
+			weapon = WP_DUAL_TT33;
 		}
 	}
 
@@ -1520,6 +1744,9 @@ qboolean AICast_ScriptAction_GiveWeaponFull( cast_state_t *cs, char *params ) {
 		}
 		if ( weapon == WP_DELISLESCOPE ) {
 			COM_BitSet( g_entities[cs->entityNum].client->ps.weapons, WP_DELISLE );
+		}
+		if ( weapon == WP_M1941SCOPE ) {
+			COM_BitSet( g_entities[cs->entityNum].client->ps.weapons, WP_M1941 );
 		}
 //----(SA)	end
 
@@ -1572,6 +1799,7 @@ qboolean AICast_ScriptAction_TakeWeapon( cast_state_t *cs, char *params ) {
 		memset( g_entities[cs->entityNum].client->ps.weapons, 0, sizeof( g_entities[cs->entityNum].client->ps.weapons ) );
 		memset( g_entities[cs->entityNum].client->ps.ammo, 0, sizeof( g_entities[cs->entityNum].client->ps.ammo ) );
 		memset( g_entities[cs->entityNum].client->ps.ammoclip, 0, sizeof( g_entities[cs->entityNum].client->ps.ammoclip ) );
+		memset( g_entities[cs->entityNum].client->ps.holdable, 0, sizeof( g_entities[cs->entityNum].client->ps.holdable ) );
 		cs->weaponNum = WP_NONE;
 
 	} else {
@@ -1600,6 +1828,16 @@ qboolean AICast_ScriptAction_TakeWeapon( cast_state_t *cs, char *params ) {
 				// take 'akimbo' first if it's there, then take 'colt'
 				if ( COM_BitCheck( g_entities[cs->entityNum].client->ps.weapons, WP_AKIMBO ) ) {
 					weapon = WP_AKIMBO;
+				}
+			}
+
+			if ( weapon == WP_DUAL_TT33 ) {
+				// take both the colt /and/ the akimbo weapons when 'akimbo' is specified
+				COM_BitClear( g_entities[cs->entityNum].client->ps.weapons, WP_TT33 );
+			} else if ( weapon == WP_TT33 ) {
+				// take 'akimbo' first if it's there, then take 'colt'
+				if ( COM_BitCheck( g_entities[cs->entityNum].client->ps.weapons, WP_DUAL_TT33 ) ) {
+					weapon = WP_DUAL_TT33;
 				}
 			}
 
@@ -1872,6 +2110,48 @@ qboolean AICast_ScriptAction_SaveGame( cast_state_t *cs, char *params ) {
 
 /*
 =================
+AICast_ScriptAction_SaveCheckpoint
+
+  NOTE: only use this command in "player" scripts, not for AI
+
+  syntax: savegame
+=================
+*/
+qboolean AICast_ScriptAction_SaveCheckpoint ( cast_state_t *cs, char *params ) {
+	char *pString, *saveName;
+	pString = params;
+
+	gentity_t   *player;
+
+	player = AICast_FindEntityForName( "player" );
+
+	if ( cs->bs ) {
+		G_Error( "AI Scripting: savegame attempted on a non-player" );
+	}
+
+	if (  g_ironchallenge.integer)
+	{
+		return qfalse;
+	}
+
+//----(SA)	check for parameter
+	saveName = COM_ParseExt( &pString, qfalse );
+	if ( !saveName[0] ) {
+		G_SaveGame( "lastcheckpoint" );	// save the default "current" savegame  
+		G_SaveGame( "current" );	   // save the default "current" savegame
+	} else {
+		G_SaveGame( saveName );
+	}
+
+	//trap_SendServerCommand( -1, "cptop checkpointsaved" );  // yes save for u
+	
+	G_AddEvent( player, EV_CHECKPOINT_PASSED, G_SoundIndex( "sound/misc/blank.wav" ) );
+
+	return qtrue;
+}
+
+/*
+=================
 AICast_ScriptAction_FireAtTarget
 
   syntax: fireattarget <targetname> [duration]
@@ -2059,6 +2339,27 @@ qboolean AICast_ScriptAction_AccumPrint(cast_state_t* cs, char* params) {
 	return qtrue;
 }
 
+qboolean AICast_ScriptAction_GlobalAccumPrint(cast_state_t* cs, char* params) {
+	int bufferIndex;
+	char* pString, * token;
+
+	int* globalAccumBuffer = g_scriptGlobalAccumBuffer;
+
+	if (!params || !params[0]) {
+		G_Error("AI Scripting: accum print requires some text\n");
+	}
+	pString = params;
+	token = COM_ParseExt(&pString, qfalse);
+	bufferIndex = atoi(token);
+	if (bufferIndex >= G_MAX_SCRIPT_GLOBAL_ACCUM_BUFFERS) {
+		G_Error("^1AI Scripting: accum buffer is outside range (0 - %i)\n", G_MAX_SCRIPT_GLOBAL_ACCUM_BUFFERS);
+		return qtrue;
+	}
+	token = COM_ParseExt(&pString, qfalse);
+	trap_SendServerCommand(-1, va("%s %s%d", "print", token, globalAccumBuffer[bufferIndex]));
+	return qtrue;
+}
+
 
 /*
 AICast_ScriptAction_ChangeAiTeam
@@ -2208,8 +2509,145 @@ qboolean AICast_ScriptAction_Accum( cast_state_t *cs, char *params ) {
 			G_Error( "AI Scripting: accum %s requires a parameter\n", lastToken );
 		}
 		cs->scriptAccumBuffer[bufferIndex] = rand() % atoi( token );
-	} else {
+	} else if ( !Q_stricmp( lastToken, "random_no_zero" ) ) {
+    if ( !token[0] ) {
+        G_Error( "AI Scripting: accum %s requires a parameter\n", lastToken );
+    }
+    int tokenValue = atoi(token);
+    if (tokenValue > 1) {
+        cs->scriptAccumBuffer[bufferIndex] = (rand() % (tokenValue - 1)) + 1;
+    } else {
+        G_Error( "AI Scripting: accum %s requires a parameter greater than 1\n", lastToken );
+    }
+}  else {
 		G_Error( "AI Scripting: accum %s: unknown command\n", params );
+	}
+
+	return qtrue;
+}
+
+/*
+=================
+AICast_ScriptAction_GlobalAccum
+
+  syntax: globalaccum <buffer_index> <command> <paramater>
+  
+  Commands:
+  
+  globalaccum <n> inc <m>
+  globalaccum <n> abort_if_less_than <m>
+  globalaccum <n> abort_if_greater_than <m>
+  globalaccum <n> abort_if_not_equal <m>
+  globalaccum <n> abort_if_equal <m>
+  globalaccum <n> set <m>
+  globalaccum <n> random <m>
+  globalaccum <n> bitset <m>
+  globalaccum <n> bitreset <m>
+  globalaccum <n> abort_if_bitset <m>
+  globalaccum <n> abort_if_not_bitset <m>
+=================
+*/
+qboolean AICast_ScriptAction_GlobalAccum( cast_state_t *cs, char *params ) {
+	char *pString, *token, lastToken[MAX_QPATH];
+	int bufferIndex;
+
+	pString = params;
+
+	int* globalAccumBuffer = g_scriptGlobalAccumBuffer;
+
+	token = COM_ParseExt( &pString, qfalse );
+	if ( !token[0] ) {
+		G_Error( "AI Scripting: accum without a buffer index\n" );
+	}
+
+	bufferIndex = atoi( token );
+	if ( bufferIndex >= G_MAX_SCRIPT_GLOBAL_ACCUM_BUFFERS ) {
+		G_Error( "AI Scripting: global accum buffer is outside range (0 - %i)\n", G_MAX_SCRIPT_GLOBAL_ACCUM_BUFFERS );
+	}
+
+	token = COM_ParseExt( &pString, qfalse );
+	if ( !token[0] ) {
+		G_Error( "AI Scripting: global accum without a command\n" );
+	}
+
+	Q_strncpyz( lastToken, token, sizeof( lastToken ) );
+	token = COM_ParseExt( &pString, qfalse );
+
+	if ( !Q_stricmp( lastToken, "inc" ) ) {
+		if ( !token[0] ) {
+			G_Error( "AI Scripting: global accum %s requires a parameter\n", lastToken );
+		}
+		globalAccumBuffer[bufferIndex] += atoi( token );
+	} else if ( !Q_stricmp( lastToken, "abort_if_less_than" ) ) {
+		if ( !token[0] ) {
+			G_Error( "AI Scripting: global accum %s requires a parameter\n", lastToken );
+		}
+		if ( globalAccumBuffer[bufferIndex] < atoi( token ) ) {
+			// abort the current script
+			cs->castScriptStatus.castScriptStackHead = cs->castScriptEvents[cs->castScriptStatus.castScriptEventIndex].stack.numItems;
+		}
+	} else if ( !Q_stricmp( lastToken, "abort_if_greater_than" ) ) {
+		if ( !token[0] ) {
+			G_Error( "AI Scripting: global accum %s requires a parameter\n", lastToken );
+		}
+		if ( globalAccumBuffer[bufferIndex] > atoi( token ) ) {
+			// abort the current script
+			cs->castScriptStatus.castScriptStackHead = cs->castScriptEvents[cs->castScriptStatus.castScriptEventIndex].stack.numItems;
+		}
+	} else if ( !Q_stricmp( lastToken, "abort_if_not_equal" ) ) {
+		if ( !token[0] ) {
+			G_Error( "AI Scripting: global accum %s requires a parameter\n", lastToken );
+		}
+		if ( globalAccumBuffer[bufferIndex] != atoi( token ) ) {
+			// abort the current script
+			cs->castScriptStatus.castScriptStackHead = cs->castScriptEvents[cs->castScriptStatus.castScriptEventIndex].stack.numItems;
+		}
+	} else if ( !Q_stricmp( lastToken, "abort_if_equal" ) ) {
+		if ( !token[0] ) {
+			G_Error( "AI Scripting: global accum %s requires a parameter\n", lastToken );
+		}
+		if ( globalAccumBuffer[bufferIndex] == atoi( token ) ) {
+			// abort the current script
+			cs->castScriptStatus.castScriptStackHead = cs->castScriptEvents[cs->castScriptStatus.castScriptEventIndex].stack.numItems;
+		}
+	} else if ( !Q_stricmp( lastToken, "bitset" ) ) {
+		if ( !token[0] ) {
+			G_Error( "AI Scripting: global accum %s requires a parameter\n", lastToken );
+		}
+		globalAccumBuffer[bufferIndex] |= ( 1 << atoi( token ) );
+	} else if ( !Q_stricmp( lastToken, "bitreset" ) ) {
+		if ( !token[0] ) {
+			G_Error( "AI Scripting: global accum %s requires a parameter\n", lastToken );
+		}
+		globalAccumBuffer[bufferIndex] &= ~( 1 << atoi( token ) );
+	} else if ( !Q_stricmp( lastToken, "abort_if_bitset" ) ) {
+		if ( !token[0] ) {
+			G_Error( "AI Scripting: global accum %s requires a parameter\n", lastToken );
+		}
+		if ( globalAccumBuffer[bufferIndex] & ( 1 << atoi( token ) ) ) {
+			// abort the current script
+			cs->castScriptStatus.castScriptStackHead = cs->castScriptEvents[cs->castScriptStatus.castScriptEventIndex].stack.numItems;
+		}
+	} else if ( !Q_stricmp( lastToken, "abort_if_not_bitset" ) ) {
+		if ( !token[0] ) {
+			G_Error( "AI Scripting: global accum %s requires a parameter\n", lastToken );
+		}
+		if ( !( globalAccumBuffer[bufferIndex] & ( 1 << atoi( token ) ) ) ) {
+			// abort the current script
+			cs->castScriptStatus.castScriptStackHead = cs->castScriptEvents[cs->castScriptStatus.castScriptEventIndex].stack.numItems;
+		}
+	} else if ( !Q_stricmp( lastToken, "set" ) ) {
+		if ( !token[0] ) {
+			G_Error( "AI Scripting: global accum %s requires a parameter\n", lastToken );
+		}
+		globalAccumBuffer[bufferIndex] = atoi( token );
+	} else if ( !Q_stricmp( lastToken, "random" ) ) {
+		if ( !token[0] ) {
+			G_Error( "AI Scripting: global accum %s requires a parameter\n", lastToken );
+		}
+		globalAccumBuffer[bufferIndex] = rand() % atoi( token );
+	} else {
+		G_Error( "AI Scripting: global accum %s: unknown command\n", params );
 	}
 
 	return qtrue;
@@ -2618,7 +3056,7 @@ qboolean AICast_ScriptAction_ObjectiveMet( cast_state_t *cs, char *params ) {
 			G_Error( "AI Scripting: missionsuccess with unknown parameter: %s\n", token );
 		}
 	} else {    // show on-screen information
-		trap_Cvar_Set( "cg_youGotMail", "2" ); // set flag to draw icon
+		G_AddEvent( player, EV_OBJECTIVE_MET, G_SoundIndex( "sound/misc/objective_met.wav" ) );
 	}
 
 	return qtrue;
@@ -2689,6 +3127,41 @@ qboolean AICast_ScriptAction_FaceTargetAngles( cast_state_t *cs, char *params ) 
 
 	return qtrue;
 }
+
+/*
+=================
+AICast_ScriptAction_FaceEntity
+
+  syntax: face_entity <targetname>
+
+  The AI will look at the target entity
+=================
+*/
+qboolean AICast_ScriptAction_FaceEntity ( cast_state_t *cs, char *params ) {
+    gentity_t *ent;
+	vec3_t org, vec;
+
+	if ( !params || !params[0] ) {
+		G_Error( "AI Scripting: face_entity requires a targetname\n" );
+	}
+		
+	// find this targetname
+	ent = G_Find( NULL, FOFS( targetname ), params );
+	if ( !ent ) {
+		ent = AICast_FindEntityForName( params );
+		if ( !ent ) {
+			G_Error( "AI Scripting: wait cannot find targetname \"%s\"\n", params );
+		    }
+		}
+		// set the view angle manually
+		BG_EvaluateTrajectory( &ent->s.pos, level.time, org );
+		VectorSubtract( org, cs->bs->origin, vec );
+		VectorNormalize( vec );
+		vectoangles( vec, cs->ideal_viewangles );
+
+	return qtrue;
+}
+
 
 /*
 ===================
@@ -4472,6 +4945,188 @@ qboolean AICast_ScriptAction_Achievement_WARBELL5( cast_state_t *cs, char *param
 	return qtrue;
 }
 
+/*
+==================
+AICast_ScriptAction_Achievement_MALTA_NIGHTMARE
+==================
+*/
+qboolean AICast_ScriptAction_Achievement_MALTA_NIGHTMARE( cast_state_t *cs, char *params ) {
+	if ( !g_cheats.integer ) 
+	{
+    steamSetAchievement("ACH_MALTA_NIGHTMARE");
+	}
+	return qtrue;
+}
+
+/*
+==================
+AICast_ScriptAction_Achievement_MALTA_LEAP
+==================
+*/
+qboolean AICast_ScriptAction_Achievement_MALTA_LEAP( cast_state_t *cs, char *params ) {
+	if ( !g_cheats.integer ) 
+	{
+    steamSetAchievement("ACH_MALTA_LEAP");
+	}
+	return qtrue;
+}
+
+/*
+==================
+AICast_ScriptAction_Achievement_MALTA_OSA
+==================
+*/
+qboolean AICast_ScriptAction_Achievement_MALTA_OSA( cast_state_t *cs, char *params ) {
+	if ( !g_cheats.integer ) 
+	{
+    steamSetAchievement("ACH_MALTA_OSA");
+	}
+	return qtrue;
+}
+
+
+/*
+==================
+AICast_ScriptAction_Achievement_MALTA_GOAT
+==================
+*/
+qboolean AICast_ScriptAction_Achievement_MALTA_GOAT( cast_state_t *cs, char *params ) {
+	if ( !g_cheats.integer ) 
+	{
+    steamSetAchievement("ACH_MALTA_GOAT");
+	}
+	return qtrue;
+}
+
+/*
+==================
+AICast_ScriptAction_Achievement_MALTA_COURSE
+==================
+*/
+qboolean AICast_ScriptAction_Achievement_MALTA_COURSE( cast_state_t *cs, char *params ) {
+	if ( !g_cheats.integer ) 
+	{
+    steamSetAchievement("ACH_MALTA_COURSE");
+	}
+	return qtrue;
+}
+
+/*
+==================
+AICast_ScriptAction_Achievement_MALTA_RADIO
+==================
+*/
+qboolean AICast_ScriptAction_Achievement_MALTA_RADIO( cast_state_t *cs, char *params ) {
+	if ( !g_cheats.integer ) 
+	{
+    steamSetAchievement("ACH_MALTA_RADIO");
+	}
+	return qtrue;
+}
+
+/*
+==================
+AICast_ScriptAction_Achievement_MALTA_EGYPT
+==================
+*/
+qboolean AICast_ScriptAction_Achievement_MALTA_EGYPT( cast_state_t *cs, char *params ) {
+	if ( !g_cheats.integer ) 
+	{
+    steamSetAchievement("ACH_MALTA_EGYPT");
+	}
+	return qtrue;
+}
+
+/*
+==================
+AICast_ScriptAction_Achievement_MALTA_WIDE
+==================
+*/
+qboolean AICast_ScriptAction_Achievement_MALTA_WIDE( cast_state_t *cs, char *params ) {
+	if ( !g_cheats.integer ) 
+	{
+    steamSetAchievement("ACH_MALTA_WIDE");
+	}
+	return qtrue;
+}
+
+/*
+==================
+AICast_ScriptAction_Achievement_MALTA_FIREFLY
+==================
+*/
+qboolean AICast_ScriptAction_Achievement_MALTA_FIREFLY( cast_state_t *cs, char *params ) {
+	if ( !g_cheats.integer ) 
+	{
+    steamSetAchievement("ACH_MALTA_FIREFLY");
+	}
+	return qtrue;
+}
+
+/*
+==================
+AICast_ScriptAction_Achievement_MALTA_LAIR
+==================
+*/
+qboolean AICast_ScriptAction_Achievement_MALTA_LAIR( cast_state_t *cs, char *params ) {
+	if ( !g_cheats.integer ) 
+	{
+    steamSetAchievement("ACH_MALTA_LAIR");
+	}
+	return qtrue;
+}
+
+/*
+==================
+AICast_ScriptAction_Achievement_MALTA_HIDEOUT
+==================
+*/
+qboolean AICast_ScriptAction_Achievement_MALTA_HIDEOUT( cast_state_t *cs, char *params ) {
+	if ( !g_cheats.integer ) 
+	{
+    steamSetAchievement("ACH_MALTA_HIDEOUT");
+	}
+	return qtrue;
+}
+
+/*
+==================
+AICast_ScriptAction_Achievement_MALTA_BARTENDER
+==================
+*/
+qboolean AICast_ScriptAction_Achievement_MALTA_BARTENDER( cast_state_t *cs, char *params ) {
+	if ( !g_cheats.integer ) 
+	{
+    steamSetAchievement("ACH_MALTA_BARTENDER");
+	}
+	return qtrue;
+}
+
+/*
+==================
+AICast_ScriptAction_Achievement_MALTA_BETRAYER
+==================
+*/
+qboolean AICast_ScriptAction_Achievement_MALTA_BETRAYER( cast_state_t *cs, char *params ) {
+	if ( !g_cheats.integer ) 
+	{
+    steamSetAchievement("ACH_MALTA_BETRAYER");
+	}
+	return qtrue;
+}
+
+/*
+==================
+AICast_ScriptAction_Achievement_MALTA_AGENT2
+==================
+*/
+qboolean AICast_ScriptAction_Achievement_MALTA_AGENT2( cast_state_t *cs, char *params ) {
+	if ( !g_cheats.integer ) 
+	{
+    steamSetAchievement("ACH_MALTA_AGENT2");
+	}
+	return qtrue;
+}
 
 /*
 ==================
@@ -5128,6 +5783,47 @@ qboolean AICast_ScriptAction_LockPlayer( cast_state_t *cs, char *params ) {
 
 	return qtrue;
 }
+
+/*
+=================
+AICast_ScriptAction_ScreenFade
+
+  syntax: screenfade <fadetime> <in/out>
+=================
+*/
+qboolean AICast_ScriptAction_ScreenFade( cast_state_t *cs, char *params ) {
+	char    *pString, *token;
+	int fadetime;
+
+	pString = params;
+
+	if (!params || !params[0]) {
+		G_Error("AI Scripting:screenfade without parameters\n");
+	}
+    
+	// Specify fadetime
+	token = COM_ParseExt( &pString, qfalse );
+	if ( !token[0] ) {
+		G_Error( "AI_Scripting: syntax: screenfade <fadetime> <in/out>" );
+	}
+	fadetime = atof ( token );
+
+	// Specify in/out
+    token = COM_ParseExt( &pString, qfalse );
+    	
+	if ( !token[0] ) {
+		G_Error( "AI_Scripting: syntax: screenfade <fadetime> <in/out>" );
+	}
+
+	if (!Q_stricmp (token, "in")) {
+		trap_SetConfigstring( CS_SCREENFADE, va( "1 %i %i", level.time + 10, fadetime ) ); // fading in
+	} else if (!Q_stricmp (token, "out")) {
+	    trap_SetConfigstring( CS_SCREENFADE, va( "0 %i %i", level.time + 10, fadetime ) ); // fading out
+	}
+
+	return qtrue;
+
+	}
 
 /*
 ==================

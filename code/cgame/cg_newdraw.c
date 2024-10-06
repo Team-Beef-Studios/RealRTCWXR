@@ -150,7 +150,6 @@ static int weapIconDrawSize( int weap ) {
 	switch ( weap ) {
 
 	// weapons to not draw
-	case WP_KNIFE:
 	case WP_DAGGER:
 	    return 0;
 	// weapons with 'wide' icons
@@ -173,16 +172,21 @@ static int weapIconDrawSize( int weap ) {
 	case WP_MOSIN:
 	case WP_DELISLE:
 	case WP_DELISLESCOPE:
+	case WP_M1941SCOPE:
 	case WP_G43:
 	case WP_M1GARAND:
 	case WP_BAR:
     case WP_MP44:
 	case WP_MG42M:
 	case WP_M97:
+	case WP_AUTO5:
 	case WP_BROWNING:
 	case WP_M7:
 	case WP_M30:
+	case WP_M1941:
 		return 2;
+	case WP_KNIFE:
+	     return 1;
 	}
 
 	return 1;
@@ -228,7 +232,11 @@ static void CG_DrawPlayerWeaponIcon( rectDef_t *rect, qboolean drawHighlighted, 
 	if ( cg.predictedPlayerState.grenadeTimeLeft ) {   // grenades and dynamite set this
 
 		// these time differently
-		if ( realweap == WP_DYNAMITE ) {
+		if ( realweap ==  WP_KNIFE ) {
+			scale = (float)(cg.predictedPlayerState.grenadeTimeLeft/(KNIFECHARGETIME/7.f));
+			halfScale = scale * 0.5f;
+		}
+		else if ( realweap == WP_DYNAMITE ) {
 			if ( ( ( cg.grenLastTime ) % 1000 ) > ( ( cg.predictedPlayerState.grenadeTimeLeft ) % 1000 ) ) {
 				trap_S_StartLocalSound( cgs.media.grenadePulseSound4, CHAN_LOCAL_SOUND );
 			}
@@ -251,8 +259,11 @@ static void CG_DrawPlayerWeaponIcon( rectDef_t *rect, qboolean drawHighlighted, 
 			}
 		}
 
+		if ( realweap != WP_KNIFE ) {
 		scale = (float)( ( cg.predictedPlayerState.grenadeTimeLeft ) % 1000 ) / 100.0f;
 		halfScale = scale * 0.5f;
+		}
+
 
 		cg.grenLastTime = cg.predictedPlayerState.grenadeTimeLeft;
 	} else {
@@ -380,6 +391,7 @@ static void CG_DrawCursorhint( rectDef_t *rect ) {
 		icon = cgs.media.hintShaders[HINT_NOACTIVATE];
 		break;
 	case HINT_PLYR_FRIEND:
+	case HINT_PLYR_SPEAK:
 		break;
 	case HINT_NOEXIT_FAR:
 		redbar = qtrue;     // draw the status bar in red to show that you can't exit yet
@@ -463,10 +475,15 @@ CG_DrawMessageIcon
 
 static void CG_DrawMessageIcon( rectDef_t *rect ) {
 	int icon;
+	float       *color;
 
-	if ( !cg_youGotMail.integer || !cg_journalStyle.integer ) {
+	color = CG_FadeColor( cg.yougotmailTime, OBJECTIVE_MET_TIME );
+
+	if ( !color || !cg_journalStyle.integer ) {
 		return;
 	}
+
+	trap_R_SetColor( color );
 
 	if ( cg_youGotMail.integer == 2 ) {
 		icon = cgs.media.youGotObjectiveShader;
@@ -513,22 +530,22 @@ static void CG_DrawPlayerAmmoValue( rectDef_t *rect, int font, float scale, vec4
 	}
 
 	switch ( weap ) {      // some weapons don't draw ammo count text
-	case WP_KNIFE:
 	case WP_AIRSTRIKE:
 	case WP_DAGGER:
 		return;
 
 	case WP_AKIMBO:
+	case WP_DUAL_TT33:
 		special = qtrue;
 		break;
 
 	case WP_GRENADE_LAUNCHER:
+	case WP_KNIFE:
 	case WP_GRENADE_PINEAPPLE:
 	case WP_DYNAMITE:
 	case WP_TESLA:
 	case WP_FLAMETHROWER:
 	case WP_POISONGAS:
-	case WP_WELROD:
 	case WP_HOLYCROSS:
 		if ( type == 0 ) {  // don't draw reserve value, just clip (since these weapons have all their ammo in the clip)
 			return;
@@ -546,8 +563,8 @@ static void CG_DrawPlayerAmmoValue( rectDef_t *rect, int font, float scale, vec4
 		value = ps->ammoclip[BG_FindClipForWeapon( weap )];
 		if ( special ) {
 			value2 = value;
-			if ( weapAlts[weap] ) {
-				value = ps->ammoclip[weapAlts[weap]];
+			if ( ammoTable[weap].weapAlts ) {
+				value = ps->ammoclip[ammoTable[weap].weapAlts];
 			}
 //				value2 = ps->ammoclip[weapAlts[weap]];
 		}
@@ -822,17 +839,14 @@ static void CG_DrawHoldableItem( rectDef_t *rect, int font, float scale, qboolea
 	value = cg.predictedPlayerState.holdable[cg.holdableSelect];
 
 	if ( value ) {
-//		CG_RegisterItemVisuals( value );
 		CG_RegisterItemVisuals( item - bg_itemlist );
 
 		if ( cg.holdableSelect == HI_WINE ) {
 			if ( value > 3 ) {
 				value = 3;  // 3 stages to icon, just draw full if beyond 'full'
 			}
-//			CG_DrawPic( rect->x, rect->y, rect->w, rect->h, cg_items[ value ].icons[2-(value-1)] );
 			CG_DrawPic( rect->x, rect->y, rect->w, rect->h, cg_items[item - bg_itemlist].icons[2 - ( value - 1 )] );
 		} else {
-//			CG_DrawPic( rect->x, rect->y, rect->w, rect->h, cg_items[ value ].icons[0] );
 			CG_DrawPic( rect->x, rect->y, rect->w, rect->h, cg_items[item - bg_itemlist].icons[0] );
 		}
 	}
@@ -1416,6 +1430,12 @@ qboolean CG_OwnerDrawVisible( int flags ) {
 		}
 	}
 
+	if ( flags & CG_SHOW_NOT_V_SNIPER ) {     // if looking through sniper scope
+		if ( cg.weaponSelect == WP_M1941SCOPE ) {
+			return qfalse;
+		}
+	}
+
 	if ( flags & CG_SHOW_NOT_V_SNOOPER ) {        // if looking through snooper scope
 		if ( cg.weaponSelect == WP_SNOOPERSCOPE ) {
 			return qfalse;
@@ -1470,7 +1490,7 @@ qboolean CG_OwnerDrawVisible( int flags ) {
 //----(SA)	added
 	if ( flags & CG_SHOW_NOT_V_CLEAR ) {
 		// if /not/ looking through binocs,snooper or sniper
-		if ( !cg.zoomedBinoc && !( cg.weaponSelect == WP_SNIPERRIFLE ) && !( cg.weaponSelect == WP_SNOOPERSCOPE ) && !( cg.weaponSelect == WP_FG42SCOPE ) && !( cg.weaponSelect == WP_DELISLESCOPE ) ) {
+		if ( !cg.zoomedBinoc && !( cg.weaponSelect == WP_SNIPERRIFLE ) && !( cg.weaponSelect == WP_SNOOPERSCOPE ) && !( cg.weaponSelect == WP_FG42SCOPE ) && !( cg.weaponSelect == WP_DELISLESCOPE ) && !( cg.weaponSelect == WP_M1941SCOPE ) ) {
 			return qfalse;
 		}
 	}
@@ -1894,7 +1914,7 @@ void CG_DrawWeapStability( rectDef_t *rect, vec4_t color, int align ) {
 		return;
 	}
 
-	if ( cg_drawSpreadScale.integer == 1 && !( cg.weaponSelect == WP_SNOOPERSCOPE || cg.weaponSelect == WP_SNIPERRIFLE || cg.weaponSelect == WP_FG42SCOPE || cg.weaponSelect == WP_DELISLESCOPE ) ) {
+	if ( cg_drawSpreadScale.integer == 1 && !( cg.weaponSelect == WP_SNOOPERSCOPE || cg.weaponSelect == WP_SNIPERRIFLE || cg.weaponSelect == WP_FG42SCOPE || cg.weaponSelect == WP_DELISLESCOPE || cg.weaponSelect == WP_M1941SCOPE ) ) {
 		// cg_drawSpreadScale of '1' means only draw for scoped weapons, '2' means draw all the time (for debugging)
 		return;
 	}

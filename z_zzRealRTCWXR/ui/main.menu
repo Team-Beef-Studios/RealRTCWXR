@@ -392,7 +392,7 @@ itemDef
 		setCvar g_ironchallenge "0"; 
 		setcvar g_nopickupchallenge "0"; 
 		setCvar g_decaychallenge "0"; 
-		exec "spdevmap fr"  
+		exec "spmap malta_menu"  
 		}	
 		
 	    mouseEnter { show "realrtcw_main_training" } 
@@ -641,7 +641,7 @@ itemDef
 	itemDef {
 		name controlsmenu1
 		group controlsmenus
-		rect 220 102 443 300	
+		rect 220 102 443 320	
 		style WINDOW_STYLE_FILLED
 		border 1
 		bordercolor .5 .5 .5 .5
@@ -1134,7 +1134,6 @@ itemDef
 		mouseexit { hide keyBindStatus }
 	}
 	
-	
 		itemDef {
 		name move
 		group controls
@@ -1155,12 +1154,13 @@ itemDef
 		mouseexit { hide keyBindStatus }
     }
 
+	
 	itemDef {
 		name move
 		group controls
 		type ITEM_TYPE_BIND
-		text "@CONTROLS_CROUCH"
-		cvar "+movedown"
+		text "@CONTROLS_TOOGLECROUCH"
+		cvar "=movedown"
 		rect 300 270 290 12
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 142
@@ -1179,8 +1179,8 @@ itemDef
 		name move
 		group controls
 		type ITEM_TYPE_BIND
-		text "@CONTROLS_SPRINT"
-		cvar "+sprint"
+		text "@CONTROLS_CROUCH"
+		cvar "+movedown"
 		rect 300 285 290 12
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 142 
@@ -1191,14 +1191,16 @@ itemDef
 		backcolor 1 1 1 .07
 		textfont UI_FONT_BIG
 		visible 0 
+		mouseenter { show keyBindStatus }
+		mouseexit { hide keyBindStatus }
     }
 	
 		itemDef {
 		name move
 		group controls
 		type ITEM_TYPE_BIND
-		text "@CONTROLS_WALK"
-		cvar "+speed"
+		text "@CONTROLS_SPRINT"
+		cvar "+sprint"
 		rect 300 300 290 12
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 142 
@@ -1211,13 +1213,12 @@ itemDef
 		visible 0 
     }
 
-	
 		itemDef {
 		name move
 		group controls
-		type ITEM_TYPE_YESNO
-		text "@CONTROLS_ALWAYSRUN"
-		cvar "cl_run"
+		type ITEM_TYPE_BIND
+		text "@CONTROLS_WALK"
+		cvar "+speed"
 		rect 300 315 290 12
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 142 
@@ -1228,8 +1229,6 @@ itemDef
 		backcolor 1 1 1 .07
 		textfont UI_FONT_BIG
 		visible 0 
-		mouseenter { show yesno_message }
-		mouseexit { hide yesno_message }
     }
 
 
@@ -2084,6 +2083,26 @@ itemDef
 		mouseexit { hide keyBindStatus }
   	}
 	
+	itemDef {
+		name misc
+		group controls
+		type ITEM_TYPE_BIND
+		text "@CONTROLS_CHECKPOINT"
+		cvar "loadgame lastcheckpoint"
+		rect 300 395 290 12
+		textalign ITEM_ALIGN_RIGHT
+		textfont UI_FONT_BIG
+		textalignx 142 
+		textaligny 10
+		textscale .23  
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07                  
+		forecolor 1 1 1 1
+		visible 0 
+		mouseenter { show keyBindStatus }
+		mouseexit { hide keyBindStatus }
+  	}
+	
 	
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////               SYSTEM MENU          //////////////////////////////////////////////////////////////////////
@@ -2777,6 +2796,24 @@ itemDef {
 		visible 0
 	}
 
+		itemDef {
+		name performancegraphics
+		group system
+		type ITEM_TYPE_YESNO
+		textfont UI_FONT_BIG
+		text "@PERF_FOLIAGE"
+		cvar "r_drawfoliage"
+		rect 300 180 290 12
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 142
+		textaligny 10
+		textscale .22
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 0 
+    }
+
 
 	itemDef {
 		name performancegraphics
@@ -3023,6 +3060,44 @@ itemDef {
 		action { uiScript glCustom }
    	}
 	
+		itemDef {
+		name sounds
+		type ITEM_TYPE_MULTI
+        textfont UI_FONT_BIG		
+		group system
+		text "@SOUND_SUBSSIZE"
+		rect 300 235 290 12
+		cvar "cg_subtitlesize"
+		cvarFloatList { "@SOUND_SUBS_VERYSMALL" 5 "@SOUND_SUBS_SMALL" 7 "@SOUND_SUBS_MEDIUM" 9 "@SOUND_SUBS_LARGE" 12 "@SOUND_SUBS_EXTRALARGE" 16 }
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 142
+		textaligny 10
+		textscale .22
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 0
+	}
+	
+		itemDef {
+		name sounds
+		textfont UI_FONT_BIG
+		group system
+		type ITEM_TYPE_YESNO
+		text "@SOUND_SUBSSHADOW"
+		cvar "cg_subtitleshadow"
+		rect 300 250 290 12
+      	textalign ITEM_ALIGN_RIGHT
+      	textalignx 142
+      	textaligny 10
+		textscale .22 
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07       
+      	forecolor 1 1 1 1
+      	visible 0 
+		action { uiScript glCustom }
+   	}
+	
 	
 		itemDef {
 		name sounds
@@ -3031,7 +3106,7 @@ itemDef {
 		type ITEM_TYPE_YESNO
 		text "@SOUND_OPENAL"
 		cvar "s_useOpenAL"
-		rect 300 235 290 12
+		rect 300 265 290 12
       	textalign ITEM_ALIGN_RIGHT
       	textalignx 142
       	textaligny 10
@@ -3050,7 +3125,7 @@ itemDef {
 		type ITEM_TYPE_YESNO
 		text "@SOUND_MUTEMIN"
 		cvar "s_muteWhenMinimized"
-		rect 300 250 290 12
+		rect 300 280 290 12
       	textalign ITEM_ALIGN_RIGHT
       	textalignx 142
       	textaligny 10
@@ -3069,7 +3144,7 @@ itemDef {
 		type ITEM_TYPE_YESNO
 		text "@SOUND_MUTEUNFOCUS"
 		cvar "s_muteWhenUnfocused"
-		rect 300 265 290 12
+		rect 300 295 290 12
       	textalign ITEM_ALIGN_RIGHT
       	textalignx 142
       	textaligny 10
@@ -3160,7 +3235,7 @@ itemDef {
 	    group gomenus
 		textfont UI_FONT_BIG
 	    style WINDOW_STYLE_FILLED
-	    rect 360 110 100 12
+	    rect 380 110 100 12
 	    textalign 1
 	    textalignx 50
 	    textaligny 10
@@ -3178,7 +3253,7 @@ itemDef {
 	    group gomenus
 		textfont UI_FONT_BIG
 	    style WINDOW_STYLE_FILLED
-	    rect 450 110 100 12
+	    rect 490 110 100 12
 	    textalign 1
 	    textalignx 50
 	    textaligny 10
@@ -3596,7 +3671,7 @@ itemDef {
 		type ITEM_TYPE_MULTI
 		text "@GM_VIEWPOS"
 		cvar "cg_gunposlock"
-		cvarFloatList { "@GM_VIEWREALRTCW" 1 "@GM_VIEWCOD1" 2 "@GM_VIEWQUAKE" 3	}
+		cvarFloatList { "@GM_VIEWREALRTCW" 1 "@GM_VIEWQUAKE" 3	}
 		rect 300 335 290 12
 		textalign ITEM_ALIGN_RIGHT
 		textfont UI_FONT_BIG
@@ -3669,7 +3744,43 @@ itemDef {
 /////////////////////////////                                    GAMEPLAY             //////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
+		itemDef {
+	    name gameplay
+		group options
+	    text "@GM_CORE_GAMEPLAY"
+	    textscale .25
+		decoration
+	    style WINDOW_STYLE_FILLED
+	    rect 410 125 290 12
+	    textalign 1
+		textfont UI_FONT_BIG
+	    textalignx 22
+	    textaligny 14
+	    border 1
+	    //bordercolor .1 .1 .1 0
+	    forecolor 1 1 1 1
+	    visible 0
+	}
 
+
+		itemDef {
+		name gameplay
+		group options
+		text "@GM_MIDGAME"
+		type ITEM_TYPE_MULTI
+        textfont UI_FONT_BIG		
+		cvar "g_midgame"
+		cvarFloatList { "@GM_MIDGAME_CLASSIC" 0 "@GM_MIDGAME_HUBANDCUTSCENE" 1 }
+		rect 300 145 290 12
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 142
+		textaligny 10
+		textscale .22
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 0 
+        }
 
 		itemDef {
 		name gameplay
@@ -3678,8 +3789,27 @@ itemDef {
 		type ITEM_TYPE_MULTI
         textfont UI_FONT_BIG		
 		cvar "g_fullarsenal"
-		cvarFloatList { "@GM_ARSENAL_CLASSIC" 0 "@GM_ARSENAL_REALRTCW" 1 "@GM_ARSENAL_ET" 2 }
-		rect 300 135 290 12
+		cvarFloatList { "@GM_ARSENAL_CLASSIC" 0 "@GM_ARSENAL_REALRTCW" 1 }
+		rect 300 160 290 12
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 142
+		textaligny 10
+		textscale .22
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 0 
+    }
+	
+		itemDef {
+		name gameplay
+		group options
+		text "@GM_VANILLA_GUNS"
+		type ITEM_TYPE_MULTI
+        textfont UI_FONT_BIG		
+		cvar "g_vanilla_guns"
+		cvarFloatList { "@GM_GUNS_HD" 0 "@GM_GUNS_VANILLA" 1 }
+		rect 300 175 290 12
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 142
 		textaligny 10
@@ -3697,7 +3827,7 @@ itemDef {
 		type ITEM_TYPE_YESNO
         textfont UI_FONT_BIG		
 		cvar "g_endmapbonus"
-		rect 300 150 290 12
+		rect 300 190 290 12
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 142
 		textaligny 10
@@ -3711,56 +3841,21 @@ itemDef {
 		itemDef {
 		name gameplay
 		group options
-		text "@GM_DOGS"
-		type ITEM_TYPE_YESNO
+	    text "@GM_AI_OPTIONS"
+	    textscale .25
+		decoration
+	    style WINDOW_STYLE_FILLED
+	    rect 410 225 290 12
+	    textalign 1
         textfont UI_FONT_BIG		
-		cvar "g_spawndogs"
-		rect 300 165 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0 
-    }	
+	    textalignx 22
+	    textaligny 14
+	    border 1
+	    //bordercolor .1 .1 .1 0
+	    forecolor 1 1 1 1
+	    visible 0
+	}
 	
-		itemDef {
-		name gameplay
-		group options
-		text "@GM_PRIESTS"
-		type ITEM_TYPE_YESNO
-        textfont UI_FONT_BIG		
-		cvar "g_spawnpriests"
-		rect 300 180 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0 
-    }	
-	
-		itemDef {
-		name gameplay
-		group options
-		text "@GM_XDOGS"
-		type ITEM_TYPE_YESNO
-        textfont UI_FONT_BIG		
-		cvar "g_spawnxshepherds"
-		rect 300 195 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0 
-    }	
 	
 		itemDef {
 		name gameplay
@@ -3770,43 +3865,6 @@ itemDef {
         textfont UI_FONT_BIG		
 		cvar "g_reinforce"
 		cvarFloatList { "@GM_ADDENEMIES_NO" 0 "@GM_ADDENEMIES_MORE" 1 "@GM_ADDENEMIES_EVENMORE" 2 }
-		rect 300 210 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0 
-    }
-	
-	
-		itemDef {
-		name gameplay
-		group options
-		text "@GM_FALLOFF"
-		type ITEM_TYPE_YESNO
-        textfont UI_FONT_BIG		
-		cvar "g_weaponfalloff"
-		rect 300 230 290 12
-		textalign ITEM_ALIGN_RIGHT
-		textalignx 142
-		textaligny 10
-		textscale .22
-		style WINDOW_STYLE_FILLED
-		backcolor 1 1 1 .07
-		forecolor 1 1 1 1
-		visible 0 
-    }
-	
-		itemDef {
-		name gameplay
-		group options
-		text "@GM_STRAFEJUMP"
-		type ITEM_TYPE_YESNO
-        textfont UI_FONT_BIG		
-		cvar "g_jumptime"
 		rect 300 245 290 12
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 142
@@ -3816,7 +3874,8 @@ itemDef {
 		backcolor 1 1 1 .07
 		forecolor 1 1 1 1
 		visible 0 
-    }
+    }	
+	
 	
 		itemDef {
 		name gameplay
@@ -3835,16 +3894,15 @@ itemDef {
 		backcolor 1 1 1 .07
 		forecolor 1 1 1 1
 		visible 0 
-    }
-	
+    }	
 	
 		itemDef {
 		name gameplay
 		group options
-		text "@GM_AIHEADSHOT"
+		text "@GM_DOGS"
 		type ITEM_TYPE_YESNO
         textfont UI_FONT_BIG		
-		cvar "g_aicanheadshot"
+		cvar "g_spawndogs"
 		rect 300 275 290 12
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 142
@@ -3854,15 +3912,15 @@ itemDef {
 		backcolor 1 1 1 .07
 		forecolor 1 1 1 1
 		visible 0 
-    }
+    }	
 	
 		itemDef {
 		name gameplay
 		group options
-		text "@GM_AIRIFLES"
+		text "@GM_PRIESTS"
 		type ITEM_TYPE_YESNO
         textfont UI_FONT_BIG		
-		cvar "g_fireonthemove"
+		cvar "g_spawnpriests"
 		rect 300 290 290 12
 		textalign ITEM_ALIGN_RIGHT
 		textalignx 142
@@ -3873,6 +3931,119 @@ itemDef {
 		forecolor 1 1 1 1
 		visible 0 
     }
+	
+		itemDef {
+		name gameplay
+		group options
+		text "@GM_XDOGS"
+		type ITEM_TYPE_YESNO
+        textfont UI_FONT_BIG		
+		cvar "g_spawnxshepherds"
+		rect 300 305 290 12
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 142
+		textaligny 10
+		textscale .22
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 0 
+    }
+	
+	
+		itemDef {
+		name gameplay
+		group options
+	    text "@GM_REALISM_OPTIONS"
+	    textscale .25
+		decoration
+	    style WINDOW_STYLE_FILLED
+	    rect 410 315 290 12
+	    textalign 1
+		textfont UI_FONT_BIG
+	    textalignx 22
+	    textaligny 14
+	    border 1
+	    //bordercolor .1 .1 .1 0
+	    forecolor 1 1 1 1
+	    visible 0
+	}
+	
+	
+		itemDef {
+		name gameplay
+		group options
+		text "@GM_REALISMM"
+		type ITEM_TYPE_YESNO
+        textfont UI_FONT_BIG		
+		cvar "g_realism"
+		rect 300 335 290 12
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 142
+		textaligny 10
+		textscale .22
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 0 
+    }
+	
+		itemDef {
+		name gameplay
+		group options
+		text "@GM_REGEN"
+		type ITEM_TYPE_YESNO
+        textfont UI_FONT_BIG		
+		cvar "g_regen"
+		rect 300 350 290 12
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 142
+		textaligny 10
+		textscale .22
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 0 
+    }
+	
+	
+	
+		itemDef {
+		name gameplay
+		group options
+		text "@GM_FALLOFF"
+		type ITEM_TYPE_YESNO
+        textfont UI_FONT_BIG		
+		cvar "g_weaponfalloff"
+		rect 300 365 290 12
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 142
+		textaligny 10
+		textscale .22
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 0 
+    }
+	
+		itemDef {
+		name gameplay
+		group options
+		text "@GM_STRAFEJUMP"
+		type ITEM_TYPE_YESNO
+        textfont UI_FONT_BIG		
+		cvar "g_jumptime"
+		rect 300 380 290 12
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 142
+		textaligny 10
+		textscale .22
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 0 
+    }
+	
 	
 	
 	
@@ -4173,6 +4344,24 @@ itemDef {
 		visible 0 
     }
 
+		itemDef {
+		name view
+		group options
+		type ITEM_TYPE_YESNO
+		text "@HUD_CHECKPOINT"
+		cvar "cg_drawCheckpoint"
+		rect 300 300 290 12
+		textalign ITEM_ALIGN_RIGHT
+		textfont UI_FONT_BIG
+		textalignx 142
+		textaligny 10
+		textscale .23 
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07           
+		forecolor 1 1 1 1
+		visible 0 
+    }
+
 
 	
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4438,7 +4627,7 @@ itemDef {
 		border 1
 		bordercolor .1 .1 .1 .3
 		visible 0
-		action { uiScript validate_openURL "https://ko-fi.com/realrtcwdev" }		
+		action { uiScript validate_openURL "https://store.steampowered.com/app/1508910/RealRTCW__Supporter_Pack/" }		
 	}
 	
 	itemDef {
