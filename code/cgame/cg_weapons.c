@@ -3885,8 +3885,8 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 			}
 
 			if (wasfiring) {
-				trap_Vibrate(1, 0, 0.0, "ignore", 0.0, 0.0);
-				trap_Vibrate(1, 1, 0.0, "ignore", 0.0, 0.0);
+				trap_Vibrate(0, 0, 0.0, "ignore", 0.0, 0.0);
+				trap_Vibrate(0, 1, 0.0, "ignore", 0.0, 0.0);
 				wasfiring = qfalse;
 			}
 		}
