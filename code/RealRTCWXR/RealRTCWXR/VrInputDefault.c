@@ -665,9 +665,17 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
                 sendButtonAction("+moveup", (primaryButtonsNew & primaryButton1));
             }
 
-            //B Button - Reload
             if (primaryButton2New != primaryButton2Old) {
-                sendButtonAction("+reload", primaryButton2New);
+                if (cl.snap.ps.weapon == WP_KNIFE || cl.snap.ps.weapon == WP_DAGGER)
+                {
+                    //B Button - Throws the knife
+                    sendButtonAction("+attack2", primaryButton2New);
+                }
+                else
+                {
+                    //B Button - Reload
+                    sendButtonAction("+reload", primaryButton2New);
+                }
             }
 
             static bool firing = false;
@@ -677,7 +685,7 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
             // Don't fire velocity triggered weapons
             if (cl.snap.ps.weapon != WP_KNIFE && cl.snap.ps.weapon != WP_DAGGER)
             {
-                //Fire Primary - Doesn't trigger the saber
+                //Fire Primary
                 if ((pDominantTrackedRemoteNew->Buttons & xrButton_Trigger) !=
                     (pDominantTrackedRemoteOld->Buttons & xrButton_Trigger)) {
 
@@ -686,6 +694,7 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
                     sendButtonAction("+attack", firing);
                 }
             }
+
 
             // If zoomed, use forward and back to zoom in and out
             if (vr.cgzoommode)
