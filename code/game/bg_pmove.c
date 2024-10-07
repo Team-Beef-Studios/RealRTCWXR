@@ -3057,46 +3057,56 @@ qboolean PM_AltFiring ( qboolean delayedFire )
 
 static void PM_HandleRecoil ( void ) {
 		
-		if( !pm->pmext->weapRecoilTime ) {
-		return;
-	    }
-		
-		vec3_t muzzlebounce;
-		int i, deltaTime;
+		if (pm->pmext->weapRecoilTime) {
+			vec3_t muzzlebounce;
+			int i, deltaTime;
 
- 		deltaTime = pm->cmd.serverTime - pm->pmext->weapRecoilTime;
-		VectorCopy( pm->ps->viewangles, muzzlebounce );
+			deltaTime = pm->cmd.serverTime - pm->pmext->weapRecoilTime;
+			VectorCopy(vr->muzzlebounce, muzzlebounce);
 
- 		if ( deltaTime > pm->pmext->weapRecoilDuration ) {
-			deltaTime = pm->pmext->weapRecoilDuration;
-		}
-
- 		for ( i = pm->pmext->lastRecoilDeltaTime; i < deltaTime; i += 15 ) {
-			if ( pm->pmext->weapRecoilPitch > 0.f ) {
-				muzzlebounce[PITCH] -= 2*pm->pmext->weapRecoilPitch*cos( 2.5*(i) / pm->pmext->weapRecoilDuration );
-				muzzlebounce[PITCH] -= 0.25 * random() * ( 1.0f - ( i ) / pm->pmext->weapRecoilDuration );
+			if (deltaTime > pm->pmext->weapRecoilDuration) {
+				deltaTime = pm->pmext->weapRecoilDuration;
 			}
 
- 			if ( pm->pmext->weapRecoilYaw > 0.f ) {
-				muzzlebounce[YAW] += 0.5*pm->pmext->weapRecoilYaw*cos( 1.0 - (i)*3 / pm->pmext->weapRecoilDuration );
-				muzzlebounce[YAW] += 0.5 * crandom() * ( 1.0f - ( i ) / pm->pmext->weapRecoilDuration );
+			for (i = pm->pmext->lastRecoilDeltaTime; i < deltaTime; i += 15) {
+				if (pm->pmext->weapRecoilPitch > 0.f) {
+					muzzlebounce[PITCH] -= 2 * pm->pmext->weapRecoilPitch * cos(2.5 * (i) / pm->pmext->weapRecoilDuration);
+					muzzlebounce[PITCH] -= 0.25 * random() * (1.0f - (i) / pm->pmext->weapRecoilDuration);
+				}
+
+				if (pm->pmext->weapRecoilYaw > 0.f) {
+					muzzlebounce[YAW] += 0.5 * pm->pmext->weapRecoilYaw * cos(1.0 - (i) * 3 / pm->pmext->weapRecoilDuration);
+					muzzlebounce[YAW] += 0.5 * crandom() * (1.0f - (i) / pm->pmext->weapRecoilDuration);
+				}
+			}
+
+			// set the delta angle
+	/*		for (i = 0; i < 3; i++) {
+				int cmdAngle;
+
+				cmdAngle = ANGLE2SHORT( muzzlebounce[i] );
+				pm->ps->delta_angles[i] = cmdAngle - pm->cmd.angles[i];
+			}
+			*/
+			if (fabsf(muzzlebounce[PITCH]) > 20.0f)
+			{
+				muzzlebounce[PITCH] *= 0.9f;
+			}
+
+			VectorCopy(muzzlebounce, vr->muzzlebounce);
+
+			if (deltaTime == pm->pmext->weapRecoilDuration) {
+				pm->pmext->weapRecoilTime = 0;
+				pm->pmext->lastRecoilDeltaTime = 0;
+			}
+			else {
+				pm->pmext->lastRecoilDeltaTime = deltaTime;
 			}
 		}
-
- 		// set the delta angle
-		for ( i = 0; i < 3; i++ ) {
-			int cmdAngle;
-
- 			cmdAngle = ANGLE2SHORT( muzzlebounce[i] );
-			pm->ps->delta_angles[i] = cmdAngle - pm->cmd.angles[i];
-		}
-		VectorCopy( muzzlebounce, pm->ps->viewangles );
-
- 		if ( deltaTime == pm->pmext->weapRecoilDuration ) {
-			pm->pmext->weapRecoilTime = 0;
-			pm->pmext->lastRecoilDeltaTime = 0;
-		} else {
-			pm->pmext->lastRecoilDeltaTime = deltaTime;
+		else
+		{
+			vr->muzzlebounce[PITCH] *= 0.95f;
+			vr->muzzlebounce[YAW] *= 0.95f;
 		}
 
 }
