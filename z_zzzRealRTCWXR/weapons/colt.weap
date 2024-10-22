@@ -1,0 +1,106 @@
+weaponDef
+{
+	client {
+		//standModel			""
+		pickupModel		        "models/weapons/pistols/colt/colt_3rd.md3"
+		droppedAnglesHack
+		
+		weaponConfig		"models/weapons/pistols/colt2/weapon.cfg"
+		handsModel			"models/weapons/pistols/colt/v_colt_hand.mdc"
+		
+		flashDlightColor	1.0 0.6 0.23
+		flashSound			"sound/weapons/colt/colt_fire.wav"		
+		flashEchoSound		"sound/weapons/colt/colt_far.wav"		
+		//lastShotSound		""										
+		
+		//readySound		""
+		//firingSound		""									
+		//overheatSound		""
+		reloadSound			"sound/weapons/colt/colt_reload.wav"
+		reloadFullSound		"sound/weapons/colt/colt_reload.wav"
+		reloadSoundAi	    "sound/weapons/ai/pistol_reload.wav"
+		//reloadFastSound	""		
+		//spinupSound		""									
+		//spindownSound		""									
+		//switchSound		""	
+        bounceSound         "sound/misc/weapon_bounce.wav"	
+		
+		weaponIcon			"icons/iconw_colt_1"
+		weaponSelectedIcon	"icons/iconw_colt_1_select"
+		
+		//missileModel		""
+		//missileSound		""
+		//missileTrailFunc	""									// supports "GrenadeTrail", "RocketTrail", "PyroSmokeTrail"
+		//missileDlight		0
+		//missileDlightColor	0 0 0							
+		
+		weaponPosition      0 0 -1                             // X Y Z positions
+		weaponPositionAlt   0 2 4
+		weaponPositionAlt2  0 4 -2
+		
+		ejectBrassFunc		"PistolEjectBrass"				// supports "MachineGunEjectBrass" "PistolEjectBrass" and "PanzerFaustEjectBrass"
+		
+		//modModel 1		""
+		
+		firstPerson {
+			model			"models/weapons/pistols/colt/v_colt.md3"
+			flashModel		"models/weapons/pistols/colt/v_colt_flash.md3"
+
+			weaponLink
+			{
+				part 0
+				{
+					tag		"tag_barrel"
+					model	"models/weapons/pistols/colt/v_colt_barrel.md3"
+				}
+				part 1
+				{
+					tag		"tag_barrel2"
+					model	"models/weapons/pistols/colt/v_colt_barrel2.md3"
+				}
+				part 2
+				{
+					tag		"tag_barrel3"
+					model	"models/weapons/pistols/colt/v_colt_barrel3.md3"
+				}
+				part 3
+				{
+					tag		"tag_barrel4"
+					model	"models/weapons/pistols/colt/v_colt_barrel4.md3"
+				}
+			}
+		}
+		
+		thirdPerson {
+			model			"models/weapons/pistols/colt/colt_3rd.md3"
+			flashmodel		"models/weapons/pistols/colt/colt_3rd_flash.md3"
+		}
+	}
+			ammo {
+			maxammoPerSkill     300 250 200 150 150 // max ammo capacity per difficulty level (easy,medium,hard,death incarnate,realism)
+			maxclipPerSkill     7   7   7   7   7   // max clip capacity per difficulty level (easy,medium,hard,death incarnate,realism)
+			uses                1                   // how much ammo will weapon use with one shot
+			reloadTime          1650                // reload time in miliseconds
+			reloadTimeFull      1650                // reload time in miliseconds
+			fireDelayTime       10                 // time between pressing the button and actual shot in miliseconds
+			nextShotTime        200                 // time between shots in miliseconds (firing rate)
+			nextShotTime2       200                 // alternate time between shots in miliseconds (firing rate)
+			maxHeat             0                   // time before weapon will overheat in miliseconds
+			coolRate            0                   // time for cooling the weapon in miliseconds
+			playerDamage        9                  // damage inflicted by player 
+			aiDamage            6                   // damage inflicted by AI
+			playerSplashRadius  0                   // splash when player is using the weapon (for explosives)
+			aiSplashRadius      0                   // splash when AI is using the weapon (for explosives)
+			spread              400                 // weapon spread (the higher value - the worse is accuracy)
+			aimSpreadScaleAdd   35                  // spread add
+			spreadScale         0.4                 // spread scale
+			weapRecoilDuration  50                  // recoil intensity
+			weapRecoilPitch     0.2 0.1             // recoil values for Pitch
+			weapRecoilYaw       0.0 0.0             // recoil values for Yaw
+			soundRange          700                 // hearing range for AI
+			moveSpeed           0.95                // player's movement speed while holding this weapon
+			twoHand             0                   // is weapon twohanded? 1-yes, 0-no
+			upAngle             0                  // throw range - works only for grenades and dynamite
+			falloffDistance     750.0 1500.0        // falloffDistance min and max
+		}
+}

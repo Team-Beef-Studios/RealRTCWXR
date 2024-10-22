@@ -8,8 +8,8 @@
 #define ANGLES_KNIFE            2
 #define ANGLES_COUNT            3
 
-#define USE_GESTURE_OFF_HAND      1
-#define USE_GESTURE_WEAPON_HAND   2
+#define ACTIVE_OFF_HAND      1
+#define ACTIVE_WEAPON_HAND   2
 #define USE_HAPTIC_FEEDBACK_DELAY 500
 
 typedef struct {
@@ -89,6 +89,8 @@ typedef struct {
 
     int item_selector; // 1 - weapons 2 - Holdable Items
     qboolean use_item;
+    int      akimboTriggerState;
+    qboolean akimboFire;
 
     qboolean velocitytriggered;
     qboolean velocitytriggeractive;

@@ -744,8 +744,13 @@ void Bullet_Fire( gentity_t *ent, float spread, int damage ) {
 		sprintf(fire_command, "fire_%i", ent->s.weapon);
 		if (ent->s.weapon == WP_AKIMBO)
 		{
-			right = BG_AkimboFireSequence(ent->s.weapon, ent->client->ps.ammoclip[WP_AKIMBO], ent->client->ps.ammoclip[WP_COLT]);
-			trap_Vibrate(100, right ? 1 : 0, 1.0, fire_command, 0.0, 0.0);
+			qboolean akimbo = BG_AkimboFireSequence(ent->s.weapon, ent->client->ps.ammoclip[WP_AKIMBO], ent->client->ps.ammoclip[WP_COLT], vr->akimboTriggerState);
+			trap_Vibrate(100, right != akimbo ? 1 : 0, 1.0, fire_command, 0.0, 0.0);
+		}
+		else if (ent->s.weapon == WP_DUAL_TT33)
+		{
+			qboolean akimbo = BG_AkimboFireSequence(ent->s.weapon, ent->client->ps.ammoclip[WP_DUAL_TT33], ent->client->ps.ammoclip[WP_TT33], vr->akimboTriggerState);
+			trap_Vibrate(100, right != akimbo ? 1 : 0, 1.0, fire_command, 0.0, 0.0);
 		}
 		else {
 			trap_Vibrate(100, right ? 1 : 0, 1.0, fire_command, 0.0, 0.0);
@@ -1697,7 +1702,14 @@ void CalcMuzzlePoint( gentity_t *ent, int weapon, vec3_t forward, vec3_t right, 
 		float worldscale = Cvar_VariableFloatValue("cg_worldScale");
 		float heightAdjust = Cvar_VariableFloatValue("cg_heightAdjust");
 
-		BG_ConvertFromVR(ent->client->ps.viewangles[YAW], worldscale, vr->weaponoffset, ent->r.currentOrigin, muzzlePoint);
+		if ((weapon == WP_AKIMBO && BG_AkimboFireSequence(WP_AKIMBO, ent->client->ps.ammoclip[WP_AKIMBO], ent->client->ps.ammoclip[WP_COLT], vr->akimboTriggerState)) ||
+			(weapon == WP_DUAL_TT33 && BG_AkimboFireSequence(WP_DUAL_TT33, ent->client->ps.ammoclip[WP_DUAL_TT33], ent->client->ps.ammoclip[WP_TT33], vr->akimboTriggerState))) {
+			BG_ConvertFromVR(ent->client->ps.viewangles[YAW], worldscale, vr->offhandoffset, ent->r.currentOrigin, muzzlePoint);
+		}
+		else {
+			BG_ConvertFromVR(ent->client->ps.viewangles[YAW], worldscale, vr->weaponoffset, ent->r.currentOrigin, muzzlePoint);
+		}
+		
 		muzzlePoint[2] += (ent->client->ps.viewheight - DEFAULT_PLAYER_HEIGHT);
 		muzzlePoint[2] += (vr->hmdposition[1] + heightAdjust) * worldscale;
 		return;
@@ -1725,7 +1737,6 @@ void CalcMuzzlePoint( gentity_t *ent, int weapon, vec3_t forward, vec3_t right, 
 	case WP_POISONGAS:
 		VectorMA( muzzlePoint, 20, right, muzzlePoint );
 		break;
-	case WP_AKIMBO:     // left side rather than right
 	case WP_DUAL_TT33:
 		VectorMA( muzzlePoint, -6, right, muzzlePoint );
 		VectorMA( muzzlePoint, -4, up, muzzlePoint );
@@ -1764,7 +1775,15 @@ void CalcMuzzlePointForActivate( gentity_t *ent, vec3_t forward, vec3_t right, v
 		float worldscale = Cvar_VariableFloatValue("cg_worldScale");
 		float heightAdjust = Cvar_VariableFloatValue("cg_heightAdjust");
 
-		BG_ConvertFromVR(ent->client->ps.viewangles[YAW], worldscale, vr->weaponoffset, ent->r.currentOrigin, muzzlePoint);
+
+		if ((ent->client->ps.weapon == WP_AKIMBO && BG_AkimboFireSequence(WP_AKIMBO, ent->client->ps.ammoclip[WP_AKIMBO], ent->client->ps.ammoclip[WP_COLT], vr->akimboTriggerState)) ||
+			(ent->client->ps.weapon == WP_DUAL_TT33 && BG_AkimboFireSequence(WP_DUAL_TT33, ent->client->ps.ammoclip[WP_DUAL_TT33], ent->client->ps.ammoclip[WP_TT33], vr->akimboTriggerState)) ){
+			BG_ConvertFromVR(ent->client->ps.viewangles[YAW], worldscale, vr->offhandoffset, ent->r.currentOrigin, muzzlePoint);
+		}
+		else {
+			BG_ConvertFromVR(ent->client->ps.viewangles[YAW], worldscale, vr->weaponoffset, ent->r.currentOrigin, muzzlePoint);
+		}
+		
 		muzzlePoint[2] += (ent->client->ps.viewheight - DEFAULT_PLAYER_HEIGHT);
 		muzzlePoint[2] += (vr->hmdposition[1] + heightAdjust) * worldscale;
 		return;
@@ -1801,8 +1820,17 @@ void CalcMuzzlePoints( gentity_t *ent, int weapon ) {
 	*/
 
 	if (!(ent->r.svFlags & SVF_CASTAI)) {
-		VectorCopy(vr->weaponangles[ANGLES_ADJUSTED], viewang);
-		viewang[YAW] = ent->client->ps.viewangles[YAW] + (vr->weaponangles[ANGLES_ADJUSTED][YAW] - getHMDYawForCalc());
+
+		if ((weapon == WP_AKIMBO && BG_AkimboFireSequence(WP_AKIMBO, ent->client->ps.ammoclip[WP_AKIMBO], ent->client->ps.ammoclip[WP_COLT], vr->akimboTriggerState)) ||
+			(weapon == WP_DUAL_TT33 && BG_AkimboFireSequence(WP_DUAL_TT33, ent->client->ps.ammoclip[WP_DUAL_TT33], ent->client->ps.ammoclip[WP_TT33], vr->akimboTriggerState))) {
+			VectorCopy(vr->offhandangles[ANGLES_ADJUSTED], viewang);
+			viewang[YAW] = ent->client->ps.viewangles[YAW] + (vr->offhandangles[ANGLES_ADJUSTED][YAW] - getHMDYawForCalc());
+		}
+		else {
+			VectorCopy(vr->weaponangles[ANGLES_ADJUSTED], viewang);
+			viewang[YAW] = ent->client->ps.viewangles[YAW] + (vr->weaponangles[ANGLES_ADJUSTED][YAW] - getHMDYawForCalc());
+		}
+
 	}
 
 	// set aiming directions
@@ -1856,7 +1884,7 @@ void FireWeapon( gentity_t *ent ) {
 			case WP_LUGER:
 			case WP_SILENCER:
 			case WP_COLT:
-			case WP_AKIMBO:
+			//case WP_AKIMBO:
 			case WP_DUAL_TT33:
 				aimSpreadScale += 0.4f;
 				break;

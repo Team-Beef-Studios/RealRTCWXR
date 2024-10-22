@@ -1360,7 +1360,15 @@ float CG_GetValue( int ownerDraw, int type ) {
 	case CG_PLAYER_AMMOCLIP_VALUE:
 		if ( cent->currentState.weapon ) {
 			if ( type == RANGETYPE_RELATIVE ) {
-				return (float)ps->ammoclip[BG_FindClipForWeapon( cent->currentState.weapon )] / (float)ammoTable[cent->currentState.weapon].maxclip;
+				if (cent->currentState.weapon == WP_AKIMBO) {
+					return (float)(ps->ammoclip[WP_AKIMBO] + ps->ammoclip[WP_COLT]) / (float)(ammoTable[WP_AKIMBO].maxclip * 4);
+				}
+				else if (cent->currentState.weapon == WP_DUAL_TT33) {
+					return (float)(ps->ammoclip[WP_DUAL_TT33] + ps->ammoclip[WP_TT33]) / (float)(ammoTable[WP_DUAL_TT33].maxclip * 4);
+				}
+				else {
+					return (float)ps->ammoclip[BG_FindClipForWeapon(cent->currentState.weapon)] / (float)ammoTable[cent->currentState.weapon].maxclip;
+				}
 			} else {
 				return ps->ammoclip[BG_FindClipForWeapon( cent->currentState.weapon )];
 			}

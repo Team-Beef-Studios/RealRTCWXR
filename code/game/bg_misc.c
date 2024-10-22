@@ -52,6 +52,9 @@ splinePath_t splinePaths[MAX_SPLINE_PATHS];
 int numPathCorners;
 pathCorner_t pathCorners[MAX_PATH_CORNERS];
 
+#define TRIGGER_SECONDARY 1
+#define TRIGGER_PRIMARY   2
+
 // NOTE: This once-static data is included in both Client and Game modules.
 //       Both now load values into here from weap files.
 //       All values are empty because of that
@@ -5826,11 +5829,19 @@ BG_AkimboFireSequence
 ==============
 */
 //qboolean BG_AkimboFireSequence( playerState_t *ps ) {
-qboolean BG_AkimboFireSequence( int weapon, int akimboClip, int coltClip ) {
+qboolean BG_AkimboFireSequence( int weapon, int akimboClip, int coltClip, int triggerState) {
 	// NOTE: this doesn't work when clips are turned off (dmflags 64)
 
 	if ( weapon != WP_AKIMBO && weapon != WP_DUAL_TT33 ) {
 		return qfalse;
+	}
+
+	// If only one trigger is pushed, return weapon matching the trigger
+	if ((triggerState & TRIGGER_SECONDARY) && !(triggerState & TRIGGER_PRIMARY)) {
+		return qtrue; // Firing secondary weapon
+	}
+	if ((triggerState & TRIGGER_PRIMARY) && !(triggerState & TRIGGER_SECONDARY)) {
+		return qfalse; // Firing primary weapon
 	}
 
 	if ( !akimboClip ) {
@@ -5842,14 +5853,9 @@ qboolean BG_AkimboFireSequence( int weapon, int akimboClip, int coltClip ) {
 		return qtrue;
 	}
 
-	// at this point, both have ammo
-
-	// now check 'cycle'   // (removed old method 11/5/2001)
-	if ( ( akimboClip + coltClip ) & 1 ) {
-		return qfalse;
-	}
-
-	return qtrue;
+	// At this point, both have ammo and we are firing from both
+	// Switch between primary and secondary after each fired shot
+	return ((akimboClip + coltClip) & 1);
 }
 
 //----(SA) end
@@ -7829,10 +7835,10 @@ char *BG_GetWeaponFilename( weapon_t weaponNum )
 		case WP_DAGGER:            return "dagger.weap";
 		case WP_LUGER:             return "luger.weap";
 		case WP_SILENCER:          return "luger_silenced.weap";
-		case WP_COLT:              return "colt.weap";
-		case WP_AKIMBO:            return "akimbo.weap";
-		case WP_TT33:              return "tt33.weap";
-		case WP_DUAL_TT33:         return "dualtt33.weap";
+		case WP_COLT:
+		case WP_AKIMBO:            return "colt.weap";
+		case WP_TT33:
+		case WP_DUAL_TT33:         return "tt33.weap";
 		case WP_P38:               return "p38.weap";
 		case WP_REVOLVER:          return "revolver.weap";
 		case WP_THOMPSON:          return "thompson.weap";

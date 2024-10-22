@@ -33,6 +33,11 @@ If you have questions concerning this license or the applicable additional terms
 #include "cg_local.h"
 #include "../ui/ui_shared.h" // for Menus_CloseAll()
 
+
+#include <VrClientInfo.h>
+
+vr_client_info_t* vr;
+
 extern int hWeaponSnd;
 extern int hWeaponEchoSnd; 
 
@@ -1742,6 +1747,9 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 // jpw
 	case EV_EMPTYCLIP:
 		DEBUGNAME( "EV_EMPTYCLIP" );
+		if ((es->weapon != WP_GRENADE_LAUNCHER) && (es->weapon != WP_GRENADE_PINEAPPLE) && (es->weapon != WP_DYNAMITE)) {
+			trap_S_StartSound(NULL, es->number, CHAN_AUTO, cgs.media.noAmmoSound);
+		}
 		break;
 
 	case EV_FILL_CLIP:
@@ -1849,8 +1857,10 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		CG_FireWeapon( cent, event );
 		if ( event == EV_FIRE_WEAPONB ) {  // akimbo firing colt
 			cent->akimboFire = qtrue;
+			vr->akimboFire = qtrue;
 		} else {
 			cent->akimboFire = qfalse;
+			vr->akimboFire = qfalse;
 		}
 		break;
 	case EV_FIRE_WEAPON_LASTSHOT:

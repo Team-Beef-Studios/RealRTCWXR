@@ -683,18 +683,29 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
             int thirdPerson = Cvar_VariableIntegerValue("cg_thirdPerson");
 
             // Don't fire velocity triggered weapons
-            if (cl.snap.ps.weapon != WP_KNIFE && cl.snap.ps.weapon != WP_DAGGER)
+            if (cl.snap.ps.weapon != WP_KNIFE && cl.snap.ps.weapon != WP_DAGGER && !vr.item_selector)
             {
-                //Fire Primary
-                if ((pDominantTrackedRemoteNew->Buttons & xrButton_Trigger) !=
-                    (pDominantTrackedRemoteOld->Buttons & xrButton_Trigger)) {
+                if (cl.snap.ps.weapon == WP_AKIMBO ||
+                    cl.snap.ps.weapon == WP_DUAL_TT33) {
+                    firing = false;
+                    vr.akimboTriggerState = 0;
+                    if (pDominantTrackedRemoteNew->Buttons & xrButton_Trigger) {
+                        vr.akimboTriggerState |= ACTIVE_WEAPON_HAND;
+                        firing = true;
+                    }
 
-                    firing = (pDominantTrackedRemoteNew->Buttons & xrButton_Trigger) &&
-                            !vr.item_selector;
-                    sendButtonAction("+attack", firing);
+                    if (pOffTrackedRemoteNew->Buttons & xrButton_Trigger) {
+                        vr.akimboTriggerState |= ACTIVE_OFF_HAND;
+                        firing = true;
+                    }
                 }
-            }
+                else {
+                    vr.akimboTriggerState = 0;
+                    firing = pDominantTrackedRemoteNew->Buttons & xrButton_Trigger;
+                }
 
+                sendButtonAction("+attack", firing);
+            }
 
             // If zoomed, use forward and back to zoom in and out
             if (vr.cgzoommode)
@@ -827,15 +838,6 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
                 CL_KeyEvent(K_TAB, true, Sys_Milliseconds());
             }
 
-            //Use Force - off hand trigger
-            {
-                if ((pOffTrackedRemoteNew->Buttons & xrButton_Trigger) !=
-                    (pOffTrackedRemoteOld->Buttons & xrButton_Trigger))
-                {
-                    sendButtonAction("+useforce", (pOffTrackedRemoteNew->Buttons & xrButton_Trigger));
-                }
-            }
-
             //Use smooth in 3rd person
             bool usingSnapTurn = vr_turn_mode->integer == 0;
 
@@ -903,34 +905,34 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
             // Off-hand gesture
             float distanceToBody = sqrt(vr.offhandoffset[0]*vr.offhandoffset[0] + vr.offhandoffset[2]*vr.offhandoffset[2]);
             if (gestureUseAllowed && (distanceToBody > vr_use_gesture_boundary->value)) {
-                if (!(vr.useGestureState & USE_GESTURE_OFF_HAND)) {
+                if (!(vr.useGestureState & ACTIVE_OFF_HAND)) {
                     sendButtonAction("+altuse", true);
                 }
-                vr.useGestureState |= USE_GESTURE_OFF_HAND;
+                vr.useGestureState |= ACTIVE_OFF_HAND;
             } else {
-                if (vr.useGestureState & USE_GESTURE_OFF_HAND) {
+                if (vr.useGestureState & ACTIVE_OFF_HAND) {
                     sendButtonAction("+altuse", false);
                 }
-                vr.useGestureState &= ~USE_GESTURE_OFF_HAND;
+                vr.useGestureState &= ~ACTIVE_OFF_HAND;
             }
             // Weapon-hand gesture
             distanceToBody = sqrt(vr.weaponoffset[0]*vr.weaponoffset[0] + vr.weaponoffset[2]*vr.weaponoffset[2]);
             if (gestureUseAllowed && (distanceToBody > vr_use_gesture_boundary->value)) {
-                if (!(vr.useGestureState & USE_GESTURE_WEAPON_HAND)) {
+                if (!(vr.useGestureState & ACTIVE_WEAPON_HAND)) {
                     sendButtonAction("+activate", true);
                 }
-                vr.useGestureState |= USE_GESTURE_WEAPON_HAND;
+                vr.useGestureState |= ACTIVE_WEAPON_HAND;
             } else {
-                if (vr.useGestureState & USE_GESTURE_WEAPON_HAND) {
+                if (vr.useGestureState & ACTIVE_WEAPON_HAND) {
                     sendButtonAction("+activate", false);
                 }
-                vr.useGestureState &= ~USE_GESTURE_WEAPON_HAND;
+                vr.useGestureState &= ~ACTIVE_WEAPON_HAND;
             }
         } else {
-            if (vr.useGestureState & USE_GESTURE_OFF_HAND) {
+            if (vr.useGestureState & ACTIVE_OFF_HAND) {
                 sendButtonAction("+altuse", false);
             }
-            if (vr.useGestureState & USE_GESTURE_WEAPON_HAND) {
+            if (vr.useGestureState & ACTIVE_WEAPON_HAND) {
                 sendButtonAction("+activate", false);
             }
             vr.useGestureState = 0;

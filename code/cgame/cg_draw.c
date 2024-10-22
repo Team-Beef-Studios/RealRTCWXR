@@ -2634,7 +2634,7 @@ static void CG_DrawCrosshair( void ) {
 CG_DrawCrosshair3D
 =================
 */
-static void CG_DrawCrosshair3D( void ) {
+static void CG_DrawCrosshair3D( qboolean akimbo ) {
 	float w;
 	qhandle_t hShader;
 	float f;
@@ -2809,7 +2809,14 @@ static void CG_DrawCrosshair3D( void ) {
 
 
 	vec3_t forward, weaponangles, origin;
-	BG_CalculateVRWeaponPosition(cg.refdefViewAngles[YAW], cg.refdef.vieworg, cg_heightAdjust.value , cg_worldScale.value, origin, weaponangles);
+	if (akimbo)
+	{
+		BG_CalculateVROffHandPosition(cg.refdefViewAngles[YAW], cg.refdef.vieworg, cg_heightAdjust.value, cg_worldScale.value, origin, weaponangles);
+	}
+	else {
+		BG_CalculateVRWeaponPosition(cg.refdefViewAngles[YAW], cg.refdef.vieworg, cg_heightAdjust.value, cg_worldScale.value, origin, weaponangles);
+	}
+
 	AngleVectors(weaponangles, forward, NULL, NULL);
 
 	// let the trace run through until a change in stereo separation of the crosshair becomes less than one pixel.
@@ -3964,7 +3971,14 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 
 	if (!vr->using_screen_layer &&
 		!vr->cin_camera)
-		CG_DrawCrosshair3D();
+	{
+		CG_DrawCrosshair3D(qfalse);
+		if (cg.weaponSelect == WP_AKIMBO ||
+			cg.weaponSelect == WP_DUAL_TT33)
+		{
+			CG_DrawCrosshair3D(qtrue);
+		}
+	}
 
 	vr->emplaced_gun = (cg.snap->ps.eFlags & EF_MG42_ACTIVE);
 

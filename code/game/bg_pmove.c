@@ -37,6 +37,10 @@ If you have questions concerning this license or the applicable additional terms
 
 #include <VrClientInfo.h>
 
+
+#define TRIGGER_SECONDARY 1
+#define TRIGGER_PRIMARY   2
+
 // Rafael gameskill
 int bg_pmove_gameskill_integer;
 // done
@@ -2729,8 +2733,8 @@ void PM_CheckForReload( int weapon ) {
 				
 				
 			    // and you have reserves
-				if ( weapon == WP_AKIMBO ) {    // if colt's got ammo, don't force reload yet (you know you've got it 'out' since you've got the akimbo selected
-					if ( !( pm->ps->ammoclip[WP_COLT] ) ) {
+				if (weapon == WP_AKIMBO) {  // reload only if both clips are empty
+					if (!(pm->ps->ammoclip[WP_COLT]) && !(pm->ps->ammoclip[WP_COLT])) {
 						doReload = qtrue;
 					}
 					// likewise.  however, you need to check if you've got the akimbo selected, since you could have the colt alone
@@ -2739,8 +2743,8 @@ void PM_CheckForReload( int weapon ) {
 						doReload = qtrue;
 					}
 				} else if ( weapon == WP_COLT ) {   // weapon checking for reload is colt...
-					if ( pm->ps->weapon == WP_AKIMBO ) {    // you've got the akimbo selected...
-						if ( !( pm->ps->ammoclip[WP_AKIMBO] ) ) {   // and it's got no ammo either
+					if (pm->ps->weapon == WP_AKIMBO) {  // reload only if both clips are empty
+						if (!(pm->ps->ammoclip[WP_COLT]) && !(pm->ps->ammoclip[WP_AKIMBO])) {
 							doReload = qtrue;       // so reload
 						}
 					} else {     // single colt selected
@@ -2834,11 +2838,11 @@ void PM_WeaponUseAmmo( int wp, int amount ) {
 	} else {
 		takeweapon = BG_FindClipForWeapon( wp );
 		if ( wp == WP_AKIMBO ) {
-			if ( !BG_AkimboFireSequence( wp, pm->ps->ammoclip[WP_AKIMBO], pm->ps->ammoclip[WP_COLT] ) ) {
+			if (!BG_AkimboFireSequence(wp, pm->ps->ammoclip[WP_AKIMBO], pm->ps->ammoclip[WP_COLT], vr->akimboTriggerState)) {
 				takeweapon = WP_COLT;
 			}
 		} else if ( wp == WP_DUAL_TT33 ) {
-			if ( !BG_AkimboFireSequence( wp, pm->ps->ammoclip[WP_DUAL_TT33], pm->ps->ammoclip[WP_TT33] ) ) {
+			if ( !BG_AkimboFireSequence( wp, pm->ps->ammoclip[WP_DUAL_TT33], pm->ps->ammoclip[WP_TT33], vr->akimboTriggerState) ) {
 				takeweapon = WP_TT33;
 			}
 		}
@@ -2862,11 +2866,11 @@ int PM_WeaponAmmoAvailable( int wp ) {
 	} else {
 		takeweapon = BG_FindClipForWeapon( wp );
 		if ( wp == WP_AKIMBO ) {
-			if ( !BG_AkimboFireSequence( pm->ps->weapon, pm->ps->ammoclip[WP_AKIMBO], pm->ps->ammoclip[WP_COLT] ) ) {
+			if ( !BG_AkimboFireSequence( pm->ps->weapon, pm->ps->ammoclip[WP_AKIMBO], pm->ps->ammoclip[WP_COLT], vr->akimboTriggerState) ) {
 				takeweapon = WP_COLT;
 			}
 		} else if ( wp == WP_DUAL_TT33 ) {
-			if ( !BG_AkimboFireSequence( pm->ps->weapon, pm->ps->ammoclip[WP_DUAL_TT33], pm->ps->ammoclip[WP_TT33] ) ) {
+			if ( !BG_AkimboFireSequence( pm->ps->weapon, pm->ps->ammoclip[WP_DUAL_TT33], pm->ps->ammoclip[WP_TT33], qfalse ) ) {
 				takeweapon = WP_TT33;
 			}
 		}
@@ -3279,8 +3283,8 @@ static void PM_Weapon( void ) {
 		return;
 	}
 
-	akimboFire_colt = BG_AkimboFireSequence( pm->ps->weapon, pm->ps->ammoclip[WP_AKIMBO], pm->ps->ammoclip[WP_COLT] );
-	akimboFire_tt33 = BG_AkimboFireSequence( pm->ps->weapon, pm->ps->ammoclip[WP_DUAL_TT33], pm->ps->ammoclip[WP_TT33] );
+	akimboFire_colt = BG_AkimboFireSequence( pm->ps->weapon, pm->ps->ammoclip[WP_AKIMBO], pm->ps->ammoclip[WP_COLT], vr->akimboTriggerState );
+	akimboFire_tt33 = BG_AkimboFireSequence( pm->ps->weapon, pm->ps->ammoclip[WP_DUAL_TT33], pm->ps->ammoclip[WP_TT33], vr->akimboTriggerState);
 
 	if ( 0 ) {
 		switch ( pm->ps->weaponstate ) {
@@ -3558,11 +3562,13 @@ static void PM_Weapon( void ) {
 		return;
 	}
 
-		if ( pm->ps->weapon == WP_AIRSTRIKE ) {
-			if ( pm->cmd.serverTime - pm->ps->classWeaponTime < ( pm->ltChargeTime ) ) {
-				return;
-			}
+
+	if ( pm->ps->weapon == WP_AIRSTRIKE ) {
+		if ( pm->cmd.serverTime - pm->ps->classWeaponTime < ( pm->ltChargeTime ) ) {
+			return;
 		}
+	}
+
 	// check for fire
 	if ( (!(pm->cmd.buttons & BUTTON_ATTACK) && !PM_AltFire() && !delayedFire) 
 	    || (pm->ps->leanf != 0 && !PM_AltFiring(delayedFire) && pm->ps->weapon != WP_GRENADE_LAUNCHER && pm->ps->weapon != WP_GRENADE_PINEAPPLE && pm->ps->weapon != WP_POISONGAS) )
@@ -3604,6 +3610,22 @@ static void PM_Weapon( void ) {
 			pm->ps->weaponTime  = 500;
 			return;
 		}
+	}
+
+
+	// In case of akimbo, fire only if player still holds at least one of triggers
+	// (Sometimes with really quick tap +attack is spawned but trigger state is no longer
+	// set when reaching here. Exiting solves problem of "random" weapon fire)
+	if ((pm->ps->weapon == WP_AKIMBO || pm->ps->weapon == WP_DUAL_TT33) && !vr->akimboTriggerState) {
+		pm->ps->weaponTime = 0;
+		pm->ps->weaponDelay = 0;
+
+		if (weaponstateFiring) {  // you were just firing, time to relax
+			PM_ContinueWeaponAnim(WEAP_IDLE1);
+		}
+
+		pm->ps->weaponstate = WEAPON_READY;
+		return;
 	}
 
 	// start the animation even if out of ammo
@@ -3773,6 +3795,16 @@ static void PM_Weapon( void ) {
 			case WP_GRENADE_PINEAPPLE:
 			case WP_POISONGAS:
 				playswitchsound = qfalse;
+				break;
+
+			case WP_AKIMBO:
+				// do not reload but continue fire if there is ammo in other gun
+				if (pm->ps->ammoclip[WP_AKIMBO] || pm->ps->ammoclip[WP_COLT]) {
+					reloadingW = qfalse;
+					playswitchsound = qfalse;
+					// notify player that one gun is empty
+					PM_AddEvent(EV_EMPTYCLIP);
+				}
 				break;
 			// some weapons not allowed to reload.  must switch back to primary first
 			case WP_SNOOPERSCOPE:
@@ -3967,9 +3999,16 @@ static void PM_Weapon( void ) {
 	break;
 	case WP_AKIMBO:
 		addTime = ammoTable[pm->ps->weapon].nextShotTime;
-		if ( !pm->ps->ammoclip[WP_AKIMBO] || !pm->ps->ammoclip[WP_COLT] ) {
-			       if ( ( !pm->ps->ammoclip[WP_AKIMBO] && !akimboFire_colt ) || ( !pm->ps->ammoclip[WP_COLT] && akimboFire_colt ) ) {
-				addTime = 2 * ammoTable[pm->ps->weapon].nextShotTime;
+		if (vr->akimboTriggerState < 3) {
+			// firing only single gun
+			addTime = 2 * ammoTable[pm->ps->weapon].nextShotTime;
+		}
+		else {
+			// (SA) (added check for last shot in both guns so there's no delay for the last shot)
+			if (!pm->ps->ammoclip[WP_AKIMBO] || !pm->ps->ammoclip[WP_COLT]) {
+				if ((!pm->ps->ammoclip[WP_AKIMBO] && !vr->akimboFire) || (!pm->ps->ammoclip[WP_COLT] && vr->akimboFire)) {
+					addTime = 2 * ammoTable[pm->ps->weapon].nextShotTime;
+				}
 			}
 		}
 		break;

@@ -1,9 +1,9 @@
-cd z_zzRealRTCWXR
-del z_zzRealRTCWXR.pk3
+cd z_zzzRealRTCWXR
+del z_zzzRealRTCWXR.pk3
 cd ..
-powershell Compress-Archive z_zzRealRTCWXR/* z_zzRealRTCWXR.zip
-rename z_zzRealRTCWXR.zip z_zzRealRTCWXR.pk3
-copy z_zzRealRTCWXR.pk3 code\RealRTCWXR\x64\Debug\Main\*.*
-move z_zzRealRTCWXR.pk3 code/RealRTCWXR/x64/Release/Main
+powershell Compress-Archive z_zzzRealRTCWXR/* z_zzzRealRTCWXR.zip
+rename z_zzzRealRTCWXR.zip z_zzzRealRTCWXR.pk3
+copy z_zzzRealRTCWXR.pk3 code\RealRTCWXR\x64\Debug\Main\*.*
+move z_zzzRealRTCWXR.pk3 code/RealRTCWXR/x64/Release/Main
 
 pause
