@@ -4945,15 +4945,24 @@ void CG_ItemSelectorSelect_f(void)
 	if (cg.itemSelectorType == ST_WEAPON_BANKS) // weapons
 	{
 		centity_t* cent = &cg_entities[cg.snap->ps.clientNum];
+		int targetSelection;
+		if (cg.itemSelectorSelection >= 100)
 		{
-			if (cg.weaponSelect == cg.itemSelectorSelection)
-			{
-				return;
-			}
-
-			cg.weaponSelectTime = cg.time;
-			cg.weaponSelect = weapBanks[cg.itemSelectorWeaponBank][cg.itemSelectorSelection];
+			targetSelection = ammoTable[weapBanks[cg.itemSelectorWeaponBank][cg.itemSelectorSelection - 100]].weapAlts;
 		}
+		else
+		{
+			targetSelection = weapBanks[cg.itemSelectorWeaponBank][cg.itemSelectorSelection];
+		}
+
+		if (cg.weaponSelect == targetSelection)
+		{
+			return;
+		}
+
+		cg.weaponSelectTime = cg.time;
+		cg.weaponSelect = targetSelection;
+		
 	}
 	else if (cg.itemSelectorType == ST_WEAPON_ALL) // weapons
 	{
@@ -4979,13 +4988,23 @@ void CG_ItemSelectorSelect_f(void)
 			}
 		}
 
-		if (cg.weaponSelect == weapons[cg.itemSelectorSelection])
+		int targetSelection;
+		if (cg.itemSelectorSelection >= 100)
+		{
+			targetSelection = ammoTable[weapons[cg.itemSelectorSelection - 100]].weapAlts;
+		}
+		else
+		{
+			targetSelection = weapons[cg.itemSelectorSelection];
+		}
+
+		if (cg.weaponSelect == targetSelection)
 		{
 			return;
 		}
 
 		cg.weaponSelectTime = cg.time;
-		cg.weaponSelect = weapons[cg.itemSelectorSelection];
+		cg.weaponSelect = targetSelection;
 	}
 	else if (cg.itemSelectorType == ST_GADGET) // gadgets
 	{
@@ -5088,6 +5107,7 @@ void CG_DrawItemSelector(void)
 	float dist = 10.0f;
 	float radius = 4.4f;
 	float scale = 0.12f;
+	float altRad = 1.75f;
 
 	float frac = (cg.time - cg.itemSelectorTime) / 20.0f;
 	if (frac > 1.0f)
@@ -5135,8 +5155,8 @@ void CG_DrawItemSelector(void)
 		}
 	}
 
-	VectorMA(selectorOrigin, radius * pos[0], wheelRight, selectorOrigin);
-	VectorMA(selectorOrigin, radius * pos[1], wheelUp, selectorOrigin);
+	VectorMA(selectorOrigin, radius * altRad* pos[0], wheelRight, selectorOrigin);
+	VectorMA(selectorOrigin, radius * altRad* pos[1], wheelUp, selectorOrigin);
 
 	centity_t* cent = &cg_entities[cg.snap->ps.clientNum];
 
@@ -5219,14 +5239,26 @@ void CG_DrawItemSelector(void)
 
 		{
 			qboolean selectable;
+			weapon_t alt = WP_NONE;
+			qboolean altSelectable = qfalse;
 			switch (cg.itemSelectorType)
 			{
 			case ST_WEAPON_BANKS: //weapons
-				selectable = CG_WeaponSelectable(weapBanks[cg.itemSelectorWeaponBank][itemId]);
-				break;
+			{
+				int w = weapBanks[cg.itemSelectorWeaponBank][itemId];
+				selectable = w != WP_NONE && CG_WeaponSelectable(weapBanks[cg.itemSelectorWeaponBank][itemId]);
+				alt = ammoTable[weapBanks[cg.itemSelectorWeaponBank][itemId]].weapAlts;
+				altSelectable = alt != WP_NONE && CG_WeaponSelectable(alt) && !(w == WP_GARAND || w == WP_FG42 || w == WP_MAUSER || w == WP_M1941 || w == WP_DELISLE);
+			}
+			break;
 			case ST_WEAPON_ALL: //weapons
+			{
+				int w = weapons[itemId];
 				selectable = qtrue;
-				break;
+				alt = ammoTable[weapons[itemId]].weapAlts;
+				altSelectable = alt != WP_NONE && CG_WeaponSelectable(alt) && !(w == WP_GARAND || w == WP_FG42 || w == WP_MAUSER || w == WP_M1941 || w == WP_DELISLE);
+			}
+			break;
 			case ST_GADGET: //gadgets
 				if (itemId == 0)
 				{
@@ -5267,8 +5299,7 @@ void CG_DrawItemSelector(void)
 						if (cg.itemSelectorSelection != itemId) {
 							cg.itemSelectorSelection = itemId;
 
-							//cgi_HapticEvent("selector_icon", 0, vr->right_handed ?
-							//	((cg.itemSelectorType >= ST_FORCE_POWER) ? 2 : 1) : ((cg.itemSelectorType >= ST_FORCE_POWER) ? 1 : 2), 100, 0, 0);
+							trap_Vibrate(100, vr->right_handed ? 1 : 0, 0.6, "selector_icon", 0.0, 0.0);
 						}
 
 						selected = qtrue;
@@ -5453,6 +5484,84 @@ void CG_DrawItemSelector(void)
 					sprite.shaderRGBA[2] = 255;
 					sprite.shaderRGBA[3] = 255;
 					trap_R_AddRefEntityToScene(&sprite);
+				}
+			}
+
+			if (altSelectable) {
+				//first calculate wheel slot position
+				vec3_t angles, iconOrigin, iconBackground, iconForeground;
+				VectorClear(angles);
+				angles[YAW] = wheelAngles[YAW];
+				angles[PITCH] = wheelAngles[PITCH];
+				angles[ROLL] = (float)(360 / count) * index;
+				vec3_t forward, up;
+				AngleVectors(angles, forward, NULL, up);
+
+				VectorMA(wheelOrigin, ((radius * altRad) * frac), up, iconOrigin);
+				VectorMA(iconOrigin, 0.2f, forward, iconBackground);
+				VectorMA(iconOrigin, -0.2f, forward, iconForeground);
+
+				{
+					vec3_t diff;
+					VectorSubtract(selectorOrigin, iconOrigin, diff);
+					float length = VectorLength(diff);
+					if (length <= 1.0f &&
+						frac == 1.0f) {
+						if (cg.itemSelectorSelection != (itemId + 100)) {
+							cg.itemSelectorSelection = (itemId + 100);
+
+							trap_Vibrate(100, vr->right_handed ? 1 : 0, 0.6, "selector_icon", 0.0, 0.0);
+						}
+
+						selected = qtrue;
+					}
+				
+					refEntity_t ent;
+					memset(&ent, 0, sizeof(ent));
+					VectorCopy(iconOrigin, ent.origin);
+
+					//Shift model a bit
+					VectorMA(ent.origin, 0.3f, wheelForward, ent.origin);
+					VectorMA(ent.origin, -0.2f, wheelRight, ent.origin);
+					VectorMA(ent.origin, 0.1f, wheelUp, ent.origin);
+
+					vec3_t iconAngles;
+					VectorCopy(wheelAngles, iconAngles);
+					iconAngles[PITCH] = 30;
+					iconAngles[YAW] -= 145.0f;
+
+					float weaponScale = (scale * frac) +
+						(cg.itemSelectorSelection == (itemId + 100) ? 0.08f : 0);
+
+					AnglesToAxis(iconAngles, ent.axis);
+					VectorScale(ent.axis[0], weaponScale, ent.axis[0]);
+					VectorScale(ent.axis[1], weaponScale, ent.axis[1]);
+					VectorScale(ent.axis[2], weaponScale, ent.axis[2]);
+					ent.nonNormalizedAxes = qtrue;
+
+					weaponInfo_t* weaponInfo = &cg_weapons[alt];
+
+					if (cg.itemSelectorSelection == (itemId + 100))
+					{
+						gitem_t* item = BG_FindItemForWeapon(alt);
+						if (item && item->classname)
+						{
+							CG_CenterPrint(item->pickup_name, 240, SMALLCHAR_WIDTH);
+						}
+					}
+
+					ent.hModel = weaponInfo->weaponModel[W_TP_MODEL].model;
+					if (alt == WP_AKIMBO || alt == WP_DUAL_TT33)
+					{
+						VectorMA(ent.origin, -0.5f, wheelRight, ent.origin);
+						trap_R_AddRefEntityToScene(&ent);
+						VectorMA(ent.origin, 1.0f, wheelRight, ent.origin);
+						trap_R_AddRefEntityToScene(&ent);
+					}
+					else
+					{
+						trap_R_AddRefEntityToScene(&ent);
+					}
 				}
 			}
 		}

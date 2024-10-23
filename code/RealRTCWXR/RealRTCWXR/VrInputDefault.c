@@ -765,14 +765,6 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
                             action = 0;
                             sendButtonActionSimple("+kick");
                         }
-                        else if (between(-1.0f, pPrimaryJoystick->y, -0.6f))
-                        {
-                            if (!vr.scopedweapon)
-                            {
-                                action = 1;
-                                sendButtonActionSimple("weapalt");
-                            }
-                        }
                         else
                         {
                             action = 2;
