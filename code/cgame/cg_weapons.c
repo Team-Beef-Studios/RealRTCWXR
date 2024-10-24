@@ -5275,6 +5275,7 @@ void CG_DrawItemSelector(void)
 				break;
 			}
 
+			vec3_t mainIconOrigin;
 			if (selectable) {
 				//first calculate wheel slot position
 				vec3_t angles, iconOrigin, iconBackground, iconForeground;
@@ -5312,6 +5313,7 @@ void CG_DrawItemSelector(void)
 					refEntity_t ent;
 					memset(&ent, 0, sizeof(ent));
 					VectorCopy(iconOrigin, ent.origin);
+					VectorCopy(iconOrigin, mainIconOrigin);
 
 					//Shift model a bit
 					VectorMA(ent.origin, 0.3f, wheelForward, ent.origin);
@@ -5489,7 +5491,7 @@ void CG_DrawItemSelector(void)
 
 			if (altSelectable) {
 				//first calculate wheel slot position
-				vec3_t angles, iconOrigin, iconBackground, iconForeground;
+				vec3_t angles, iconOrigin, altIconOrigin, iconBackground, iconForeground;
 				VectorClear(angles);
 				angles[YAW] = wheelAngles[YAW];
 				angles[PITCH] = wheelAngles[PITCH];
@@ -5519,6 +5521,7 @@ void CG_DrawItemSelector(void)
 					refEntity_t ent;
 					memset(&ent, 0, sizeof(ent));
 					VectorCopy(iconOrigin, ent.origin);
+					VectorCopy(iconOrigin, altIconOrigin);
 
 					//Shift model a bit
 					VectorMA(ent.origin, 0.3f, wheelForward, ent.origin);
@@ -5553,7 +5556,7 @@ void CG_DrawItemSelector(void)
 					ent.hModel = weaponInfo->weaponModel[W_TP_MODEL].model;
 					if (alt == WP_AKIMBO || alt == WP_DUAL_TT33)
 					{
-						VectorMA(ent.origin, -0.5f, wheelRight, ent.origin);
+						//VectorMA(ent.origin, -0.5f, wheelRight, ent.origin);
 						trap_R_AddRefEntityToScene(&ent);
 						VectorMA(ent.origin, 1.0f, wheelRight, ent.origin);
 						trap_R_AddRefEntityToScene(&ent);
@@ -5562,6 +5565,15 @@ void CG_DrawItemSelector(void)
 					{
 						trap_R_AddRefEntityToScene(&ent);
 					}
+
+					//Add a small "attaching" line between the weapon and its alt fire mode
+					byte colour[4] = { 0x00 , 0x80 , 0x00 , 0x40 };
+					vec3_t idir;
+					VectorSubtract(mainIconOrigin, altIconOrigin, idir);
+					VectorNormalize(idir);
+					VectorMA(mainIconOrigin, -0.8f, idir, mainIconOrigin);
+					VectorMA(altIconOrigin, 0.8f, idir, altIconOrigin);
+					CG_LaserSight(mainIconOrigin, altIconOrigin, colour, 0.03f);
 				}
 			}
 		}
