@@ -5300,7 +5300,7 @@ void CG_DrawItemSelector(void)
 						if (cg.itemSelectorSelection != itemId) {
 							cg.itemSelectorSelection = itemId;
 
-							trap_Vibrate(100, vr->right_handed ? 1 : 0, 0.6, "selector_icon", 0.0, 0.0);
+							trap_Vibrate(100, (cg.itemSelectorType <= ST_WEAPON_ALL) == vr->right_handed ? 1 : 0, 0.6, "selector_icon", 0.0, 0.0);
 						}
 
 						selected = qtrue;

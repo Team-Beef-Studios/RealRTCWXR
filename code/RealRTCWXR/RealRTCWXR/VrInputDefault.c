@@ -20,6 +20,15 @@ Authors		:	Simon Brown
 #include "android/sys_local.h"
 #endif
 
+int sector(float sectorCount, float x, float y)  {
+    if (length(x, y) < 0.01f)
+    {
+        return -1;
+    }
+    float angle = RAD2DEG(atan2f(x, y));
+    if (angle < 0.f) angle += 360.f;
+    return ((int)((angle + (180.f / sectorCount)) / (360.f / sectorCount))) % (int)sectorCount;
+}
 
 void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew, ovrInputStateTrackedRemote *pDominantTrackedRemoteOld, ovrTrackedController* pDominantTracking,
                           ovrInputStateTrackedRemote *pOffTrackedRemoteNew, ovrInputStateTrackedRemote *pOffTrackedRemoteOld, ovrTrackedController* pOffTracking,
@@ -752,43 +761,13 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
                 vr.maxHeight = 0;
             }
 
-            static int action = -1;
+            //Kick is now just forward on the right thumbstick
+            sendButtonAction("+kick", between(0.7f, pPrimaryJoystick->y, 1.0f) && sector(8, pPrimaryJoystick->x, pPrimaryJoystick->y) == 0);
+
+            //Activate is now just clicking the right thumbstick
             if ((primaryButtonsNew & primaryThumb) != (primaryButtonsOld & primaryThumb))
             {
-                if (primaryButtonsNew & primaryThumb)
-                {
-                    //Clicked
-                    if (between(-0.2f, pPrimaryJoystick->x, 0.2f))
-                    {
-                        if (between(0.6f, pPrimaryJoystick->y, 1.0f))
-                        {
-                            action = 0;
-                            sendButtonActionSimple("+kick");
-                        }
-                        else
-                        {
-                            action = 2;
-                            sendButtonActionSimple("+activate");
-                        }
-                    }
-                }
-                else
-                {
-                    //Unclicked
-                    switch (action)
-                    {
-                    case 0:
-                        sendButtonActionSimple("-kick");
-                        break;
-                    case 1:
-                        //sendButtonActionSimple("-reload");
-                        break;
-                    case 2:
-                        sendButtonActionSimple("-activate");
-                        break;
-                    }
-                    action = -1;
-                }
+                sendButtonAction("+activate", (primaryButtonsNew & primaryThumb));
             }
         }
 
