@@ -172,6 +172,11 @@ void VR_GetMove(float *forward, float *side, float *pos_forward, float *pos_side
 
 
 
+void VR_Shutdown()
+{
+	TBXR_LeaveVR();
+}
+
 void VR_Init()
 {
 	GlInitExtensions();
@@ -182,7 +187,7 @@ void VR_Init()
 	TBXR_InitRenderer();
 	TBXR_InitActions();
 	TBXR_WaitForSessionActive();
-
+	
 	//Initialise all our variables
 	remote_movementSideways = 0.0f;
 	remote_movementForward = 0.0f;

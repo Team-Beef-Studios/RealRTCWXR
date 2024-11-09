@@ -216,6 +216,8 @@ static bool ovrFramebuffer_Create(
     return true;
 }
 
+static GLuint fb = -1;
+
 void ovrFramebuffer_Destroy(ovrFramebuffer* frameBuffer) {
     GL(glDeleteFramebuffers(frameBuffer->TextureSwapChainLength, frameBuffer->FrameBuffers));
     GL(glDeleteTextures(frameBuffer->TextureSwapChainLength, frameBuffer->DepthBuffers));
@@ -224,6 +226,12 @@ void ovrFramebuffer_Destroy(ovrFramebuffer* frameBuffer) {
 
     free(frameBuffer->DepthBuffers);
     free(frameBuffer->FrameBuffers);
+
+	if (fb != -1)
+	{
+		glDeleteFramebuffers(1, &fb);
+	}
+	fb = -1;
 }
 
 void ovrFramebuffer_SetCurrent(ovrFramebuffer* frameBuffer) {
@@ -252,7 +260,6 @@ void ovrFramebuffer_Resolve(ovrFramebuffer* frameBuffer) {
 
 	//Create a framebuffer solely for the purpose of binding the color texture to as a single texture layer in order to blit from
 	//as we can't blit direct from the eye FBO as that doesn't work (no idea why.. no sensible explanation anywhere I can find)
-	static GLuint fb = -1;
 	if (fb == -1)
 	{
 		glGenFramebuffers(1, &fb);
@@ -839,13 +846,21 @@ void TBXR_EnterVR( ) {
 void TBXR_LeaveVR( ) {
 	if (gAppState.Session) {
 		OXR(xrDestroySpace(gAppState.ViewSpace));
+		gAppState.ViewSpace = XR_NULL_HANDLE;
 		OXR(xrDestroySpace(gAppState.LocalSpace));
+		gAppState.LocalSpace = XR_NULL_HANDLE;
 		OXR(xrDestroySpace(gAppState.StageSpace));
+		gAppState.StageSpace = XR_NULL_HANDLE;
 		OXR(xrDestroySession(gAppState.Session));
-		gAppState.Session = NULL;
+		gAppState.Session = XR_NULL_HANDLE;
 	}
 
+	xrDestroyInstance(gAppState.Instance);
+	gAppState.Instance = XR_NULL_HANDLE;
+
 	ovrRenderer_Destroy( &gAppState.Renderer );
+
+	ovrApp_Clear(&gAppState);
 }
 
 void TBXR_InitRenderer(  ) {

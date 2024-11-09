@@ -206,6 +206,7 @@ typedef struct {
 
 	//RTCWXR stuff
 	void	(*VR_Init)();
+	void	(*VR_Shutdown)();
 	void	(*TBXR_GetScreenRes)(int* width, int* height);
 	void	(*TBXR_submitFrame)();
 	qboolean (*TBXR_useScreenLayer);

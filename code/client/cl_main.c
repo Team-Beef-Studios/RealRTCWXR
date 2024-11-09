@@ -3346,6 +3346,7 @@ int CL_ScaledMilliseconds( void ) {
 
 
 void VR_Init();
+void VR_Shutdown();
 void TBXR_GetScreenRes(int* width, int* height);
 qboolean VR_UseScreenLayer();
 qboolean VR_GetVRProjection(float zNear, float zFar, float gameFovX, float gameFovY, float* projection);
@@ -3449,6 +3450,7 @@ void CL_InitRef( void ) {
 
 	//RTCWXR stuff
 	ri.VR_Init = VR_Init;
+	ri.VR_Shutdown = VR_Shutdown;
 	ri.TBXR_GetScreenRes = TBXR_GetScreenRes;
 	ri.TBXR_useScreenLayer = VR_UseScreenLayer;
 	ri.TBXR_GetVRProjection = VR_GetVRProjection;

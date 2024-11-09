@@ -104,6 +104,13 @@ void GLimp_Shutdown( void )
 {
 	ri.IN_Shutdown();
 
+
+#if defined(_WIN32)
+
+	ri.VR_Shutdown();
+
+#endif
+
 	SDL_QuitSubSystem( SDL_INIT_VIDEO );
 }
 
