@@ -545,19 +545,15 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
             //Engage scope / virtual stock if conditions are right
             qboolean scopeready = vr.weapon_stabilised && (distanceToHMD < SCOPE_ENGAGE_DISTANCE);
             static qboolean lastScopeReady = qfalse;
-            if (scopeready != lastScopeReady) {
-                if (vr.scopedweapon || vr.cgzoommode) {
-                    if (!vr.cgzoommode && scopeready) {
-                        ALOGV("**WEAPON EVENT**  trigger scope mode");
-                        sendButtonActionSimple("weapalt");
-                    }
-                    else if (vr.cgzoommode && !scopeready) {
-                        ALOGV("**WEAPON EVENT**  disable scope mode");
-                        sendButtonActionSimple("weapalt");
-                    }
-                    lastScopeReady = scopeready;
-                }
+            if (vr.scopedweapon && !vr.cgzoommode && scopeready && !lastScopeReady) {
+                ALOGV("**WEAPON EVENT**  trigger scope mode");
+                sendButtonActionSimple("weapalt");
             }
+            if (vr.scopeactive && !scopeready) {
+                ALOGV("**WEAPON EVENT**  disable scope mode");
+                sendButtonActionSimple("weapalt");
+            }
+            lastScopeReady = scopeready;
 
 
             vec3_t offhandPositionAverage;
