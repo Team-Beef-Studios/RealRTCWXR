@@ -265,6 +265,7 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
                     if (distance < CLOSE_GRIP_STABILISATION_DISTANCE &&
                         vr_two_handed_weapons->integer) {
                         vr.weapon_stabilised = 2;
+                        vr.binocularsHeld = 0;
                     }
                 }
                 if (cl.snap.ps.weapon == WP_M7 ||
@@ -293,6 +294,7 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
                     if (dot > 0.6f &&
                         vr_two_handed_weapons->integer) {
                         vr.weapon_stabilised = 1;
+                        vr.binocularsHeld = 0;
                     }
                 }
                 
@@ -758,7 +760,8 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
             }
 
             //Kick is now just forward on the right thumbstick
-            sendButtonAction("+kick", between(0.7f, pPrimaryJoystick->y, 1.0f) && sector(8, pPrimaryJoystick->x, pPrimaryJoystick->y) == 0);
+            sendButtonAction("+kick", !vr.scopeactive && !vr.binocularsActive && 
+                between(0.7f, pPrimaryJoystick->y, 1.0f) && sector(8, pPrimaryJoystick->x, pPrimaryJoystick->y) == 0);
 
             //Activate is now just clicking the right thumbstick
             if ((primaryButtonsNew & primaryThumb) != (primaryButtonsOld & primaryThumb))

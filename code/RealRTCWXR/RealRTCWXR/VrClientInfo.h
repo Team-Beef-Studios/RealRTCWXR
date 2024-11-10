@@ -52,6 +52,7 @@ typedef struct {
     qboolean cgzoommode;
     int cgzoomdir;
     qboolean scopedweapon;
+    qboolean scopeactive;
 
     int forceid;
 
