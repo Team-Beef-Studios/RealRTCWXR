@@ -1,0 +1,15 @@
+const char *fallbackShader_fogpass_fp =
+"uniform vec4  u_Color;\n"
+"\n"
+"varying float var_Scale;\n"
+"\n"
+"void main()\n"
+"{\n"
+"	gl_FragColor = u_Color;\n"
+"#if defined(USE_WOLF_FOG_LINEAR) || defined(USE_WOLF_FOG_EXPONENTIAL)\n"
+"	gl_FragColor.a *= var_Scale;\n"
+"#else\n"
+"	gl_FragColor.a = sqrt(clamp(var_Scale, 0.0, 1.0));\n"
+"#endif\n"
+"}\n"
+;

@@ -49,7 +49,7 @@ code/RealRTCWXR/RealRTCWXR/x64/*
 code/cgame/x64/*
 code/cgame/cgame/x64/*
 code/game/game/x64/*
-code/rend2/glsl/*.c
+# code/rend2/glsl/*.c
 code/rend2/Renderer/x64/*
 code/renderer/renderergl1/x64/*
 code/tools/stringify/x64/*
