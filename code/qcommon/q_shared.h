@@ -40,7 +40,7 @@ If you have questions concerning this license or the applicable additional terms
 // ver 1.2.b5	- Mac code merge in
 // ver 1.3		- patch 2 (02/13/02)
 
-#define REALRTCWXR_VERSION		"0.7.0" 
+#define REALRTCWXR_VERSION		"0.8.0" 
 #define REALRTCWXR_NAME		"(RealRTCW XR " REALRTCWXR_VERSION ")" 
 
 #ifdef STANDALONE

@@ -5011,6 +5011,18 @@ void CG_ItemSelectorSelect_f(void)
 				continue;
 			}
 
+			// RealRTCW arsenal without extra guns, value 2 will ge everything
+			char g_dlc1[10];
+			memset(g_dlc1, 0, sizeof(g_dlc1));
+			trap_Cvar_VariableStringBuffer("g_dlc1", g_dlc1, sizeof(g_dlc1));
+			if (strcmp(g_dlc1, "1") != 0 && (i == WP_M1941SCOPE
+				|| i == WP_DELISLE
+				|| i == WP_M1941
+				|| i == WP_AUTO5))
+			{
+				continue;
+			}
+
 			if (CG_WeaponSelectable(i))
 			{
 				weapons[index++] = i;
@@ -5107,6 +5119,9 @@ void CG_DrawItemSelector(void)
 		}
 	}
 
+	char g_dlc1[10];
+	memset(g_dlc1, 0, sizeof(g_dlc1));
+	trap_Cvar_VariableStringBuffer("g_dlc1", g_dlc1, sizeof(g_dlc1));
 	int weapons[12] = { 0 };
 	int allWeaponCount = 0;
 	if (cg.itemSelectorType == ST_WEAPON_ALL)
@@ -5121,6 +5136,14 @@ void CG_DrawItemSelector(void)
 				i == WP_SILENCER ||
 				i == WP_AKIMBO ||
 				i == WP_DUAL_TT33)
+			{
+				continue;
+			}
+
+			if (strcmp(g_dlc1, "1") != 0 && (i == WP_M1941SCOPE
+				|| i == WP_DELISLE
+				|| i == WP_M1941
+				|| i == WP_AUTO5))
 			{
 				continue;
 			}
@@ -5275,9 +5298,19 @@ void CG_DrawItemSelector(void)
 			case ST_WEAPON_BANKS: //weapons
 			{
 				int w = weapBanks[cg.itemSelectorWeaponBank][itemId];
-				selectable = w != WP_NONE && CG_WeaponSelectable(weapBanks[cg.itemSelectorWeaponBank][itemId]);
-				alt = ammoTable[weapBanks[cg.itemSelectorWeaponBank][itemId]].weapAlts;
-				altSelectable = alt != WP_NONE && CG_WeaponSelectable(alt) && !(w == WP_GARAND || w == WP_FG42 || w == WP_MAUSER || w == WP_M1941 || w == WP_DELISLE);
+				if (strcmp(g_dlc1, "1") != 0 && (w == WP_M1941SCOPE
+					|| w == WP_DELISLE
+					|| w == WP_M1941
+					|| w == WP_AUTO5))
+				{
+					selectable = qfalse;
+				}
+				else
+				{
+					selectable = w != WP_NONE && CG_WeaponSelectable(weapBanks[cg.itemSelectorWeaponBank][itemId]);
+					alt = ammoTable[weapBanks[cg.itemSelectorWeaponBank][itemId]].weapAlts;
+					altSelectable = alt != WP_NONE && CG_WeaponSelectable(alt) && !(w == WP_GARAND || w == WP_FG42 || w == WP_MAUSER || w == WP_M1941 || w == WP_DELISLE);
+				}
 			}
 			break;
 			case ST_WEAPON_ALL: //weapons
