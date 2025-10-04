@@ -1783,11 +1783,23 @@ static qboolean CG_RW_ParseClient( int handle, weaponInfo_t *weaponInfo, int wea
 			} else {
 				weaponInfo->reloadSound = trap_S_RegisterSound( filename );
 			}
+		} else if ( !Q_stricmp( token.string, "reloadSoundFast" ) ) {
+			if ( !PC_String_ParseNoAlloc( handle, filename, sizeof( filename ) ) ) {
+				return CG_RW_ParseError( handle, "expected reloadSound filename" );
+			} else {
+				weaponInfo->reloadSoundFast = trap_S_RegisterSound( filename );
+			}
 		} else if ( !Q_stricmp( token.string, "reloadFullSound" ) ) {
 			if ( !PC_String_ParseNoAlloc( handle, filename, sizeof( filename ) ) ) {
 				return CG_RW_ParseError( handle, "expected reloadFullSound filename" );
 			} else {
 				weaponInfo->reloadFullSound = trap_S_RegisterSound( filename );
+			}
+		} else if ( !Q_stricmp( token.string, "reloadFullSoundFast" ) ) {
+			if ( !PC_String_ParseNoAlloc( handle, filename, sizeof( filename ) ) ) {
+				return CG_RW_ParseError( handle, "expected reloadFullSound filename" );
+			} else {
+				weaponInfo->reloadFullSoundFast = trap_S_RegisterSound( filename );
 			}
 		} else if ( !Q_stricmp( token.string, "reloadSoundAi" ) ) {
 			if ( !PC_String_ParseNoAlloc( handle, filename, sizeof( filename ) ) ) {
@@ -1866,6 +1878,14 @@ static qboolean CG_RW_ParseClient( int handle, weaponInfo_t *weaponInfo, int wea
 			if ( !PC_Float_Parse( handle, &weaponInfo->missileDlight ) ) {
 				return CG_RW_ParseError( handle, "expected missileDlight value" );
 			}
+		} else if ( !Q_stricmp( token.string, "wiTrailTime" ) ) {
+			if ( !PC_Int_Parse( handle, (int *)&weaponInfo->wiTrailTime ) ) {
+				return CG_RW_ParseError( handle, "expected wiTrailTime value" );
+			}
+		} else if ( !Q_stricmp( token.string, "trailRadius" ) ) {
+			if ( !PC_Int_Parse( handle, (int *)&weaponInfo->trailRadius ) ) {
+				return CG_RW_ParseError( handle, "expected trailRadius value" );
+			}
 		} else if ( !Q_stricmp( token.string, "missileDlightColor" ) ) {
 			if ( !PC_Vec_Parse( handle, &weaponInfo->missileDlightColor ) ) {
 				return CG_RW_ParseError( handle, "expected missileDlightColor as r g b" );
@@ -1916,6 +1936,15 @@ static qboolean CG_RW_ParseClient( int handle, weaponInfo_t *weaponInfo, int wea
     // If reloadFullSound is not set, use reloadSound
     if (weaponInfo->reloadFullSound == 0) {
         weaponInfo->reloadFullSound = weaponInfo->reloadSound;
+    }
+
+
+	if (weaponInfo->reloadFullSoundFast == 0) {
+        weaponInfo->reloadFullSoundFast = weaponInfo->reloadSoundFast;
+    }
+
+	if (weaponInfo->reloadSoundFast == 0) {
+        weaponInfo->reloadSoundFast = weaponInfo->reloadSound;
     }
 
 	if (weaponInfo->reloadSoundAi == 0) {
