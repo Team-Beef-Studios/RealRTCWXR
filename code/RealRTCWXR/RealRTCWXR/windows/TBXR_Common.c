@@ -125,7 +125,7 @@ static bool ovrFramebuffer_Create(
     swapChainCreateInfo.width = width;
     swapChainCreateInfo.height = height;
     swapChainCreateInfo.faceCount = 1;
-    swapChainCreateInfo.arraySize = 2;
+    swapChainCreateInfo.arraySize = 3; // Use 3 layers, skip layer 0 for VDXR compatibility
 
     frameBuffer->ColorSwapChain.Width = swapChainCreateInfo.width;
     frameBuffer->ColorSwapChain.Height = swapChainCreateInfo.height;
@@ -173,7 +173,7 @@ static bool ovrFramebuffer_Create(
 		// Create the depth buffer texture.
 		GL(glGenTextures(1, &frameBuffer->DepthBuffers[i]));
 		GL(glBindTexture(GL_TEXTURE_2D_ARRAY, frameBuffer->DepthBuffers[i]));
-		GL(glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_DEPTH24_STENCIL8, width, height, 2));
+		GL(glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_DEPTH24_STENCIL8, width, height, 3)); // 3 layers to skip layer 0
 		GL(glBindTexture(GL_TEXTURE_2D_ARRAY, 0));
 
 		// Create the frame buffer.
@@ -181,26 +181,27 @@ static bool ovrFramebuffer_Create(
 		GL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frameBuffer->FrameBuffers[i]));
 		
 		{
+			// Use baseViewIndex=1 to render to layers 1 and 2, skipping layer 0 for VDXR compatibility
 			GL(glFramebufferTextureMultiviewOVR(
 				GL_DRAW_FRAMEBUFFER,
 				GL_DEPTH_ATTACHMENT,
 				frameBuffer->DepthBuffers[i],
 				0 /* level */,
-				0 /* baseViewIndex */,
+				1 /* baseViewIndex */,
 				2 /* numViews */));
 			GL(glFramebufferTextureMultiviewOVR(
 				GL_DRAW_FRAMEBUFFER,
 				GL_STENCIL_ATTACHMENT,
 				frameBuffer->DepthBuffers[i],
 				0 /* level */,
-				0 /* baseViewIndex */,
+				1 /* baseViewIndex */,
 				2 /* numViews */));
 			GL(glFramebufferTextureMultiviewOVR(
 				GL_DRAW_FRAMEBUFFER,
 				GL_COLOR_ATTACHMENT0,
 				colorTexture,
 				0 /* level */,
-				0 /* baseViewIndex */,
+				1 /* baseViewIndex */,
 				2 /* numViews */));
 		}
 
@@ -240,8 +241,9 @@ void ovrFramebuffer_SetCurrent(ovrFramebuffer* frameBuffer) {
 	const GLuint colorTexture = frameBuffer->ColorSwapChainImage[frameBuffer->TextureSwapChainIndex].image;
 	const uint32_t depthTexture = frameBuffer->DepthBuffers[frameBuffer->TextureSwapChainIndex];
 
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_ARRAY, colorTexture, 0);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D_ARRAY, depthTexture, 0);
+	// Re-apply multiview attachments with baseViewIndex=1 to skip layer 0 for VDXR compatibility
+	glFramebufferTextureMultiviewOVR(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, colorTexture, 0, 1, 2);
+	glFramebufferTextureMultiviewOVR(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthTexture, 0, 1, 2);
 }
 
 void ovrFramebuffer_SetNone() {
@@ -266,7 +268,7 @@ void ovrFramebuffer_Resolve(ovrFramebuffer* frameBuffer) {
 	}
 
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, fb);
-	glFramebufferTextureLayer(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, colorTexture, 0, 1); // the magic line!
+	glFramebufferTextureLayer(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, colorTexture, 0, 2); // Use layer 2 (skip layer 0) for VDXR compatibility
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 	glBlitFramebuffer(0, 0, gAppState.Width, gAppState.Height,
 		0, 0, width, height,
@@ -1217,7 +1219,7 @@ void TBXR_submitFrame()
 		projection_layer.viewCount = ovrMaxNumEyes;
 		projection_layer.views = projection_layer_elements;
 
-		for (int eye = 0; eye < ovrMaxNumEyes; eye++) 
+		for (int eye = 0; eye < ovrMaxNumEyes; eye++)
 		{
 			XrFovf fov = gAppState.Views[eye].fov;
 			if (vr.cgzoommode)
@@ -1232,7 +1234,8 @@ void TBXR_submitFrame()
 			projection_layer_elements[eye].type = XR_TYPE_COMPOSITION_LAYER_PROJECTION_VIEW;
 			projection_layer_elements[eye].pose = gAppState.Views[eye].pose;
 			projection_layer_elements[eye].fov = fov;
-			projection_layer_elements[eye].subImage.imageArrayIndex = eye;
+			// Use imageArrayIndex 1 and 2 (skip layer 0) for VDXR compatibility
+			projection_layer_elements[eye].subImage.imageArrayIndex = eye + 1;
 			projection_layer_elements[eye].subImage.swapchain = gAppState.Renderer.FrameBuffer.ColorSwapChain.Handle;
 			projection_layer_elements[eye].subImage.imageRect.extent.width = gAppState.Renderer.FrameBuffer.ColorSwapChain.Width;
 			projection_layer_elements[eye].subImage.imageRect.extent.height = gAppState.Renderer.FrameBuffer.ColorSwapChain.Height;
@@ -1257,7 +1260,8 @@ void TBXR_submitFrame()
 			projection_layer_elements[eye].type = XR_TYPE_COMPOSITION_LAYER_PROJECTION_VIEW;
 			projection_layer_elements[eye].pose = gAppState.Views[eye].pose;
 			projection_layer_elements[eye].fov = gAppState.Views[eye].fov;
-			projection_layer_elements[eye].subImage.imageArrayIndex = eye;
+			// Use imageArrayIndex 1 and 2 (skip layer 0) for VDXR compatibility
+			projection_layer_elements[eye].subImage.imageArrayIndex = eye + 1;
 			projection_layer_elements[eye].subImage.swapchain = gAppState.Renderer.NullFrameBuffer.ColorSwapChain.Handle;
 			projection_layer_elements[eye].subImage.imageRect.extent.width = gAppState.Renderer.NullFrameBuffer.ColorSwapChain.Width;
 			projection_layer_elements[eye].subImage.imageRect.extent.height = gAppState.Renderer.NullFrameBuffer.ColorSwapChain.Height;
@@ -1273,7 +1277,7 @@ void TBXR_submitFrame()
 		quad_layer.layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT;
 		quad_layer.space = gAppState.StageSpace;
 		quad_layer.eyeVisibility =XR_EYE_VISIBILITY_BOTH;
-		quad_layer.subImage.imageArrayIndex = 1;
+		quad_layer.subImage.imageArrayIndex = 2; // Use layer 2 (skip layer 0) for VDXR compatibility
 		quad_layer.subImage.swapchain = gAppState.Renderer.FrameBuffer.ColorSwapChain.Handle;
 		quad_layer.subImage.imageRect.extent.width = gAppState.Renderer.FrameBuffer.ColorSwapChain.Width;
 		quad_layer.subImage.imageRect.extent.height = gAppState.Renderer.FrameBuffer.ColorSwapChain.Height;
