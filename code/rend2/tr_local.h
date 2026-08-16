@@ -1789,6 +1789,30 @@ typedef struct {
 
 	FBO_t					*renderFbo;
 	FBO_t					*msaaResolveFbo;
+
+	// VR HUD buffer. The 2D HUD renders here instead of straight into the eye
+	// buffer, so it can be composited as one layer. Multiview needs a layered
+	// target, so this is a 2 layer array texture and not an image_t.
+	FBO_t					*hudFbo;
+	uint32_t				hudTexture;
+	int						hudWidth;
+	int						hudHeight;
+
+	// Main 3D view of this frame, kept so the HUD quad can be placed in the world
+	// after the scene has finished.
+	float					hudViewMatrix[16];
+	vec3_t					hudViewOrigin;
+	vec3_t					hudViewAxis[3];
+	qboolean				hudViewValid;
+
+	// Direction the HUD quad currently rests in, and the lagged head part of it.
+	// Only head movement lags; player turning is added back every frame so the HUD
+	// comes round with a snap turn or a stick turn immediately.
+	vec3_t					hudAngles;
+	vec3_t					hudHeadAngles;
+	qboolean				hudAnglesValid;
+	float					hudLastTime;
+
 	FBO_t					*sunRaysFbo;
 	FBO_t					*depthFbo;
 	FBO_t					*pshadowFbos[MAX_DRAWN_PSHADOWS];
@@ -1837,6 +1861,7 @@ typedef struct {
 	//
 	shaderProgram_t genericShader[GENERICDEF_COUNT];
 	shaderProgram_t textureColorShader;
+	shaderProgram_t textureColorArrayShader; // samples a 2D array texture, for the HUD buffer
 	shaderProgram_t fogShader[FOGDEF_COUNT];
 	shaderProgram_t dlightShader[DLIGHTDEF_COUNT];
 	shaderProgram_t lightallShader[LIGHTDEF_COUNT];
@@ -1980,6 +2005,16 @@ extern cvar_t   *r_lodscale;
 
 extern cvar_t   *r_inGameVideo;             // controls whether in game video should be draw
 extern cvar_t   *r_fastsky;             // controls whether sky should be cleared or drawn
+// VR HUD. 0 draws the HUD flat in screen space, 1 draws it on a quad in the world
+// with the real stereo projection.
+extern cvar_t   *vr_hudMode;
+extern cvar_t   *vr_hudDistance;        // world units to the HUD quad, about 37.5 per metre
+extern cvar_t   *vr_hudSize;            // angular width of the HUD quad, in degrees
+extern cvar_t   *vr_hudPitch;           // degrees below the view, where the HUD rests
+extern cvar_t   *vr_hudDeadzoneYaw;     // degrees of free head turn before the HUD follows
+extern cvar_t   *vr_hudPitchLag;        // 0 pins pitch to the view, 1 lets it lag and ease back
+extern cvar_t   *vr_hudFollowSpeed;     // how fast the HUD catches up once it starts to move
+
 extern cvar_t   *r_drawSun;             // controls drawing of sun quad
 										// "0" no sun
 										// "1" draw sun
@@ -2846,6 +2881,10 @@ typedef struct {
 	int commandId;
 } exportCubemapsCommand_t;
 
+typedef struct {
+	int commandId;
+} hudBufferCommand_t;
+
 typedef enum {
 	RC_END_OF_LIST,
 	RC_SET_COLOR,
@@ -2861,7 +2900,9 @@ typedef enum {
 	RC_CAPSHADOWMAP,
 	RC_POSTPROCESS,
 	RC_EXPORT_CUBEMAPS,
-	RC_FLUSH
+	RC_FLUSH,
+	RC_HUD_BEGIN,
+	RC_HUD_END
 } renderCommand_t;
 
 
@@ -2904,6 +2945,8 @@ void R_AddCapShadowmapCmd( int dlight, int cubeSide );
 void R_AddPostProcessCmd (void);
 
 void RE_SetColor( const float *rgba );
+void RE_BeginHUD( void );
+void RE_EndHUD( void );
 void RE_StretchPic( float x, float y, float w, float h,
 					float s1, float t1, float s2, float t2, qhandle_t hShader );
 void RE_StretchPicGradient( float x, float y, float w, float h,

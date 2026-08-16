@@ -243,7 +243,9 @@ extern void (APIENTRYP qglPNTrianglesfATI)(GLenum pname, GLfloat param);
 	GLE(void, GetQueryObjectuiv, GLuint id, GLenum pname, GLuint *params) \
 
 // OpenGL 1.5, was GL_ARB_vertex_buffer_object
+// BlendFuncSeparate is OpenGL 1.4, and is grouped here because nothing loads 1.4 on its own.
 #define QGL_1_5_PROCS \
+	GLE(void, BlendFuncSeparate, GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha, GLenum dstAlpha) \
 	GLE(void, BindBuffer, GLenum target, GLuint buffer) \
 	GLE(void, DeleteBuffers, GLsizei n, const GLuint *buffers) \
 	GLE(void, GenBuffers, GLsizei n, GLuint *buffers) \

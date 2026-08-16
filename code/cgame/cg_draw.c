@@ -1402,10 +1402,12 @@ static void CG_DrawPickupItem( void ) {
 			color[0] = color[1] = color[2] = 1.0;
 			color[3] = fadeColor[0];
 			w = CG_DrawStrlen( pickupText ) * 10;
+			// Centre on the 640 wide layout. This read 640 - w/2, which centres the
+			// text on the right edge and pushes half of every name off the screen.
 #ifdef LOCALISATION
-			CG_DrawStringExt2( 640 - ( w / 2 ), 375, CG_TranslateString( pickupText ), color, qfalse, qtrue, 10, 10, 0 );
+			CG_DrawStringExt2( 320 - ( w / 2 ), 375, CG_TranslateString( pickupText ), color, qfalse, qtrue, 10, 10, 0 );
 #else
-			CG_DrawStringExt2( 640 - ( w / 2 ), 375, pickupText, color, qfalse, qtrue, 10, 10, 0 );
+			CG_DrawStringExt2( 320 - ( w / 2 ), 375, pickupText, color, qfalse, qtrue, 10, 10, 0 );
 #endif
 
 			trap_R_SetColor( NULL );
@@ -4039,6 +4041,22 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 	CG_TileClear();     //----(SA)	moved to 2d section to avoid 2d/3d fog-state problems
 
 	// draw status bar and other floating elements
-	CG_Draw2D(stereoView);
+	// The HUD goes into its own buffer so the renderer can draw it on a world quad.
+	// Frames that need something to cover the whole view - a fade, a damage flash, a
+	// cinematic, a scope - fall back to drawing flat into the eye buffer, because a
+	// quad cannot fill the view.
+	{
+		qboolean buffered = CG_VRHudBuffered();
+
+		if (buffered) {
+			trap_R_BeginHUD();
+		}
+
+		CG_Draw2D(stereoView);
+
+		if (buffered) {
+			trap_R_EndHUD();
+		}
+	}
 }
 

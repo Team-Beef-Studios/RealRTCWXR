@@ -21,6 +21,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 */
 // tr_fbo.c
+#ifdef USE_LOCAL_HEADERS
+#	include "SDL.h"
+#else
+#	include <SDL.h>
+#endif
+
 #include "tr_local.h"
 
 #include "tr_dsa.h"
@@ -222,6 +228,94 @@ void FBO_StoreCurrent(int eye)
 
 /*
 ============
+FBO_CreateHudBuffer
+
+The VR HUD renders here rather than straight into the eye buffer. Every vertex
+shader is compiled with layout(num_views=2), so the target has to be a layered
+array texture even though both layers hold the same pixels.
+============
+*/
+
+#ifndef GL_TEXTURE_2D_ARRAY
+#define GL_TEXTURE_2D_ARRAY 0x8C1A
+#endif
+
+typedef void (APIENTRYP RTCWXR_glTexStorage3D_t)(GLenum, GLsizei, GLenum, GLsizei, GLsizei, GLsizei);
+typedef void (APIENTRYP RTCWXR_glFramebufferTextureMultiviewOVR_t)(GLenum, GLenum, GLuint, GLint, GLint, GLsizei);
+
+static RTCWXR_glTexStorage3D_t                     rtcwxr_glTexStorage3D;
+static RTCWXR_glFramebufferTextureMultiviewOVR_t   rtcwxr_glFramebufferTextureMultiviewOVR;
+
+void FBO_CreateHudBuffer(int width, int height)
+{
+	FBO_DestroyHudBuffer();
+
+	if (!glRefConfig.framebufferObject || width <= 0 || height <= 0)
+		return;
+
+	if (!rtcwxr_glTexStorage3D)
+		rtcwxr_glTexStorage3D = (RTCWXR_glTexStorage3D_t)SDL_GL_GetProcAddress("glTexStorage3D");
+
+	if (!rtcwxr_glFramebufferTextureMultiviewOVR)
+		rtcwxr_glFramebufferTextureMultiviewOVR =
+			(RTCWXR_glFramebufferTextureMultiviewOVR_t)SDL_GL_GetProcAddress("glFramebufferTextureMultiviewOVR");
+
+	if (!rtcwxr_glTexStorage3D || !rtcwxr_glFramebufferTextureMultiviewOVR)
+	{
+		ri.Printf(PRINT_WARNING, "FBO_CreateHudBuffer: multiview entry points are absent, the HUD buffer is off\n");
+		return;
+	}
+
+	qglGenTextures(1, &tr.hudTexture);
+	qglBindTexture(GL_TEXTURE_2D_ARRAY, tr.hudTexture);
+	rtcwxr_glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RGBA8, width, height, 2);
+	qglTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	qglTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	qglTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	qglTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	qglBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+
+	tr.hudFbo = FBO_Create("_vrhud", width, height);
+
+	GL_BindFramebuffer(GL_FRAMEBUFFER, tr.hudFbo->frameBuffer);
+	rtcwxr_glFramebufferTextureMultiviewOVR(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+		tr.hudTexture, 0, 0 /* baseViewIndex */, 2 /* numViews */);
+	tr.hudFbo->colorFormat = GL_RGBA8;
+
+	if (!R_CheckFBO(tr.hudFbo))
+	{
+		ri.Printf(PRINT_WARNING, "FBO_CreateHudBuffer: the HUD framebuffer is incomplete, the HUD buffer is off\n");
+		FBO_DestroyHudBuffer();
+		GL_BindFramebuffer(GL_FRAMEBUFFER, 0);
+		glState.currentFBO = NULL;
+		return;
+	}
+
+	tr.hudWidth = width;
+	tr.hudHeight = height;
+
+	GL_BindFramebuffer(GL_FRAMEBUFFER, 0);
+	glState.currentFBO = NULL;
+
+	ri.Printf(PRINT_ALL, "...created a %i x %i VR HUD buffer\n", width, height);
+}
+
+void FBO_DestroyHudBuffer(void)
+{
+	if (tr.hudTexture)
+	{
+		qglDeleteTextures(1, &tr.hudTexture);
+		tr.hudTexture = 0;
+	}
+
+	// The FBO itself lives on the hunk and FBO_Shutdown deletes its GL name.
+	tr.hudFbo = NULL;
+	tr.hudWidth = 0;
+	tr.hudHeight = 0;
+}
+
+/*
+============
 FBO_Bind
 ============
 */
@@ -417,6 +511,8 @@ void FBO_Init(void)
 		R_CheckFBO(tr.renderCubeFbo);
 	}
 
+	FBO_CreateHudBuffer(glConfig.vidWidth, glConfig.vidHeight);
+
 	GL_CheckErrors();
 
 	GL_BindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -439,6 +535,8 @@ void FBO_Shutdown(void)
 		return;
 
 	FBO_Bind(NULL);
+
+	FBO_DestroyHudBuffer();
 
 	for(i = 0; i < tr.numFBOs; i++)
 	{

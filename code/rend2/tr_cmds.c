@@ -229,6 +229,48 @@ void	R_AddPostProcessCmd( void ) {
 
 /*
 =============
+RE_BeginHUD
+
+Sends the 2D that follows into the VR HUD buffer instead of the eye buffer.
+=============
+*/
+void	RE_BeginHUD( void ) {
+	hudBufferCommand_t	*cmd;
+
+	if ( !tr.registered || !tr.hudFbo ) {
+		return;
+	}
+
+	cmd = R_GetCommandBuffer( sizeof( *cmd ) );
+	if ( !cmd ) {
+		return;
+	}
+	cmd->commandId = RC_HUD_BEGIN;
+}
+
+/*
+=============
+RE_EndHUD
+
+Ends the HUD buffer and composites it over the eye buffer.
+=============
+*/
+void	RE_EndHUD( void ) {
+	hudBufferCommand_t	*cmd;
+
+	if ( !tr.registered || !tr.hudFbo ) {
+		return;
+	}
+
+	cmd = R_GetCommandBuffer( sizeof( *cmd ) );
+	if ( !cmd ) {
+		return;
+	}
+	cmd->commandId = RC_HUD_END;
+}
+
+/*
+=============
 RE_SetColor
 
 Passing NULL will set the color to white

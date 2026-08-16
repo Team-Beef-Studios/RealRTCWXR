@@ -1,5 +1,9 @@
 const char *fallbackShader_texturecolor_fp =
+"#if defined(USE_TEXTURE_ARRAY)\n"
+"uniform sampler2DArray u_DiffuseMap;\n"
+"#else\n"
 "uniform sampler2D u_DiffuseMap;\n"
+"#endif\n"
 "uniform vec4      u_Color;\n"
 "\n"
 "varying vec2      var_Tex1;\n"
@@ -7,6 +11,11 @@ const char *fallbackShader_texturecolor_fp =
 "\n"
 "void main()\n"
 "{\n"
+"#if defined(USE_TEXTURE_ARRAY)\n"
+"	// Both layers hold the same pixels, so layer 0 serves either eye.\n"
+"	gl_FragColor = texture(u_DiffuseMap, vec3(var_Tex1, 0.0)) * u_Color;\n"
+"#else\n"
 "	gl_FragColor = texture2D(u_DiffuseMap, var_Tex1) * u_Color;\n"
+"#endif\n"
 "}\n"
 ;

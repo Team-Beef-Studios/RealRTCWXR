@@ -36,15 +36,33 @@ If you have questions concerning this license or the applicable additional terms
 #include <VrClientInfo.h>
 
 
+// True while something on screen has to cover the whole view: a fade, a damage
+// flash, a cinematic, a scope, or the menu layer. These cannot go on the HUD quad,
+// because a quad only fills part of the view.
+qboolean CG_VRFullScreen2D(void) {
+	return (vr->cin_camera && !vr->immersive_cinematics)
+		|| vr->using_screen_layer
+		|| cg.zoomedBinoc
+		|| cg.zoomval
+		|| cg.viewFade != 0.0
+		|| cg.fadeRate
+		|| cg.coverView
+		|| cgs.scrFadeAlphaCurrent != 0.0;
+}
+
+// True when this frame's 2D is going into the HUD buffer to be drawn on a world quad.
+qboolean CG_VRHudBuffered(void) {
+	return (cg_vrHudMode.integer != 0) && !CG_VRFullScreen2D();
+}
+
 void CG_AdjustForVRStereo(float* x, float* y, float* w, float* h) {
-	if ((!vr->cin_camera || vr->immersive_cinematics)
-		&& !vr->using_screen_layer 
-		&& !cg.zoomedBinoc
-		&& !cg.zoomval
-		&& cg.viewFade == 0.0
-		&& !cg.fadeRate
-		&& !cg.coverView
-		&& (cgs.scrFadeAlphaCurrent == 0.0))
+	// On the world quad the HUD owns the whole buffer, and the quad's angular size
+	// decides how large it looks. Insetting here would shrink it twice.
+	if (CG_VRHudBuffered()) {
+		return;
+	}
+
+	if (!CG_VRFullScreen2D())
 	{
 		float screenXScale = 1.0f / 1.8f;
 		float screenYScale = 1.0f / 1.8f;
@@ -399,6 +417,16 @@ void    trap_R_DrawStretchPic( float x, float y, float w, float h,
 	CG_AdjustForVRStereo(&x, &y, &w, &h);
 
 	syscall( CG_R_DRAWSTRETCHPIC, PASSFLOAT( x ), PASSFLOAT( y ), PASSFLOAT( w ), PASSFLOAT( h ), PASSFLOAT( s1 ), PASSFLOAT( t1 ), PASSFLOAT( s2 ), PASSFLOAT( t2 ), hShader );
+}
+
+// The 2D drawn between these two calls goes into the VR HUD buffer, which is then
+// composited over the eye buffer as one layer.
+void    trap_R_BeginHUD( void ) {
+	syscall( CG_R_BEGINHUD );
+}
+
+void    trap_R_EndHUD( void ) {
+	syscall( CG_R_ENDHUD );
 }
 
 void    trap_R_DrawStretchPicGradient(  float x, float y, float w, float h,

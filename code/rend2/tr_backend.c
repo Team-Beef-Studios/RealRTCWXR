@@ -30,6 +30,8 @@ If you have questions concerning this license or the applicable additional terms
 #include "tr_fbo.h"
 #include "tr_dsa.h"
 
+#include <VrClientInfo.h>
+
 backEndData_t  *backEndData;
 backEndState_t backEnd;
 
@@ -217,7 +219,14 @@ void GL_State( unsigned long stateBits ) {
 				break;
 			}
 
-			qglBlendFunc( srcFactor, dstFactor );
+			if ( glState.isDrawingHUD ) {
+				// The HUD buffer starts fully transparent, so accumulate coverage in
+				// alpha and let colour come out premultiplied. RB_HudEnd then
+				// composites it with ONE / ONE_MINUS_SRC_ALPHA, which is exact.
+				qglBlendFuncSeparate( srcFactor, dstFactor, GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
+			} else {
+				qglBlendFunc( srcFactor, dstFactor );
+			}
 		}
 	}
 
@@ -1128,7 +1137,8 @@ void RE_StretchRaw (int x, int y, int w, int h, int cols, int rows, const byte *
 	}
 
 	// FIXME: HUGE hack
-	if (glRefConfig.framebufferObject)
+	// Leave the target alone while the VR HUD buffer is bound.
+	if (glRefConfig.framebufferObject && !glState.isDrawingHUD)
 	{
 		FBO_Bind(backEnd.framePostProcessed ? NULL : tr.renderFbo);
 	}
@@ -1217,7 +1227,9 @@ const void *RB_StretchPic( const void *data ) {
 	cmd = (const stretchPicCommand_t *)data;
 
 	// FIXME: HUGE hack
-	if (glRefConfig.framebufferObject)
+	// Leave the target alone while the VR HUD buffer is bound, or every 2D draw
+	// would rebind straight back to the eye buffer.
+	if (glRefConfig.framebufferObject && !glState.isDrawingHUD)
 		FBO_Bind(backEnd.framePostProcessed ? NULL : tr.renderFbo);
 
 	RB_SetGL2D();
@@ -1300,7 +1312,8 @@ const void *RB_StretchPicGradient( const void *data ) {
 	cmd = (const stretchPicCommand_t *)data;
 
 	// FIXME: HUGE hack
-	if (glRefConfig.framebufferObject)
+	// Leave the target alone while the VR HUD buffer is bound.
+	if (glRefConfig.framebufferObject && !glState.isDrawingHUD)
 	{
 		if (!tr.renderFbo || backEnd.framePostProcessed)
 		{
@@ -1404,6 +1417,18 @@ const void	*RB_DrawSurfs( const void *data ) {
 	backEnd.viewParms = cmd->viewParms;
 
 	isShadowView = !!(backEnd.viewParms.flags & VPF_DEPTHSHADOW);
+
+	// Remember the main view so RB_HudEnd can place the HUD quad in the world.
+	// Portals, mirrors and shadow passes carry the wrong camera for that.
+	if ( !isShadowView && !backEnd.viewParms.isPortal && !(backEnd.refdef.rdflags & RDF_NOWORLDMODEL) )
+	{
+		Mat4Copy( backEnd.viewParms.world.modelMatrix, tr.hudViewMatrix );
+		VectorCopy( backEnd.refdef.vieworg, tr.hudViewOrigin );
+		VectorCopy( backEnd.refdef.viewaxis[0], tr.hudViewAxis[0] );
+		VectorCopy( backEnd.refdef.viewaxis[1], tr.hudViewAxis[1] );
+		VectorCopy( backEnd.refdef.viewaxis[2], tr.hudViewAxis[2] );
+		tr.hudViewValid = qtrue;
+	}
 
 	// clear the z buffer, set the modelview, etc
 	RB_BeginDrawingView ();
@@ -1708,6 +1733,9 @@ const void  *RB_DrawBuffer( const void *data ) {
 	if(tess.numIndexes)
 		RB_EndSurface();
 
+	// A new frame has no main view yet, so the HUD quad must not reuse the last one.
+	tr.hudViewValid = qfalse;
+
 	FBO_StoreCurrent(cmd->buffer);
 
 	if (glRefConfig.framebufferObject)
@@ -1811,6 +1839,272 @@ const void *RB_ColorMask(const void *data)
 	qglColorMask(cmd->rgba[0], cmd->rgba[1], cmd->rgba[2], cmd->rgba[3]);
 	
 	return (const void *)(cmd + 1);
+}
+
+/*
+=============
+RB_ResetBlendState
+
+Drops the cached blend state so the next GL_State call issues the blend function
+again. RB_HudBegin and RB_HudEnd change how alpha is written, and GL_State would
+otherwise skip the update when the blend bits happen not to change.
+=============
+*/
+static void RB_ResetBlendState( void )
+{
+	qglDisable( GL_BLEND );
+	glState.glStateBits   &= ~( GLS_SRCBLEND_BITS | GLS_DSTBLEND_BITS );
+	glState.storedGlState &= ~( GLS_SRCBLEND_BITS | GLS_DSTBLEND_BITS );
+}
+
+/*
+=============
+RB_HudBegin
+
+Points 2D drawing at the VR HUD buffer.
+=============
+*/
+const void *RB_HudBegin( const void *data )
+{
+	const hudBufferCommand_t *cmd = data;
+
+	if ( !tr.hudFbo )
+		return (const void *)( cmd + 1 );
+
+	if ( tess.numIndexes )
+		RB_EndSurface();
+
+	FBO_Bind( tr.hudFbo );
+
+	glState.isDrawingHUD = qtrue;
+	RB_ResetBlendState();
+
+	// RB_SetGL2D early-outs on the FBO it last set up, so let it run again here.
+	backEnd.projection2D = qfalse;
+	RB_SetGL2D();
+
+	qglClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
+	qglClear( GL_COLOR_BUFFER_BIT );
+
+	return (const void *)( cmd + 1 );
+}
+
+/*
+=============
+RB_UpdateHudAngles
+
+Moves the resting direction of the HUD quad toward the view direction.
+
+The HUD holds completely still while the head stays within the dead zone, so you
+can look straight at any corner and read it. Past the dead zone it is dragged
+along and settles back at the dead zone edge.
+=============
+*/
+static float RB_ChaseAngle( float current, float target, float deadzone, float lerp )
+{
+	float delta = AngleSubtract( target, current );
+	float excess;
+
+	if ( fabs( delta ) <= deadzone )
+		return current;
+
+	excess = ( delta > 0.0f ) ? ( delta - deadzone ) : ( delta + deadzone );
+
+	return AngleNormalize180( current + excess * lerp );
+}
+
+static void RB_UpdateHudAngles( void )
+{
+	vec3_t view;
+	float headYaw, headPitch;
+	float bodyYaw, bodyPitch;
+	float dt, lerp;
+
+	vectoangles( tr.hudViewAxis[0], view );
+
+	// Split the view into the part the head contributes and the part the player's
+	// turning contributes. Only the head is allowed to lag. Snap turn and smooth
+	// turn move the body, and the HUD has to come round with the player at once.
+	headYaw   = vr->hmdorientation[YAW];
+	headPitch = vr->hmdorientation[PITCH];
+	bodyYaw   = AngleSubtract( view[YAW],   headYaw );
+	bodyPitch = AngleSubtract( view[PITCH], headPitch );
+
+	if ( !tr.hudAnglesValid )
+	{
+		tr.hudHeadAngles[PITCH] = headPitch;
+		tr.hudHeadAngles[YAW]   = headYaw;
+		tr.hudLastTime          = backEnd.refdef.floatTime;
+		tr.hudAnglesValid       = qtrue;
+	}
+	else
+	{
+		dt = backEnd.refdef.floatTime - tr.hudLastTime;
+		tr.hudLastTime = backEnd.refdef.floatTime;
+
+		// A load or a pause leaves a huge gap, which would snap the HUD across the view.
+		if ( dt <= 0.0f || dt > 0.25f )
+			dt = 0.016f;
+
+		// Exponential catch-up, so the feel does not change with the frame rate.
+		lerp = 1.0f - exp( -vr_hudFollowSpeed->value * dt );
+
+		// Yaw keeps a dead zone, so you can glance to either side and read a corner
+		// without the HUD sliding away from you.
+		tr.hudHeadAngles[YAW] = RB_ChaseAngle( tr.hudHeadAngles[YAW], headYaw,
+			vr_hudDeadzoneYaw->value, lerp );
+
+		// Pitch gets no dead zone. A dead zone leaves the HUD wherever it was last
+		// dragged, so looking up and back down would park it across your view. This
+		// lags instead, then always eases back to its resting place below the view.
+		if ( vr_hudPitchLag->integer )
+		{
+			tr.hudHeadAngles[PITCH] = AngleNormalize180( tr.hudHeadAngles[PITCH]
+				+ AngleSubtract( headPitch, tr.hudHeadAngles[PITCH] ) * lerp );
+		}
+		else
+		{
+			tr.hudHeadAngles[PITCH] = headPitch;
+		}
+	}
+
+	// Put the body back on top, so turning carries the HUD with no lag at all.
+	tr.hudAngles[YAW]   = AngleNormalize180( bodyYaw + tr.hudHeadAngles[YAW] );
+	tr.hudAngles[PITCH] = AngleNormalize180( bodyPitch + tr.hudHeadAngles[PITCH] );
+
+	// Roll stays at zero. A HUD that tilts with the head is quickly unpleasant.
+	tr.hudAngles[ROLL] = 0.0f;
+}
+
+/*
+=============
+RB_HudEnd
+
+Puts the eye buffer back, then composites the HUD buffer over it.
+
+Stage 1 draws the HUD buffer as a full screen quad, so the result matches what
+the HUD looked like when it drew straight into the eye buffer. The per eye
+offset still comes from FULLSCREEN_ORTHO_PROJECTION.
+=============
+*/
+const void *RB_HudEnd( const void *data )
+{
+	const hudBufferCommand_t *cmd = data;
+	vec4_t quadVerts[4];
+	vec2_t texCoords[4];
+	qboolean worldQuad;
+
+	if ( !tr.hudFbo )
+		return (const void *)( cmd + 1 );
+
+	if ( tess.numIndexes )
+		RB_EndSurface();
+
+	glState.isDrawingHUD = qfalse;
+	RB_ResetBlendState();
+
+	FBO_Bind( NULL );
+
+	worldQuad = ( vr_hudMode->integer != 0 ) && tr.hudViewValid;
+
+	// The HUD buffer stores the top row at v = 1, because an ortho with y = 0 at the
+	// top maps that row to the highest line of the framebuffer.
+	VectorSet2( texCoords[0], 0.0f, 1.0f );
+	VectorSet2( texCoords[1], 1.0f, 1.0f );
+	VectorSet2( texCoords[2], 1.0f, 0.0f );
+	VectorSet2( texCoords[3], 0.0f, 0.0f );
+
+	if ( worldQuad )
+	{
+		vec3_t angles, forward, right, up, centre, offRight, offUp;
+		float dist, halfWidth, halfHeight;
+
+		RB_UpdateHudAngles();
+
+		dist = vr_hudDistance->value;
+		if ( dist < 1.0f )
+			dist = 1.0f;
+
+		halfWidth = dist * tan( DEG2RAD( vr_hudSize->value ) * 0.5f );
+
+		// The HUD buffer is the shape of the eye buffer, but cgame drew a 640 x 480
+		// layout across all of it. A 4:3 quad undoes that stretch.
+		halfHeight = halfWidth * ( 480.0f / 640.0f );
+
+		// A positive pitch looks down, so vr_hudPitch drops the HUD below the view.
+		angles[PITCH] = tr.hudAngles[PITCH] + vr_hudPitch->value;
+		angles[YAW]   = tr.hudAngles[YAW];
+		angles[ROLL]  = 0.0f;
+		AngleVectors( angles, forward, right, up );
+
+		// The quad faces back along its own direction, so it always squares up to
+		// the player rather than shearing as the HUD lags behind.
+		VectorMA( tr.hudViewOrigin, dist, forward, centre );
+
+		VectorScale( right, halfWidth, offRight );
+		VectorScale( up, halfHeight, offUp );
+
+		// Order matches texCoords: top left, top right, bottom right, bottom left.
+		VectorSubtract( centre, offRight, quadVerts[0] );
+		VectorAdd( quadVerts[0], offUp, quadVerts[0] );
+		quadVerts[0][3] = 1.0f;
+
+		VectorAdd( centre, offRight, quadVerts[1] );
+		VectorAdd( quadVerts[1], offUp, quadVerts[1] );
+		quadVerts[1][3] = 1.0f;
+
+		VectorAdd( centre, offRight, quadVerts[2] );
+		VectorSubtract( quadVerts[2], offUp, quadVerts[2] );
+		quadVerts[2][3] = 1.0f;
+
+		VectorSubtract( centre, offRight, quadVerts[3] );
+		VectorSubtract( quadVerts[3], offUp, quadVerts[3] );
+		quadVerts[3][3] = 1.0f;
+
+		// GLSL_CalculateProjection reads these, and they still describe whatever view
+		// was drawn last. Force the plain stereo projection for the HUD quad.
+		backEnd.refdef.is_skybox = 0;
+		backEnd.viewParms.isPortal = qfalse;
+
+		backEnd.projection2D = qfalse;
+		GL_SetProjectionMatrix( tr.vrParms.projection );
+	}
+	else
+	{
+		float width  = (float)tr.hudWidth;
+		float height = (float)tr.hudHeight;
+
+		backEnd.projection2D = qfalse;
+		RB_SetGL2D();
+
+		VectorSet4( quadVerts[0], 0.0f,  0.0f,   0.0f, 1.0f );
+		VectorSet4( quadVerts[1], width, 0.0f,   0.0f, 1.0f );
+		VectorSet4( quadVerts[2], width, height, 0.0f, 1.0f );
+		VectorSet4( quadVerts[3], 0.0f,  height, 0.0f, 1.0f );
+	}
+
+	// The HUD buffer holds premultiplied colour, so source factor ONE is correct.
+	GL_State( GLS_DEPTHTEST_DISABLE | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA );
+	GL_Cull( CT_TWO_SIDED );
+
+	GL_BindMultiTexture( GL_TEXTURE0 + TB_COLORMAP, GL_TEXTURE_2D_ARRAY, tr.hudTexture );
+
+	GLSL_BindProgram( &tr.textureColorArrayShader );
+	GLSL_SetUniformMat4( &tr.textureColorArrayShader, UNIFORM_MODELMATRIX,
+		worldQuad ? tr.hudViewMatrix : glState.modelMatrix );
+	GLSL_BindBuffers( &tr.textureColorArrayShader );
+	GLSL_SetUniformVec4( &tr.textureColorArrayShader, UNIFORM_COLOR, colorWhite );
+
+	RB_InstantQuad2( quadVerts, texCoords );
+
+	if ( worldQuad )
+	{
+		// Put the 2D projection back so the console and menus are unaffected.
+		backEnd.projection2D = qfalse;
+		RB_SetGL2D();
+	}
+
+	return (const void *)( cmd + 1 );
 }
 
 /*
@@ -2329,6 +2623,12 @@ void RB_ExecuteRenderCommands( const void *data ) {
 			break;
 		case RC_FLUSH:
 			data = RB_Flush(data);
+			break;
+		case RC_HUD_BEGIN:
+			data = RB_HudBegin(data);
+			break;
+		case RC_HUD_END:
+			data = RB_HudEnd(data);
 			break;
 		case RC_END_OF_LIST:
 		default:

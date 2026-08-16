@@ -221,7 +221,11 @@ typedef enum {
 	CG_HAPTIC,
 
 	// New in IORTCW
-	CG_ALLOC = 900
+	CG_ALLOC = 900,
+
+	// RealRTCW XR: brackets the 2D that belongs in the VR HUD buffer
+	CG_R_BEGINHUD = 910,
+	CG_R_ENDHUD
 
 } cgameImport_t;
 

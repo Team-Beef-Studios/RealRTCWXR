@@ -62,4 +62,7 @@ void FBO_Blit(FBO_t *src, ivec4_t srcBox, vec2_t srcTexScale, FBO_t *dst, ivec4_
 void FBO_FastBlit(FBO_t *src, ivec4_t srcBox, FBO_t *dst, ivec4_t dstBox, int buffers, int filter);
 void FBO_StoreCurrent(int eye);
 
+void FBO_CreateHudBuffer(int width, int height);
+void FBO_DestroyHudBuffer(void);
+
 #endif

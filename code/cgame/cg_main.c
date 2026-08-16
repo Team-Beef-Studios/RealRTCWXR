@@ -177,6 +177,7 @@ vmCvar_t cg_ignore;
 vmCvar_t cg_simpleItems;
 vmCvar_t cg_fov;
 vmCvar_t cg_fixedAspect;
+vmCvar_t cg_vrHudMode;
 vmCvar_t cg_fixedAspectFOV;
 vmCvar_t cg_drawCheckpoint;
 vmCvar_t cg_oldWolfUI;
@@ -344,6 +345,9 @@ cvarTable_t cvarTable[] = {
 	{ &cg_zoomStepFG, "cg_zoomStepFG", "10", CVAR_ARCHIVE },          //----(SA)	added
 	{ &cg_fov, "cg_fov", "90", CVAR_ARCHIVE },	// NOTE: there is already a dmflag (DF_FIXED_FOV) to allow server control of this cheat
 	{ &cg_fixedAspect, "cg_fixedAspect", "0", CVAR_ARCHIVE | CVAR_LATCH }, // Essentially the same as setting DF_FIXED_FOV for widescreen aspects
+	// Mirrors the renderer cvar. On the world quad the HUD uses the whole 640x480
+	// layout, so the screen space inset must not be applied.
+	{ &cg_vrHudMode, "vr_hudMode", "1", CVAR_ARCHIVE },
 	{ &cg_fixedAspectFOV, "cg_fixedAspectFOV", "0", CVAR_ARCHIVE },
 	{ &cg_oldWolfUI, "cg_oldWolfUI", "0", CVAR_ARCHIVE },
 	{ &cg_drawStatusHead, "cg_drawStatusHead", "0", CVAR_ARCHIVE },

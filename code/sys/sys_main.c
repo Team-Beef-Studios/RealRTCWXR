@@ -51,6 +51,15 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "stdbool.h"
 
 
+#ifdef _WIN32
+// Hybrid graphics laptops otherwise hand OpenGL to the integrated GPU, which has no
+// GL_OVR_multiview2. The VR renderer cannot compile a single shader without it, so the
+// game dies at startup. Exporting these two symbols makes both vendors' drivers pick the
+// discrete GPU. They must live in the executable, not in a DLL.
+__declspec( dllexport ) unsigned long NvOptimusEnablement = 0x00000001;
+__declspec( dllexport ) int AmdPowerXpressRequestHighPerformance = 1;
+#endif
+
 static char binaryPath[ MAX_OSPATH ] = { 0 };
 static char installPath[ MAX_OSPATH ] = { 0 };
 

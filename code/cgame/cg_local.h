@@ -1779,6 +1779,7 @@ extern vmCvar_t cg_ignore;
 extern vmCvar_t cg_simpleItems;
 extern vmCvar_t cg_fov;
 extern vmCvar_t cg_fixedAspect;
+extern vmCvar_t cg_vrHudMode;
 extern vmCvar_t cg_fixedAspectFOV;
 extern vmCvar_t cg_drawCheckpoint;
 extern vmCvar_t cg_oldWolfUI;
@@ -2521,6 +2522,10 @@ void        trap_R_DrawStretchPic( float x, float y, float w, float h,
 								   float s1, float t1, float s2, float t2, qhandle_t hShader );
 void        trap_R_DrawStretchPicGradient( float x, float y, float w, float h,
 										   float s1, float t1, float s2, float t2, qhandle_t hShader, const float *gradientColor, int gradientType );
+void        trap_R_BeginHUD( void );
+void        trap_R_EndHUD( void );
+qboolean    CG_VRFullScreen2D( void );
+qboolean    CG_VRHudBuffered( void );
 
 void        trap_R_ModelBounds( clipHandle_t model, vec3_t mins, vec3_t maxs );
 int         trap_R_LerpTag( orientation_t *tag, const refEntity_t *refent, const char *tagName, int startIndex );

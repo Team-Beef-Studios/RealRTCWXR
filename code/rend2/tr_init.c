@@ -80,6 +80,13 @@ cvar_t  *r_measureOverdraw;
 
 cvar_t  *r_inGameVideo;
 cvar_t  *r_fastsky;
+cvar_t  *vr_hudMode;
+cvar_t  *vr_hudDistance;
+cvar_t  *vr_hudSize;
+cvar_t  *vr_hudPitch;
+cvar_t  *vr_hudDeadzoneYaw;
+cvar_t  *vr_hudPitchLag;
+cvar_t  *vr_hudFollowSpeed;
 cvar_t  *r_drawSun;
 cvar_t  *r_dynamiclight;
 cvar_t  *r_dlightBacks;
@@ -1462,6 +1469,14 @@ void R_Register( void ) {
 	r_ignoreGLErrors = ri.Cvar_Get( "r_ignoreGLErrors", "1", CVAR_ARCHIVE );
 	r_fastsky = ri.Cvar_Get( "r_fastsky", "0", CVAR_ARCHIVE );
 	r_inGameVideo = ri.Cvar_Get( "r_inGameVideo", "1", CVAR_ARCHIVE );
+	vr_hudMode          = ri.Cvar_Get( "vr_hudMode",          "1",  CVAR_ARCHIVE );
+	vr_hudDistance      = ri.Cvar_Get( "vr_hudDistance",      "75", CVAR_ARCHIVE );
+	vr_hudSize          = ri.Cvar_Get( "vr_hudSize",          "50", CVAR_ARCHIVE );
+	vr_hudPitch         = ri.Cvar_Get( "vr_hudPitch",         "15", CVAR_ARCHIVE );
+	vr_hudDeadzoneYaw   = ri.Cvar_Get( "vr_hudDeadzoneYaw",   "7", CVAR_ARCHIVE );
+	vr_hudPitchLag      = ri.Cvar_Get( "vr_hudPitchLag",      "1", CVAR_ARCHIVE );
+	vr_hudFollowSpeed   = ri.Cvar_Get( "vr_hudFollowSpeed",   "7", CVAR_ARCHIVE );
+
 	r_drawSun = ri.Cvar_Get( "r_drawSun", "1", CVAR_ARCHIVE );
 	r_dynamiclight = ri.Cvar_Get( "r_dynamiclight", "1", CVAR_ARCHIVE );
 	r_dlightScale = ri.Cvar_Get( "r_dlightScale", "1.0", CVAR_ARCHIVE );   //----(SA)	added
@@ -1837,6 +1852,8 @@ refexport_t *GetRefAPI( int apiVersion, refimport_t *rimp, vr_client_info_t * pv
 	re.SetColor         = RE_SetColor;
 	re.DrawStretchPic   = RE_StretchPic;
 	re.DrawStretchPicGradient   = RE_StretchPicGradient;
+	re.BeginHUD         = RE_BeginHUD;
+	re.EndHUD           = RE_EndHUD;
 	re.DrawStretchRaw   = RE_StretchRaw;
 	re.UploadCinematic  = RE_UploadCinematic;
 	re.RegisterFont     = RE_RegisterFont;

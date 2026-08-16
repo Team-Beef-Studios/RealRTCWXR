@@ -208,7 +208,6 @@ static void GLSL_ViewMatricesUniformBuffer(const float eyeView[32], const float 
 		switch (i)
 		{
 		case FULLSCREEN_ORTHO_PROJECTION:
-		case HUDBUFFER_ORTHO_PROJECTION:
 		{
 			for (int i = 0; i < 2; ++i)
 			{
@@ -219,6 +218,14 @@ static void GLSL_ViewMatricesUniformBuffer(const float eyeView[32], const float 
 				VectorSet(translate, xDepthOffset, yDepthOffset, 0);
 				Mat4Translation(translate, viewMatrices + (16*i));
 			}
+		}
+		break;
+		case HUDBUFFER_ORTHO_PROJECTION:
+		{
+			// The HUD buffer holds one flat image. The per-eye offset belongs on the
+			// quad that composites it, not on the HUD contents.
+			Mat4Identity(viewMatrices);
+			Mat4Identity(viewMatrices + 16);
 		}
 		break;
 		case MIRROR_VR_PROJECTION:
@@ -1172,6 +1179,7 @@ void GLSL_InitGPUShaders(void)
 
 
 	attribs = ATTR_POSITION | ATTR_TEXCOORD;
+	extradefines[0] = '\0';
 
 	if (!GLSL_InitGPUShader(&tr.textureColorShader, "texturecolor", attribs, qtrue, extradefines, qtrue, fallbackShader_texturecolor_vp, fallbackShader_texturecolor_fp))
 	{
@@ -1183,6 +1191,24 @@ void GLSL_InitGPUShaders(void)
 	GLSL_SetUniformInt(&tr.textureColorShader, UNIFORM_TEXTUREMAP, TB_DIFFUSEMAP);
 
 	GLSL_FinishGPUShader(&tr.textureColorShader);
+
+	numEtcShaders++;
+
+	// Same program, but sampling a 2D array. The VR HUD buffer has to be layered
+	// because every vertex shader is built for multiview.
+	extradefines[0] = '\0';
+	Q_strcat(extradefines, 1024, "#define USE_TEXTURE_ARRAY\n");
+
+	if (!GLSL_InitGPUShader(&tr.textureColorArrayShader, "texturecolor", attribs, qtrue, extradefines, qtrue, fallbackShader_texturecolor_vp, fallbackShader_texturecolor_fp))
+	{
+		ri.Error(ERR_FATAL, "Could not load the texturecolor array shader!");
+	}
+
+	GLSL_InitUniforms(&tr.textureColorArrayShader);
+
+	GLSL_SetUniformInt(&tr.textureColorArrayShader, UNIFORM_TEXTUREMAP, TB_DIFFUSEMAP);
+
+	GLSL_FinishGPUShader(&tr.textureColorArrayShader);
 
 	numEtcShaders++;
 
@@ -1662,6 +1688,7 @@ void GLSL_ShutdownGPUShaders(void)
 		GLSL_DeleteGPUShader(&tr.genericShader[i]);
 
 	GLSL_DeleteGPUShader(&tr.textureColorShader);
+	GLSL_DeleteGPUShader(&tr.textureColorArrayShader);
 
 	for (i = 0; i < FOGDEF_COUNT; i++)
 		GLSL_DeleteGPUShader(&tr.fogShader[i]);
@@ -1715,9 +1742,12 @@ void GLSL_PrepareUniformBuffers(void)
 	GLSL_ProjectionMatricesUniformBuffer(projectionMatricesBuffer[FULLSCREEN_ORTHO_PROJECTION],
 		orthoProjectionMatrix);
 
+	// The HUD buffer matches the eye buffer for now, so cgame keeps its existing
+	// 640x480 to screen mapping. This becomes a fixed 640x480 when the HUD moves
+	// onto a world quad.
 	float hudOrthoProjectionMatrix[32];
-	Mat4Ortho(0, 640, 480, 0, 0, 1, hudOrthoProjectionMatrix);
-	Mat4Ortho(0, 640, 480, 0, 0, 1, hudOrthoProjectionMatrix+16);
+	Mat4Ortho(0, width, height, 0, 0, 1, hudOrthoProjectionMatrix);
+	Mat4Ortho(0, width, height, 0, 0, 1, hudOrthoProjectionMatrix+16);
 	GLSL_ProjectionMatricesUniformBuffer(projectionMatricesBuffer[HUDBUFFER_ORTHO_PROJECTION],
 		hudOrthoProjectionMatrix);
 

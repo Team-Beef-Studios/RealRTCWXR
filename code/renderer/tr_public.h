@@ -92,6 +92,11 @@ typedef struct {
 	void ( *DrawStretchPicGradient )( float x, float y, float w, float h,
 									  float s1, float t1, float s2, float t2, qhandle_t hShader, const float *gradientColor, int gradientType );
 
+	// VR HUD buffer. Renderers that do not implement it leave these NULL, and
+	// callers must check before use.
+	void ( *BeginHUD )( void );
+	void ( *EndHUD )( void );
+
 	// Draw images for cinematic rendering, pass as 32 bit rgba
 	void ( *DrawStretchRaw )( int x, int y, int w, int h, int cols, int rows, const byte *data, int client, qboolean dirty );
 	void ( *UploadCinematic )( int w, int h, int cols, int rows, const byte *data, int client, qboolean dirty );
