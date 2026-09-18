@@ -1040,6 +1040,7 @@ void R_SetupProjection(viewParms_t *dest, float zProj, float zFar, qboolean comp
 
 	if (ri.TBXR_GetVRProjection(zProj, tr.viewParms.zFar, dest->fovX, dest->fovY, tr.vrParms.projection))
 	{
+		tr.vrParms.valid = qtrue;
 		memcpy(dest->projectionMatrix, tr.vrParms.projection, sizeof(tr.vrParms.projection));
 
 		if (computeFrustum)
@@ -1048,6 +1049,8 @@ void R_SetupProjection(viewParms_t *dest, float zProj, float zFar, qboolean comp
 		return;
 	}
 	
+
+	tr.vrParms.valid = qfalse;
 
 	for (int eye = 0; eye < 2; ++eye)
 	{
@@ -1065,6 +1068,21 @@ void R_SetupProjection(viewParms_t *dest, float zProj, float zFar, qboolean comp
 		dest->projectionMatrix[7 + (16 * eye)] = 0;
 		dest->projectionMatrix[11 + (16 * eye)] = -1;
 		dest->projectionMatrix[15 + (16 * eye)] = 0;
+
+		// The depth terms. The caller passes zFar as 0, because R_SetFarClip has not
+		// run yet, so an infinite far plane is the only sane value here. That is also
+		// what the OpenXR projection does with a far distance of 0, which is why only
+		// this fallback path lost its depth range. R_SetupProjectionZ replaces these
+		// with the real far clip further down the frame.
+		dest->projectionMatrix[2 + (16 * eye)] = 0;
+		dest->projectionMatrix[6 + (16 * eye)] = 0;
+		if ( zFar > zProj ) {
+			dest->projectionMatrix[10 + (16 * eye)] = -( zFar + zProj ) / ( zFar - zProj );
+			dest->projectionMatrix[14 + (16 * eye)] = -2 * zFar * zProj / ( zFar - zProj );
+		} else {
+			dest->projectionMatrix[10 + (16 * eye)] = -1.0f;
+			dest->projectionMatrix[14 + (16 * eye)] = -2.0f * zProj;
+		}
 	}
 
 	memcpy(tr.vrParms.projection, dest->projectionMatrix, sizeof(tr.vrParms.projection));
@@ -1084,16 +1102,22 @@ Sets the z-component transformation part in the projection matrix
 void R_SetupProjectionZ(viewParms_t *dest)
 {
 	float zNear, zFar, depth;
-	
+	int eye;
+
 	zNear = r_znear->value;
 	zFar	= dest->zFar;
 
 	depth	= zFar - zNear;
 
-	dest->projectionMatrix[2] = 0;
-	dest->projectionMatrix[6] = 0;
-	dest->projectionMatrix[10] = -( zFar + zNear ) / depth;
-	dest->projectionMatrix[14] = -2 * zFar * zNear / depth;
+	// Both eyes. This wrote eye 0 only, and the big screen cutscene panel shows
+	// swapchain layer 2, which is eye 1.
+	for ( eye = 0; eye < 2; ++eye )
+	{
+		dest->projectionMatrix[2 + (16 * eye)] = 0;
+		dest->projectionMatrix[6 + (16 * eye)] = 0;
+		dest->projectionMatrix[10 + (16 * eye)] = -( zFar + zNear ) / depth;
+		dest->projectionMatrix[14 + (16 * eye)] = -2 * zFar * zNear / depth;
+	}
 
 	if (dest->isPortal)
 	{
@@ -1114,18 +1138,20 @@ void R_SetupProjectionZ(viewParms_t *dest)
 
 		// Lengyel, Eric. "Modifying the Projection Matrix to Perform Oblique Near-plane Clipping".
 		// Terathon Software 3D Graphics Library, 2004. http://www.terathon.com/code/oblique.html
-		q[0] = (SGN(plane2[0]) + dest->projectionMatrix[8]) / dest->projectionMatrix[0];
-		q[1] = (SGN(plane2[1]) + dest->projectionMatrix[9]) / dest->projectionMatrix[5];
-		q[2] = -1.0f;
-		q[3] = (1.0f + dest->projectionMatrix[10]) / dest->projectionMatrix[14];
+		for ( eye = 0; eye < 2; ++eye )
+		{
+			q[0] = (SGN(plane2[0]) + dest->projectionMatrix[8 + (16 * eye)]) / dest->projectionMatrix[0 + (16 * eye)];
+			q[1] = (SGN(plane2[1]) + dest->projectionMatrix[9 + (16 * eye)]) / dest->projectionMatrix[5 + (16 * eye)];
+			q[2] = -1.0f;
+			q[3] = (1.0f + dest->projectionMatrix[10 + (16 * eye)]) / dest->projectionMatrix[14 + (16 * eye)];
 
-		VectorScale4(plane2, 2.0f / DotProduct4(plane2, q), c);
+			VectorScale4(plane2, 2.0f / DotProduct4(plane2, q), c);
 
-		dest->projectionMatrix[2]  = c[0];
-		dest->projectionMatrix[6]  = c[1];
-		dest->projectionMatrix[10] = c[2] + 1.0f;
-		dest->projectionMatrix[14] = c[3];
-
+			dest->projectionMatrix[2 + (16 * eye)]  = c[0];
+			dest->projectionMatrix[6 + (16 * eye)]  = c[1];
+			dest->projectionMatrix[10 + (16 * eye)] = c[2] + 1.0f;
+			dest->projectionMatrix[14 + (16 * eye)] = c[3];
+		}
 	}
 }
 
@@ -1953,7 +1979,13 @@ void R_GenerateDrawSurfs( void ) {
 	}
 
 	// we know the size of the clipping volume. Now set the rest of the projection matrix.
-	//R_SetupProjectionZ (&tr.viewParms);
+	// Only for the fallback projection. OpenXR builds a complete matrix of its own, and
+	// it uses a different near plane, so this must not overwrite it.
+	if ( !tr.vrParms.valid )
+	{
+		R_SetupProjectionZ( &tr.viewParms );
+		memcpy( tr.vrParms.projection, tr.viewParms.projectionMatrix, sizeof( tr.vrParms.projection ) );
+	}
 
 	R_AddEntitySurfaces();
 }

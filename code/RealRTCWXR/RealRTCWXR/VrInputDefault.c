@@ -245,13 +245,20 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
                                     powf(vr.hmdposition[2] - pOff->Pose.position.z, 2));
 
 
+        //A cutscene must never run with the item selector up. It holds timescale at
+        //0.3 and takes the controls over.
+        if (vr.cin_camera && vr.item_selector)
+        {
+            vr.item_selector = 0;
+        }
+
         float controllerYawHeading = 0.0f;
         //Turn on weapon stabilisation?
         bool offhandGripPushed = (pOffTrackedRemoteNew->Buttons & xrButton_GripTrigger);
         if (offhandGripPushed)
         {
             if (!vr.weapon_stabilised && vr.item_selector == 0 &&
-                !vr.misc_camera && !vr.cgzoommode)
+                !vr.misc_camera && !vr.cgzoommode && !vr.cin_camera)
             {
                 if (cl.snap.ps.weapon == WP_KNIFE ||
                     cl.snap.ps.weapon == WP_DAGGER ||
@@ -320,7 +327,7 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
         //Do this early so we can suppress other button actions when item selector is up
         if (dominantGripPushed) {
             if (!vr.weapon_stabilised && vr.item_selector == 0
-                && !vr.misc_camera && !vr.cgzoommode) {
+                && !vr.misc_camera && !vr.cgzoommode && !vr.cin_camera) {
                 vr.item_selector = 1;
             }
         }

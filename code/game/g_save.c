@@ -514,6 +514,12 @@ int G_Save_Encode( byte *raw, byte *out, int rawsize, int outsize ) {
 			rawcount++;
 			count++;
 		}
+		// outsize was accepted and then ignored, so an oversized struct corrupted
+		// memory instead of failing. The worst case is twice rawsize.
+		if ( outcount + SAVE_ENCODE_COUNT_BYTES + ( mode ? count : 0 ) > outsize ) {
+			G_Error( "G_Save_Encode: encoded data is larger than the output buffer" );
+		}
+
 		// write the count, followed by data if required
 		memcpy( out + outcount, &count, SAVE_ENCODE_COUNT_BYTES );
 		// switch the sign bit if zeros
@@ -563,7 +569,9 @@ void G_Save_Decode( byte *in, int insize, byte *out, int outsize ) {
 
 //=========================================================
 
-byte clientBuf[ 2 * sizeof( gentity_t ) ];
+// Holds an encoded gclient_t, not a gentity_t. gclient_t outgrew the old size, so
+// WriteClient overran this buffer and recorded a length ReadClient then refused.
+byte clientBuf[ 2 * sizeof( gclient_t ) ];
 
 /*
 ===============

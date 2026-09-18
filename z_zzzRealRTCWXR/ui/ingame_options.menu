@@ -985,7 +985,7 @@ itemDef {
 		group grpOptions
 		type ITEM_TYPE_MULTI
         textfont UI_FONT_BIG		
-		text "Control Sceheme"
+		text "Control Scheme"
 		cvar "vr_control_scheme"
 		cvarFloatList { "Right Handed" 0 "Left Handed" 10 }
 		rect 82 70 290 12
@@ -1078,7 +1078,7 @@ itemDef {
 	
 	itemDef {
 		name vr
-		group options
+		group grpOptions
 		type ITEM_TYPE_SLIDER
 		text "Knife Pitch"
 		cvarfloat "vr_knife_pitchadjust" 20.0 -45.0 5.0
@@ -1099,7 +1099,7 @@ itemDef {
 	
 	itemDef {
 		name vr
-		group options
+		group grpOptions
 		type ITEM_TYPE_SLIDER
 		text "Weapon Pitch"
 		cvarfloat "vr_weapon_pitchadjust" 20.0 -45.0 5.0
@@ -1116,6 +1116,26 @@ itemDef {
 		mouseenter { show slider_message }
 		mouseexit { hide slider_message }
     }	
+	
+	itemDef {
+		name vr
+		group grpOptions
+		type ITEM_TYPE_MULTI
+		textfont UI_FONT_BIG
+		text "Cutscenes"
+		cvar "vr_immersive_cinematics"
+		cvarFloatList { "Big Screen" 0 "Immersive" 1 }
+		rect 82 230 290 12
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 142
+		textaligny 10
+		textscale .23
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 0
+	}
+
 
 	}
 

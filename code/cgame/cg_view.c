@@ -1473,6 +1473,23 @@ void CG_DrawSkyBoxPortal( void ) {
 			SHORT2ANGLE(cg.snap->ps.delta_angles[YAW]);
 		AnglesToAxis(cg.refdef.viewangles, cg.refdef.viewaxis);
 	}
+	else if (cg.cameraMode)
+	{
+		// A cutscene drives the view from the scripted camera. This chain is a copy
+		// of the one in CG_DrawActive, and it had no cutscene branch, so the sky kept
+		// following the head while the world followed the camera. On the big screen
+		// that shows up as the sky sliding inside a fixed panel.
+		if (!vr->immersive_cinematics)
+		{
+			VectorCopy(cg.refdefViewAngles, cg.refdef.viewangles);
+		}
+		else
+		{
+			VectorCopy(vr->hmdorientation, cg.refdef.viewangles);
+			cg.refdef.viewangles[YAW] = cg.camereModeYaw + vr->clientviewangles[YAW];
+		}
+		AnglesToAxis(cg.refdef.viewangles, cg.refdef.viewaxis);
+	}
 	else
 	{
 		VectorCopy(vr->hmdorientation, cg.refdef.viewangles);

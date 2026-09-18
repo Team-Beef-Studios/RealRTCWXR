@@ -75,6 +75,7 @@ extern vmCvar_t ui_autoactivate;
 extern vmCvar_t ui_emptyswitch;
 // END JOSEPH
 
+extern vmCvar_t ui_vrMenuAspect;
 extern vmCvar_t ui_fixedAspect;
 extern vmCvar_t ui_fixedAspectFOV;
 

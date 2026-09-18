@@ -1016,21 +1016,50 @@ void TBXR_UpdateControllers( )
 float vibration_channel_duration[2] = {0.0f, 0.0f};
 float vibration_channel_intensity[2] = {0.0f, 0.0f};
 
+//index 0 is the left hand, index 1 is the right, matching handSubactionPath
+static void TBXR_SetHapticChannel( int index, int duration, float intensity )
+{
+    //A stop always wins. Without this a stop that arrives while a short buzz is still
+    //playing is dropped, and a continuous effect then runs until something else
+    //happens to clear it.
+    if (duration == 0)
+    {
+        vibration_channel_duration[index] = 0.0f;
+        vibration_channel_intensity[index] = 0.0f;
+        return;
+    }
+
+    //let a running effect finish before starting another
+    if (vibration_channel_duration[index] > 0.0f ||
+        vibration_channel_duration[index] == -1.0f)
+        return;
+
+    intensity *= vr_haptic_intensity->value;
+    if (intensity < 0.0f) intensity = 0.0f;
+    if (intensity > 1.0f) intensity = 1.0f;
+
+    vibration_channel_duration[index] = duration;
+    vibration_channel_intensity[index] = intensity;
+}
+
 void TBXR_Vibrate( int duration, int chan, float intensity )
 {
-    for (int i = 0; i < 2; ++i)
+    //cgame counts channels as hand indexes, 0 left and 1 right. The engine passes 1
+    //for the right hand, 2 for the left and 3 for both. The two meanings agree on 0
+    //and 1, so this covers every caller.
+    //
+    //This used to index the arrays with chan instead of the loop variable, so chan 2
+    //wrote past the end of both arrays and chan 3 did nothing at all. That stray write
+    //landed on the neighbouring haptic state, which is what left a controller buzzing
+    //with nothing able to stop it.
+    if (chan == 0 || chan == 2 || chan == 3)
     {
-        if ((i + 1) & (chan+1))
-        {
-            if (vibration_channel_duration[chan] > 0.0f)
-                return;
+        TBXR_SetHapticChannel( 0, duration, intensity );
+    }
 
-            if (vibration_channel_duration[chan] == -1.0f && duration != 0.0f)
-                return;
-
-            vibration_channel_duration[chan] = duration;
-            vibration_channel_intensity[chan] = intensity * vr_haptic_intensity->value;
-        }
+    if (chan == 1 || chan == 3)
+    {
+        TBXR_SetHapticChannel( 1, duration, intensity );
     }
 }
 

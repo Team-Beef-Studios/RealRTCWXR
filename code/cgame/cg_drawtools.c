@@ -104,6 +104,23 @@ void CG_AdjustFrom640( float *x, float *y, float *w, float *h ) {
 
 /*
 ================
+CG_FillScreen
+
+Fills the whole framebuffer and ignores the 640x480 layout.
+
+A fade has to cover everything the player can see. In VR the layout letterboxes
+and insets, so a 640x480 fill can leave the edges of the view clear.
+=================
+*/
+void CG_FillScreen( const float *color ) {
+	trap_R_SetColor( color );
+	trap_R_DrawStretchPic( 0, 0, cgs.glconfig.vidWidth, cgs.glconfig.vidHeight,
+						   0, 0, 0, 1, cgs.media.whiteShader );
+	trap_R_SetColor( NULL );
+}
+
+/*
+================
 CG_FillRect
 
 Coordinates are 640*480 virtual values

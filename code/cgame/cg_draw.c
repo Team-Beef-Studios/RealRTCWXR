@@ -3634,13 +3634,7 @@ static void CG_DrawGameScreenFade( void ) {
 
 	VectorClear( col );
 	col[3] = cg.viewFade;
-	if ( cg_fixedAspect.integer ) {
-		CG_SetScreenPlacement(PLACE_STRETCH, PLACE_STRETCH);
-		CG_FillRect( 0, 0, 640, 480, col );
-		CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
-	} else {
-		CG_FillRect( 0, 0, 640, 480, col );
-	}
+	CG_FillScreen( col );
 }
 
 /*
@@ -3673,13 +3667,7 @@ static void CG_ScreenFade( void ) {
 			return;
 		}
 
-		if ( cg_fixedAspect.integer ) {
-			CG_SetScreenPlacement(PLACE_STRETCH, PLACE_STRETCH);
-			CG_FillRect( 0, 0, 640, 480, cg.fadeColor1 );
-			CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
-		} else {
-			CG_FillRect( 0, 0, 640, 480, cg.fadeColor1 );
-		}
+		CG_FillScreen( cg.fadeColor1 );
 
 	} else {
 		t = ( float )msec * cg.fadeRate;
@@ -3690,13 +3678,7 @@ static void CG_ScreenFade( void ) {
 		}
 
 		if ( color[ 3 ] ) {
-			if ( cg_fixedAspect.integer ) {
-				CG_SetScreenPlacement(PLACE_STRETCH, PLACE_STRETCH);
-				CG_FillRect( 0, 0, 640, 480, color );
-				CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
-			} else {
-				CG_FillRect( 0, 0, 640, 480, color );
-			}
+			CG_FillScreen( color );
 		}
 	}
 }
@@ -3949,6 +3931,52 @@ CG_DrawActive
 Perform all drawing needed to completely fill the screen
 =====================
 */
+/*
+=================
+CG_CinematicHeadOffset
+
+Gives an immersive cutscene 6DoF.
+
+The scripted camera decides where the view starts. This adds whatever the player
+has moved since the cutscene began, so leaning and stepping work. It uses the
+movement since the start, not the absolute head position, so the first frame
+matches the scripted camera exactly.
+=================
+*/
+static void CG_CinematicHeadOffset( void ) {
+	static qboolean haveStart = qfalse;
+	static vec3_t startPosition;
+	vec3_t delta, angles, forward, right, up, offset;
+	float scale = cg_worldScale.value;
+
+	// Also the reset path. A big screen cutscene shows the quad, not the world, so
+	// it must not take an offset, and the start point has to be forgotten.
+	if ( !cg.cameraMode || !vr->immersive_cinematics || vr->using_screen_layer
+		|| !cg_vrCinematic6DoF.integer ) {
+		haveStart = qfalse;
+		return;
+	}
+
+	if ( !haveStart ) {
+		VectorCopy( vr->hmdposition, startPosition );
+		haveStart = qtrue;
+	}
+
+	VectorSubtract( vr->hmdposition, startPosition, delta );
+
+	// Yaw of the room, which is the view yaw with the head yaw taken back out.
+	// Head rotation must not turn the direction the player steps in.
+	VectorSet( angles, 0, cg.refdef.viewangles[YAW] - vr->hmdorientation[YAW], 0 );
+	AngleVectors( angles, forward, right, up );
+
+	// OpenXR axes are x right, y up, z back toward the player
+	VectorScale( forward, -delta[2] * scale, offset );
+	VectorMA( offset, delta[0] * scale, right, offset );
+	offset[2] += delta[1] * scale;
+
+	VectorAdd( cg.refdef.vieworg, offset, cg.refdef.vieworg );
+}
+
 void CG_DrawActive( stereoFrame_t stereoView ) {
 
 	// optionally draw the info screen instead
@@ -4009,8 +4037,18 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 	}
 	else 
 	{
-		VectorCopy(vr->hmdorientation, cg.refdef.viewangles);
-		cg.refdef.viewangles[YAW] = cg.camereModeYaw + vr->clientviewangles[YAW];
+		if (!vr->immersive_cinematics)
+		{
+			// Big screen cutscene. The player watches a flat panel, so the view has
+			// to stay on the scripted camera. Head movement must not turn it.
+			// CG_CalcViewValues already put the camera angles in refdefViewAngles.
+			VectorCopy(cg.refdefViewAngles, cg.refdef.viewangles);
+		}
+		else
+		{
+			VectorCopy(vr->hmdorientation, cg.refdef.viewangles);
+			cg.refdef.viewangles[YAW] = cg.camereModeYaw + vr->clientviewangles[YAW];
+		}
 		AnglesToAxis(cg.refdef.viewangles, cg.refdef.viewaxis);
 	}
 
@@ -4021,8 +4059,21 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 	VectorCopy(cg.refdef.vieworg, prevOrigin);
 	if (!vr->using_screen_layer)
 	{
-		cg.refdef.vieworg[2] -= DEFAULT_PLAYER_HEIGHT;
-		cg.refdef.vieworg[2] += (vr->hmdposition[1] + cg_heightAdjust.value) * cg_worldScale.value;
+		if (cg.cameraMode && vr->immersive_cinematics)
+		{
+			// The scripted camera already sets the height, so the standing offset
+			// below must not apply as well.
+			CG_CinematicHeadOffset();
+		}
+		else
+		{
+			cg.refdef.vieworg[2] -= DEFAULT_PLAYER_HEIGHT;
+			cg.refdef.vieworg[2] += (vr->hmdposition[1] + cg_heightAdjust.value) * cg_worldScale.value;
+		}
+	}
+	else
+	{
+		CG_CinematicHeadOffset();
 	}
 
 	cg.refdef.glfog.registered = 0; // make sure it doesn't use fog from another scene

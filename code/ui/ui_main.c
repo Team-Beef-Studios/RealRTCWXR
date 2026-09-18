@@ -165,6 +165,7 @@ This is the only way control passes into the module.
 This must be the very first function compiled into the .qvm file
 ================
 */
+vmCvar_t ui_vrMenuAspect;
 vmCvar_t ui_new;
 vmCvar_t ui_debug;
 vmCvar_t ui_initialized;
@@ -174,6 +175,7 @@ void _UI_Init( qboolean );
 void _UI_Shutdown( void );
 void _UI_KeyEvent( int key, qboolean down );
 void _UI_MouseEvent( int dx, int dy );
+void UI_SetScreenScale( void );
 void _UI_Refresh( int realtime );
 qboolean _UI_IsFullscreen( void );
 
@@ -682,6 +684,9 @@ int startTime;
 void _UI_Refresh( int realtime ) {
 	static int index;
 	static int previousTimes[UI_FPS_FRAMES];
+
+	// keeps vr_menuAspect live, so the layout can be tuned without a restart
+	UI_SetScreenScale();
 
 	//if ( !( trap_Key_GetCatcher() & KEYCATCH_UI ) ) {
 	//	return;
@@ -3697,6 +3702,44 @@ void UI_ParseSavegame( int index ) {
 UI_LoadSavegames
 ==============
 */
+/*
+==============
+UI_SetDefaultSavegameName
+
+Puts a ready made name in the save field. VR players have no keyboard, so an
+empty field makes a manual save impossible.
+
+The name is the map name plus the lowest number that no existing save uses.
+==============
+*/
+static void UI_SetDefaultSavegameName( void ) {
+	char mapname[MAX_NAME_LENGTH];
+	char candidate[MAX_NAME_LENGTH];
+	int suffix, i;
+
+	Q_strncpyz( mapname, UI_Cvar_VariableString( "mapname" ), sizeof( mapname ) );
+	if ( !mapname[0] ) {
+		Q_strncpyz( mapname, "save", sizeof( mapname ) );
+	}
+
+	for ( suffix = 1; suffix < 1000; suffix++ ) {
+		Com_sprintf( candidate, sizeof( candidate ), "%s_%02i", mapname, suffix );
+
+		for ( i = 0; i < uiInfo.savegameCount; i++ ) {
+			if ( uiInfo.savegameList[i].savegameName
+				&& !Q_stricmp( candidate, uiInfo.savegameList[i].savegameName ) ) {
+				break;
+			}
+		}
+
+		if ( i == uiInfo.savegameCount ) {
+			break;
+		}
+	}
+
+	trap_Cvar_Set( "ui_savegame", candidate );
+}
+
 static void UI_LoadSavegames( char *dir ) {
 	char sglist[4096];
 	char    *sgname;
@@ -3761,6 +3804,8 @@ static void UI_LoadSavegames( char *dir ) {
 //		i = UI_SavegameIndexFromName(ui_savegameName.string);
 //		Menu_SetFeederSelection(NULL, FEEDER_SAVEGAMES, i, NULL);
 	}
+
+	UI_SetDefaultSavegameName();
 }
 
 
@@ -6682,6 +6727,79 @@ static void UI_BuildQ3Model_List( void ) {
 UI_Init
 =================
 */
+/*
+=================
+UI_SetScreenScale
+
+Works out how the 640x480 menu layout maps onto the real framebuffer.
+
+The VR eye buffer is taller than it is wide, so the stock narrow screen path
+leaves exactly 640 units of usable width. Several RealRTCW menus draw out to
+x=703, and the overflow falls outside the buffer. In VR the menus therefore get
+a widescreen layout, which gives the extra width back.
+=================
+*/
+void UI_SetScreenScale( void ) {
+	const float vidWidth = uiInfo.uiDC.glconfig.vidWidth;
+	const float vidHeight = uiInfo.uiDC.glconfig.vidHeight;
+
+	uiInfo.uiDC.xscaleStretch = vidWidth * ( 1.0 / 640.0 );
+	uiInfo.uiDC.yscaleStretch = vidHeight * ( 1.0 / 480.0 );
+
+	if ( vr != NULL ) {
+		float aspect = ui_vrMenuAspect.value;
+		float panelHeight;
+
+		if ( aspect < 1.0f || aspect > 3.0f ) {
+			aspect = 16.0f / 9.0f;
+		}
+
+		// Fit a panel of that aspect across the full width of the eye buffer, then
+		// centre it. Everything outside the 640x480 block becomes usable margin.
+		panelHeight = vidWidth / aspect;
+
+		uiInfo.uiDC.yscale = panelHeight * ( 1.0 / 480.0 );
+		uiInfo.uiDC.xscale = uiInfo.uiDC.yscale;
+		uiInfo.uiDC.xBias = 0.5 * ( vidWidth - ( uiInfo.uiDC.xscale * 640.0 ) );
+		uiInfo.uiDC.yBias = 0.5 * ( vidHeight - ( uiInfo.uiDC.yscale * 480.0 ) );
+		uiInfo.uiDC.bias = uiInfo.uiDC.xBias;
+		return;
+	}
+
+	// for 640x480 virtualized screen
+	if ( ui_fixedAspect.integer ) {
+		if ( vidWidth * 480 > vidHeight * 640 ) {
+			uiInfo.uiDC.xscale = vidWidth * ( 1.0 / 640.0 );
+			uiInfo.uiDC.yscale = vidHeight * ( 1.0 / 480.0 );
+			// wide screen
+			uiInfo.uiDC.xBias = 0.5 * ( vidWidth - ( vidHeight * ( 640.0 / 480.0 ) ) );
+			uiInfo.uiDC.xscale = uiInfo.uiDC.yscale;
+			// no narrow screen
+			uiInfo.uiDC.yBias = 0;
+		} else {
+			uiInfo.uiDC.xscale = vidWidth * ( 1.0 / 640.0 );
+			uiInfo.uiDC.yscale = vidHeight * ( 1.0 / 480.0 );
+			// narrow screen
+			uiInfo.uiDC.yBias = 0.5 * ( vidHeight - ( vidWidth * ( 480.0 / 640.0 ) ) );
+			uiInfo.uiDC.yscale = uiInfo.uiDC.xscale;
+			// no wide screen
+			uiInfo.uiDC.xBias = 0;
+		}
+	} else {
+		uiInfo.uiDC.yscale = vidHeight * ( 1.0 / 480.0 );
+		uiInfo.uiDC.xscale = vidWidth * ( 1.0 / 640.0 );
+		uiInfo.uiDC.xBias = 0;
+		uiInfo.uiDC.yBias = 0;
+		if ( vidWidth * 480 > vidHeight * 640 ) {
+			// wide screen
+			uiInfo.uiDC.bias = 0.5 * ( vidWidth - ( vidHeight * ( 640.0 / 480.0 ) ) );
+		} else {
+			// no wide screen
+			uiInfo.uiDC.bias = 0;
+		}
+	}
+}
+
 void _UI_Init( qboolean inGameLoad ) {
 	const char *menuSet;
 
@@ -6693,38 +6811,7 @@ void _UI_Init( qboolean inGameLoad ) {
 	// cache redundant calulations
 	trap_GetGlconfig( &uiInfo.uiDC.glconfig );
 
-	// for 640x480 virtualized screen
-	if ( ui_fixedAspect.integer ) {
-		uiInfo.uiDC.xscaleStretch = uiInfo.uiDC.glconfig.vidWidth * (1.0/640.0);
-		uiInfo.uiDC.yscaleStretch = uiInfo.uiDC.glconfig.vidHeight * (1.0/480.0);
-		if ( uiInfo.uiDC.glconfig.vidWidth * 480 > uiInfo.uiDC.glconfig.vidHeight * 640 ) {
-			uiInfo.uiDC.xscale = uiInfo.uiDC.glconfig.vidWidth * (1.0/640.0);
-			uiInfo.uiDC.yscale = uiInfo.uiDC.glconfig.vidHeight * (1.0/480.0);
-			// wide screen
-			uiInfo.uiDC.xBias = 0.5 * ( uiInfo.uiDC.glconfig.vidWidth - ( uiInfo.uiDC.glconfig.vidHeight * (640.0/480.0) ) );
-			uiInfo.uiDC.xscale = uiInfo.uiDC.yscale;
-			// no narrow screen
-			uiInfo.uiDC.yBias = 0;
-		} else {
-			uiInfo.uiDC.xscale = uiInfo.uiDC.glconfig.vidWidth * (1.0/640.0);
-			uiInfo.uiDC.yscale = uiInfo.uiDC.glconfig.vidHeight * (1.0/480.0);
-			// narrow screen
-			uiInfo.uiDC.yBias = 0.5 * ( uiInfo.uiDC.glconfig.vidHeight - ( uiInfo.uiDC.glconfig.vidWidth * (480.0/640.0) ) );
-			uiInfo.uiDC.yscale = uiInfo.uiDC.xscale;
-			// no wide screen
-			uiInfo.uiDC.xBias = 0;
-		}
-	} else {
-		uiInfo.uiDC.yscale = uiInfo.uiDC.glconfig.vidHeight * ( 1.0 / 480.0 );
-		uiInfo.uiDC.xscale = uiInfo.uiDC.glconfig.vidWidth * ( 1.0 / 640.0 );
-		if ( uiInfo.uiDC.glconfig.vidWidth * 480 > uiInfo.uiDC.glconfig.vidHeight * 640 ) {
-			// wide screen
-			uiInfo.uiDC.bias = 0.5 * ( uiInfo.uiDC.glconfig.vidWidth - ( uiInfo.uiDC.glconfig.vidHeight * ( 640.0 / 480.0 ) ) );
-		} else {
-			// no wide screen
-			uiInfo.uiDC.bias = 0;
-		}
-	}
+	UI_SetScreenScale();
 
 
 	//UI_Load();
@@ -6870,7 +6957,13 @@ void _UI_KeyEvent( int key, qboolean down ) {
 		menuDef_t *menu = Menu_GetFocused();
 		if ( menu ) {
 			if ( key == K_ESCAPE && down && !Menus_AnyFullScreenVisible() ) {
+				// Release the key catcher as well. Without this the catcher stays
+				// set with no menu on screen, so VR keeps showing the big screen
+				// and the player has to press escape a second time.
 				Menus_CloseAll();
+				trap_Key_SetCatcher( trap_Key_GetCatcher() & ~KEYCATCH_UI );
+				trap_Key_ClearStates();
+				trap_Cvar_Set( "cl_paused", "0" );
 			} else {
 				Menu_HandleKey( menu, key, down );
 			}
@@ -6892,19 +6985,29 @@ UI_MouseEvent
 =================
 */
 void _UI_MouseEvent( int dx, int dy ) {
+	// The VR layout puts usable margin either side of the 640x480 block, so the
+	// cursor has to reach past it.
+	float maxX = SCREEN_WIDTH;
+	float maxY = SCREEN_HEIGHT;
+
+	if ( vr != NULL && uiInfo.uiDC.xscale > 0.0f ) {
+		maxX += uiInfo.uiDC.xBias / uiInfo.uiDC.xscale;
+		maxY += uiInfo.uiDC.yBias / uiInfo.uiDC.yscale;
+	}
+
 	// update mouse screen position
 	uiInfo.uiDC.cursorx += dx;
 	if ( uiInfo.uiDC.cursorx < 0 ) {
 		uiInfo.uiDC.cursorx = 0;
-	} else if ( uiInfo.uiDC.cursorx > SCREEN_WIDTH ) {
-		uiInfo.uiDC.cursorx = SCREEN_WIDTH;
+	} else if ( uiInfo.uiDC.cursorx > maxX ) {
+		uiInfo.uiDC.cursorx = maxX;
 	}
 
 	uiInfo.uiDC.cursory += dy;
 	if ( uiInfo.uiDC.cursory < 0 ) {
 		uiInfo.uiDC.cursory = 0;
-	} else if ( uiInfo.uiDC.cursory > SCREEN_HEIGHT ) {
-		uiInfo.uiDC.cursory = SCREEN_HEIGHT;
+	} else if ( uiInfo.uiDC.cursory > maxY ) {
+		uiInfo.uiDC.cursory = maxY;
 	}
 
 	if ( Menu_Count() > 0 ) {
@@ -7497,6 +7600,7 @@ cvarTable_t cvarTable[] = {
 	{ &ui_emptyswitch, "cg_emptyswitch", "0", CVAR_ARCHIVE }, //----(SA)	added
 
 	{ &ui_fixedAspect, "cg_fixedAspect", "0", CVAR_ARCHIVE | CVAR_LATCH },
+	{ &ui_vrMenuAspect, "vr_menuAspect", "1.7778", CVAR_ARCHIVE },
 	{ &ui_fixedAspectFOV, "cg_fixedAspectFOV", "0", CVAR_ARCHIVE },
 
 	{ &ui_server1, "server1", "", CVAR_ARCHIVE },

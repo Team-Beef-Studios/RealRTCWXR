@@ -1,4 +1,7 @@
 build
+dist
+# Shipped with the installer, but too large for GitHub. See packaging/assets/README.txt
+packaging/assets/*.pk3
 Makefile.local
 *.swp
 *tags
@@ -56,3 +59,9 @@ code/tools/stringify/x64/*
 code/ui/ui/x64/*
 code/zlib-1.2.11/zlib-1.2.11/x64/*
 code/RealRTCWXR/RealRTCWXR/steamshim.log
+*.obj
+*.tlog
+*.recipe
+*.ilk
+*.idb
+*.pdb

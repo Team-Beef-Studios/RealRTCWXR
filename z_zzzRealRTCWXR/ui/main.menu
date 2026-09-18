@@ -468,6 +468,7 @@ itemDef
 		hide performance; 
 		hide gameplay; 
 		hide crosshair; 
+		hide vr; 
 		hide realrtcw; 
 		hide view; 
 		hide systemmenus; 
@@ -503,6 +504,7 @@ itemDef
 		hide performance; 
 		hide gameplay; 
 		hide crosshair; 
+		hide vr; 
 		hide realrtcw; 
 		hide view; 
 		hide controlsmenus; 
@@ -551,7 +553,8 @@ itemDef
 		hide sounds; 
 		hide view; 
 		hide applysys;
-		hide crosshair
+		hide crosshair; 
+		hide vr
 		}	
 	}
 	
@@ -592,6 +595,7 @@ itemDef
 		hide performance; 
 		hide gameplay; 
 		hide crosshair; 
+		hide vr; 
 		hide realrtcw; 
 		hide view; 
 		hide systemmenus; 
@@ -3331,7 +3335,7 @@ itemDef {
 		group options
 		type ITEM_TYPE_MULTI
         textfont UI_FONT_BIG		
-		text "Control Sceheme"
+		text "Control Scheme"
 		cvar "vr_control_scheme"
 		cvarFloatList { "Right Handed" 0 "Left Handed" 10 }
 		rect 300 165 290 12
@@ -3405,7 +3409,7 @@ itemDef {
 	
 	itemDef {
 	    name vr
-		group grpOptions
+		group options
 	    text "Weapon Angles"
 	    textscale .25
 		decoration
@@ -3462,6 +3466,26 @@ itemDef {
 		mouseenter { show slider_message }
 		mouseexit { hide slider_message }
     }	
+	
+	itemDef {
+		name vr
+		group options
+		type ITEM_TYPE_MULTI
+		textfont UI_FONT_BIG
+		text "Cutscenes"
+		cvar "vr_immersive_cinematics"
+		cvarFloatList { "Big Screen" 0 "Immersive" 1 }
+		rect 300 315 290 12
+		textalign ITEM_ALIGN_RIGHT
+		textalignx 142
+		textaligny 10
+		textscale .23
+		style WINDOW_STYLE_FILLED
+		backcolor 1 1 1 .07
+		forecolor 1 1 1 1
+		visible 0
+	}
+
 	
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

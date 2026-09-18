@@ -283,8 +283,10 @@ void UI_AdjustFrom640( float *x, float *y, float *w, float *h ) {
 			}
 		}
 	} else {
-		*x *= DC->xscale;
-		*y *= DC->yscale;
+		// xBias and yBias stay 0 on the flat build, so this matches the old result
+		// there. The VR build sets them to centre the menu in the eye buffer.
+		*x = *x * DC->xscale + DC->xBias;
+		*y = *y * DC->yscale + DC->yBias;
 		*w *= DC->xscale;
 		*h *= DC->yscale;
 	}
@@ -4066,8 +4068,10 @@ void AdjustFrom640( float *x, float *y, float *w, float *h ) {
 		*h *= DC->yscale;
 		*y = *y * DC->yscale + DC->yBias;
 	} else {
-		*x *= DC->xscale;
-		*y *= DC->yscale;
+		// xBias and yBias stay 0 on the flat build, so this matches the old result
+		// there. The VR build sets them to centre the menu in the eye buffer.
+		*x = *x * DC->xscale + DC->xBias;
+		*y = *y * DC->yscale + DC->yBias;
 		*w *= DC->xscale;
 		*h *= DC->yscale;
 	}
