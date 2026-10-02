@@ -87,6 +87,8 @@ cvar_t  *vr_hudPitch;
 cvar_t  *vr_hudDeadzoneYaw;
 cvar_t  *vr_hudPitchLag;
 cvar_t  *vr_hudFollowSpeed;
+cvar_t  *vr_cinematicStereo;
+cvar_t  *vr_cinematicConvergence;
 cvar_t  *r_drawSun;
 cvar_t  *r_dynamiclight;
 cvar_t  *r_dlightBacks;
@@ -1476,6 +1478,8 @@ void R_Register( void ) {
 	vr_hudDeadzoneYaw   = ri.Cvar_Get( "vr_hudDeadzoneYaw",   "7", CVAR_ARCHIVE );
 	vr_hudPitchLag      = ri.Cvar_Get( "vr_hudPitchLag",      "1", CVAR_ARCHIVE );
 	vr_hudFollowSpeed   = ri.Cvar_Get( "vr_hudFollowSpeed",   "7", CVAR_ARCHIVE );
+	vr_cinematicStereo      = ri.Cvar_Get( "vr_cinematic_stereo",      "1",   CVAR_ARCHIVE );
+	vr_cinematicConvergence = ri.Cvar_Get( "vr_cinematic_convergence", "160", CVAR_ARCHIVE );
 
 	r_drawSun = ri.Cvar_Get( "r_drawSun", "1", CVAR_ARCHIVE );
 	r_dynamiclight = ri.Cvar_Get( "r_dynamiclight", "1", CVAR_ARCHIVE );

@@ -1368,7 +1368,7 @@ void Cmd_Activate_f( gentity_t *ent ) {
 
 	CalcMuzzlePointForActivate( ent, forward, right, up, offset );
 
-	VectorMA( offset, 96, forward, end );
+	VectorMA( offset, CH_ACTIVATE_DIST, forward, end );
 
 	trap_Trace( &tr, offset, NULL, NULL, end, ent->s.number, ( CONTENTS_SOLID | CONTENTS_BODY | CONTENTS_CORPSE | CONTENTS_TRIGGER ) );
 
@@ -1563,11 +1563,12 @@ void Cmd_Activate_f( gentity_t *ent ) {
 //===================
 
 #define WOLFKICKDISTANCE    96
+#define WOLFKICKMAXPITCH    15
 int Cmd_WolfKick_f( gentity_t *ent ) {
 	trace_t tr;
 	vec3_t end;
 	gentity_t   *traceEnt;
-	vec3_t forward, right, up, offset;
+	vec3_t forward, right, up, offset, kickAngles;
 	gentity_t   *tent;
 	static int oldkicktime = 0;
 	int kicktime = level.time;
@@ -1578,6 +1579,10 @@ int Cmd_WolfKick_f( gentity_t *ent ) {
 	if ( ent->client->ps.leanf ) {
 		return 0;   // no kick when leaning
 
+	}
+	// a time from an earlier level.time would block kicks until the clock caught up
+	if ( oldkicktime > kicktime + 1000 ) {
+		oldkicktime = 0;
 	}
 	if ( oldkicktime > kicktime ) {
 		return ( 0 );
@@ -1590,7 +1595,15 @@ int Cmd_WolfKick_f( gentity_t *ent ) {
 
 	ent->client->ps.persistant[PERS_WOLFKICK] = 1;
 
-	AngleVectors( ent->client->ps.viewangles, forward, right, up );
+	// In VR the view pitch is the headset's, so looking down would kick the floor
+	VectorCopy( ent->client->ps.viewangles, kickAngles );
+	kickAngles[PITCH] = AngleNormalize180( kickAngles[PITCH] );
+	if ( kickAngles[PITCH] > WOLFKICKMAXPITCH ) {
+		kickAngles[PITCH] = WOLFKICKMAXPITCH;
+	} else if ( kickAngles[PITCH] < -WOLFKICKMAXPITCH ) {
+		kickAngles[PITCH] = -WOLFKICKMAXPITCH;
+	}
+	AngleVectors( kickAngles, forward, right, up );
 
 //	CalcMuzzlePointForActivate( ent, forward, right, up, offset );
 	//Use view angles for kick

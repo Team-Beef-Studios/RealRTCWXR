@@ -2945,7 +2945,8 @@ void CG_CheckForCursorHints( void ) {
 
 	if ( cg.snap->ps.serverCursorHint != HINT_NONE ) { // let the client remember what was last looked at (for fading out)
 		cg.cursorHintTime = cg.time;
-		cg.cursorHintFade = cg_hintFadeTime.integer;    // fade out time
+		// a long fade keeps the icon up after use has gone out of range
+		cg.cursorHintFade = cg_hintFadeTime.integer < FADE_TIME ? cg_hintFadeTime.integer : FADE_TIME;
 		cg.cursorHintIcon = cg.snap->ps.serverCursorHint;
 		cg.cursorHintValue = cg.snap->ps.serverCursorHintVal;
 	}
@@ -3306,15 +3307,7 @@ static void CG_DrawFlashDamage( void ) {
 		VectorSet( col, 0.2, 0, 0 );
 		col[3] =  0.7 * ( redFlash / 5.0 );
 
-		cg.coverView = qtrue;
-		if ( cg_fixedAspect.integer ) {
-			CG_SetScreenPlacement(PLACE_STRETCH, PLACE_STRETCH);
-			CG_FillRect( -10, -10, 650, 490, col );
-			CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
-		} else {
-			CG_FillRect( -10, -10, 650, 490, col );
-		}
-		cg.coverView = qfalse;
+		CG_FillScreen( col );
 	}
 }
 
@@ -3366,13 +3359,7 @@ static void CG_DrawFlashFire( void ) {
 		col[2] = alpha;
 		col[3] = alpha;
 		trap_R_SetColor( col );
-		if ( cg_fixedAspect.integer ) {
-			CG_SetScreenPlacement(PLACE_STRETCH, PLACE_STRETCH);
-			CG_DrawPic( -10, -10, 650, 490, cgs.media.viewFlashFire[( cg.time / 50 ) % 16] );
-			CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
-		} else {
-			CG_DrawPic( -10, -10, 650, 490, cgs.media.viewFlashFire[( cg.time / 50 ) % 16] );
-		}
+		CG_DrawViewPic( cgs.media.viewFlashFire[( cg.time / 50 ) % 16] );
 		trap_R_SetColor( NULL );
 
 		CG_S_AddLoopingSound( cg.snap->ps.clientNum, cg.snap->ps.origin, vec3_origin, cgs.media.flameSound, (int)( 255.0 * alpha ) );
@@ -3411,13 +3398,7 @@ static void CG_DrawFlashLightning( void ) {
 		shader = cgs.media.viewTeslaDamageEffectShader;
 	}
 
-	if ( cg_fixedAspect.integer ) {
-		CG_SetScreenPlacement(PLACE_STRETCH, PLACE_STRETCH);
-		CG_DrawPic( -10, -10, 650, 490, shader );
-		CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
-	} else {
-		CG_DrawPic( -10, -10, 650, 490, shader );
-	}
+	CG_DrawViewPic( shader );
 }
 
 
@@ -3438,11 +3419,23 @@ CG_DrawFlashBlend
 	screen flash stuff drawn last (on top of everything)
 =================
 */
+static qboolean drawingHUDBuffer = qfalse;
+static qboolean flashBlendDeferred = qfalse;
+
 static void CG_DrawFlashBlend( void ) {
+	// The HUD buffer ends up on a quad that covers only part of the view, so
+	// CG_DrawActive draws these after it, straight into the eye buffer.
+	if ( drawingHUDBuffer ) {
+		flashBlendDeferred = qtrue;
+		return;
+	}
+
+	cg.coverView = qtrue;
 	CG_DrawFlashLightning();
 	CG_DrawFlashFire();
 	CG_DrawFlashDamage();
 	CG_DrawFlashFade();
+	cg.coverView = qfalse;
 }
 
 // NERVE - SMF
@@ -4093,20 +4086,28 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 
 	// draw status bar and other floating elements
 	// The HUD goes into its own buffer so the renderer can draw it on a world quad.
-	// Frames that need something to cover the whole view - a fade, a damage flash, a
-	// cinematic, a scope - fall back to drawing flat into the eye buffer, because a
-	// quad cannot fill the view.
+	// Frames that need something to cover the whole view - a fade, a cinematic, a
+	// scope - fall back to drawing flat into the eye buffer, because a quad cannot
+	// fill the view. Damage, fire and tesla flashes are drawn flat after the buffer,
+	// so the HUD can stay on its quad while they show.
 	{
 		qboolean buffered = CG_VRHudBuffered();
 
 		if (buffered) {
 			trap_R_BeginHUD();
+			drawingHUDBuffer = qtrue;
+			flashBlendDeferred = qfalse;
 		}
 
 		CG_Draw2D(stereoView);
 
 		if (buffered) {
+			drawingHUDBuffer = qfalse;
 			trap_R_EndHUD();
+
+			if (flashBlendDeferred) {
+				CG_DrawFlashBlend();
+			}
 		}
 	}
 }

@@ -1207,9 +1207,9 @@ void TBXR_submitFrame()
 
 	XrCompositionLayerProjection projection_layer;
 	XrCompositionLayerProjectionView projection_layer_elements[2] = {0};
-	XrCompositionLayerQuad quad_layer;
+	XrCompositionLayerQuad quad_layers[2];
 
-	if (!VR_UseScreenLayer()) 
+	if (!VR_UseScreenLayer())
 	{
 		memset(&projection_layer, 0, sizeof(XrCompositionLayerProjection));
 		projection_layer.type = XR_TYPE_COMPOSITION_LAYER_PROJECTION;
@@ -1270,29 +1270,42 @@ void TBXR_submitFrame()
 		// Compose the layers for this frame.
 		layers[layerCount++] = (const XrCompositionLayerBaseHeader*)&projection_layer;
 
-		memset(&quad_layer, 0, sizeof(XrCompositionLayerQuad));
+		const int swapWidth = gAppState.Renderer.FrameBuffer.ColorSwapChain.Width;
+		const int swapHeight = gAppState.Renderer.FrameBuffer.ColorSwapChain.Height;
+		const qboolean bigscreenCutscene = vr.cin_camera && !vr.immersive_cinematics;
+		const qboolean stereo = bigscreenCutscene && vr_cinematic_stereo->integer;
 
-		// Build the quad layers
-		quad_layer.type = XR_TYPE_COMPOSITION_LAYER_QUAD;
-		quad_layer.layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT;
-		quad_layer.space = gAppState.StageSpace;
-		quad_layer.eyeVisibility =XR_EYE_VISIBILITY_BOTH;
-		quad_layer.subImage.imageArrayIndex = 2; // Use layer 2 (skip layer 0) for VDXR compatibility
-		quad_layer.subImage.swapchain = gAppState.Renderer.FrameBuffer.ColorSwapChain.Handle;
-		quad_layer.subImage.imageRect.extent.width = gAppState.Renderer.FrameBuffer.ColorSwapChain.Width;
-		quad_layer.subImage.imageRect.extent.height = gAppState.Renderer.FrameBuffer.ColorSwapChain.Height;
+		// Menus keep the original 6 x 5.5 quad. The cutscene needs the texture's true
+		// aspect, or its 3D view is stretched sideways.
+		XrExtent2Df size = { 6.0f, bigscreenCutscene ? 6.0f * swapHeight / swapWidth : 5.5f };
+
 		const XrVector3f axis = { 0.0f, 1.0f, 0.0f };
 		XrVector3f pos = {
 				gAppState.xfStageFromHead.position.x - sin(DEG2RAD(vr.hmdorientation_snap[YAW])) * VR_GetScreenLayerDistance(),
 				1.0f,
 				gAppState.xfStageFromHead.position.z - cos(DEG2RAD(vr.hmdorientation_snap[YAW])) * VR_GetScreenLayerDistance()
 		};
-		quad_layer.pose.orientation = XrQuaternionf_CreateFromVectorAngle(axis, DEG2RAD(vr.hmdorientation_snap[YAW]));
-		quad_layer.pose.position = pos;
-		XrExtent2Df size = { 6.0f, 5.5f };
-		quad_layer.size = size;
 
-		layers[layerCount++] = (const XrCompositionLayerBaseHeader*)&quad_layer;
+		// Multiview already renders both eyes, so stereo only needs a quad per eye.
+		for (int eye = 0; eye < (stereo ? 2 : 1); eye++)
+		{
+			XrCompositionLayerQuad* quad = &quad_layers[eye];
+			memset(quad, 0, sizeof(XrCompositionLayerQuad));
+			quad->type = XR_TYPE_COMPOSITION_LAYER_QUAD;
+			quad->layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT;
+			quad->space = gAppState.StageSpace;
+			quad->eyeVisibility = stereo ? (eye == 0 ? XR_EYE_VISIBILITY_LEFT : XR_EYE_VISIBILITY_RIGHT) : XR_EYE_VISIBILITY_BOTH;
+			// Layers 1 and 2 hold the eyes (layer 0 is skipped for VDXR compatibility)
+			quad->subImage.imageArrayIndex = stereo ? eye + 1 : 2;
+			quad->subImage.swapchain = gAppState.Renderer.FrameBuffer.ColorSwapChain.Handle;
+			quad->subImage.imageRect.extent.width = swapWidth;
+			quad->subImage.imageRect.extent.height = swapHeight;
+			quad->pose.orientation = XrQuaternionf_CreateFromVectorAngle(axis, DEG2RAD(vr.hmdorientation_snap[YAW]));
+			quad->pose.position = pos;
+			quad->size = size;
+
+			layers[layerCount++] = (const XrCompositionLayerBaseHeader*)quad;
+		}
 	}
 
 	ovrFramebuffer* frameBuffer = &(gAppState.Renderer.FrameBuffer);

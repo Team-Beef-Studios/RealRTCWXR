@@ -675,6 +675,11 @@ void R_RotateForEntity( const trRefEntity_t *ent, const viewParms_t *viewParms,
 	or->viewOrigin[2] = DotProduct( delta, or->axis[2] ) * axisLength;
 }
 
+// Half the IPD in world units. The 37.5 units per metre matches cg_worldScale.
+static float R_EyeHalfSeparation( void ) {
+	return ( r_stereoSeparation->value / 1000.0f / 2.0f ) * 37.5f;
+}
+
 /*
 =================
 R_RotateForViewer
@@ -697,9 +702,7 @@ void R_RotateForViewer( void ) {
 		//Se
 		if (eye < 2)
 		{
-			float vr_worldscale = 37.5;
-			float scale = ((r_stereoSeparation->value / 1000.0f) / 2.0f) * vr_worldscale;
-			VectorSet(origin, 0, (eye == 0 ? -1.0f : 1.0f) * scale, 0);
+			VectorSet(origin, 0, (eye == 0 ? -1.0f : 1.0f) * R_EyeHalfSeparation(), 0);
 			Mat4Translation(origin, viewerMatrix);
 			myGlMultMatrix(viewerMatrix, s_flipMatrix, tr.or.eyeViewMatrix[eye]);
 			Mat4Identity(viewerMatrix);
@@ -1027,7 +1030,7 @@ R_SetupProjection
 void R_SetupProjection(viewParms_t *dest, float zProj, float zFar, qboolean computeFrustum)
 {
 	float	xmin, xmax, ymin, ymax;
-	float	width, height, stereoSep = (r_stereoSeparation->value / 1000.0f);
+	float	width, height, convergence = 0.0f;
 
 	ymax = zProj * tan(dest->fovY * M_PI / 360.0f);
 	ymin = -ymax;
@@ -1052,12 +1055,20 @@ void R_SetupProjection(viewParms_t *dest, float zProj, float zFar, qboolean comp
 
 	tr.vrParms.valid = qfalse;
 
+	// Only the bigscreen cutscene gets here. R_RotateForViewer already offsets each eye,
+	// so skew the eyes towards each other to put the zero-parallax plane at the
+	// convergence distance. Without that, the whole scene floats in front of the screen.
+	if (vr_cinematicStereo->integer && vr_cinematicConvergence->value > 0.0f)
+	{
+		convergence = (2 * zProj / width) * R_EyeHalfSeparation() / vr_cinematicConvergence->value;
+	}
+
 	for (int eye = 0; eye < 2; ++eye)
 	{
 		dest->projectionMatrix[0 + (16 * eye)] = 2 * zProj / width;
 		dest->projectionMatrix[4 + (16 * eye)] = 0;
-		dest->projectionMatrix[8 + (16 * eye)] = (xmax + xmin + 2 * stereoSep) / width;
-		dest->projectionMatrix[12 + (16 * eye)] = 2 * zProj * stereoSep / width;
+		dest->projectionMatrix[8 + (16 * eye)] = (xmax + xmin) / width + (eye == 0 ? convergence : -convergence);
+		dest->projectionMatrix[12 + (16 * eye)] = 0;
 
 		dest->projectionMatrix[1 + (16 * eye)] = 0;
 		dest->projectionMatrix[5 + (16 * eye)] = 2 * zProj / height;
@@ -1089,7 +1100,7 @@ void R_SetupProjection(viewParms_t *dest, float zProj, float zFar, qboolean comp
 
 	// Now that we have all the data for the projection matrix we can also setup the view frustum.
 	if(computeFrustum)
-		R_SetupFrustumPriginal(dest, xmin, xmax, ymax, zProj, zFar, stereoSep);
+		R_SetupFrustumPriginal(dest, xmin, xmax, ymax, zProj, zFar, 0);
 }
 
 /*

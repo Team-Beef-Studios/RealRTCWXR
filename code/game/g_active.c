@@ -1457,6 +1457,10 @@ void ClientThink_real( gentity_t *ent ) {
 	ent->s.animMovetype = BG_GetConditionValue( ent->s.number, ANIM_COND_MOVETYPE, qtrue );
 
 	// Rafael Kick
+	// a timer from an earlier level.time would leave PERS_WOLFKICK at a bad frame
+	if ( wolfkicktimer > level.time + 1000 ) {
+		wolfkicktimer = 0;
+	}
 	if ( ucmd->wolfkick && ent->health > 0 ) {
 		validkick = Cmd_WolfKick_f( ent );
 

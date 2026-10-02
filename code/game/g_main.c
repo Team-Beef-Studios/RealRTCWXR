@@ -461,8 +461,7 @@ void G_EndGame( void ) {
 #define CH_LADDER_DIST      100
 #define CH_WATER_DIST       100
 #define CH_BREAKABLE_DIST   64
-#define CH_DOOR_DIST        96
-#define CH_ACTIVATE_DIST    96
+#define CH_DOOR_DIST        CH_ACTIVATE_DIST
 #define CH_EXIT_DIST        256
 #define CH_FRIENDLY_DIST    1024    // distance at which you can identify if someone is a friend
 
@@ -521,7 +520,7 @@ void G_CheckForCursorHints( gentity_t *ent ) {
 		return;
 	}
 
-	nextCheckTime = level.time + 100;   // wait a little before checking again	(10hz)
+	nextCheckTime = level.time + 50;    // the VR trace starts at the hand, which moves a lot faster than a view
 
 	indirectHit = qfalse;
 
@@ -568,6 +567,11 @@ void G_CheckForCursorHints( gentity_t *ent ) {
 	}
 
 	if ( tr->fraction == 1 ) {
+		return;
+	}
+
+	// Cmd_Activate_f gives up on these too
+	if ( tr->surfaceFlags & SURF_NOIMPACT ) {
 		return;
 	}
 
@@ -800,8 +804,12 @@ void G_CheckForCursorHints( gentity_t *ent ) {
 						}
 					}
 				} else if ( !Q_stricmp( checkEnt->classname, "func_button" ) )         {
-					hintDist = CH_ACTIVATE_DIST;
-					hintType = HINT_BUTTON;
+					// same test as Cmd_Activate_f, a moving or active button ignores use
+					if ( checkEnt->s.apos.trType == TR_STATIONARY && checkEnt->s.pos.trType == TR_STATIONARY
+						 && checkEnt->active == qfalse ) {
+						hintDist = CH_ACTIVATE_DIST;
+						hintType = HINT_BUTTON;
+					}
 				} else if ( !Q_stricmp( checkEnt->classname, "props_flamebarrel" ) )         {
 					hintDist = CH_BREAKABLE_DIST;
 					hintType = HINT_BREAKABLE;
@@ -852,24 +860,26 @@ void G_CheckForCursorHints( gentity_t *ent ) {
 
 
 	if ( zooming ) {
-		hintDist = CH_MAX_DIST_ZOOM;
-
 		// zooming can eat a lot of potential hints
 		switch ( hintType ) {
 
-			// allow while zooming
+			// allow while zooming, but only in use range
 		case HINT_MG42:
-		case HINT_PLAYER:
 		case HINT_TREASURE:
+		case HINT_PLYR_SPEAK:
+			break;
+
+			// allow while zooming
+		case HINT_PLAYER:
 		case HINT_LADDER:
 		case HINT_EXIT_FAR:
 		case HINT_NOEXIT:
 		case HINT_NOEXIT_FAR:
 		case HINT_PLYR_FRIEND:
-		case HINT_PLYR_SPEAK:
 		case HINT_PLYR_NEUTRAL:
 		case HINT_PLYR_ENEMY:
 		case HINT_PLYR_UNKNOWN:
+			hintDist = CH_MAX_DIST_ZOOM;
 			break;
 
 		default:

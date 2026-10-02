@@ -268,6 +268,11 @@ foreach ($variant in $bundles) {
 
             $absent = @()
             foreach ($f in $group.Files) {
+                if ($f.ContainsKey('Redistribute') -and -not $f.Redistribute) {
+                    Write-Info ("excluded {0} (not ours to redistribute)" -f $f.Name)
+                    continue
+                }
+
                 $src = Join-Path $realRtcwMain $f.Name
                 if (-not (Test-Path -LiteralPath $src)) {
                     if ($f.Required) { $absent += $f.Name } else { Write-Info ("skipped  {0} (optional, not installed)" -f $f.Name) }

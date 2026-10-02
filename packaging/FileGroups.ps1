@@ -42,8 +42,12 @@ $FileGroups = @(
             @{ Name = 'z_zrealrtcw_ui.pk3';               Required = $true },
             @{ Name = 'z_zzrealrtcw_scripts.pk3';         Required = $true },
             @{ Name = 'z_zzzsurvival.pk3';                Required = $true },
-            @{ Name = 'z_zrealrtcw_dlc1.pk3';             Required = $false },
-            @{ Name = 'z_zzzrealrtcw_germanvoices.pk3';   Required = $false }
+            # Paid DLC, Steam app 2993200. Never put this in a package. Owners get it
+            # copied out of their own Steam install.
+            @{ Name = 'z_zrealrtcw_dlc1.pk3';             Required = $false; Redistribute = $false },
+            # Optional German voice pack. Kept out of the package to save 83 MB.
+            # Owners get it copied out of their own Steam install.
+            @{ Name = 'z_zzzrealrtcw_germanvoices.pk3';   Required = $false; Redistribute = $false }
         )
     }
 )

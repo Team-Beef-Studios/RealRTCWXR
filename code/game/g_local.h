@@ -946,6 +946,9 @@ void CalcMuzzlePoints( gentity_t *ent, int weapon );
 
 // Rafael - for activate
 void CalcMuzzlePointForActivate( gentity_t *ent, vec3_t forward, vec3_t right, vec3_t up, vec3_t muzzlePoint );
+
+// Shared by Cmd_Activate_f and G_CheckForCursorHints, so the use icon only shows where use works
+#define CH_ACTIVATE_DIST    96
 // done.
 
 //

@@ -2014,6 +2014,8 @@ extern cvar_t   *vr_hudPitch;           // degrees below the view, where the HUD
 extern cvar_t   *vr_hudDeadzoneYaw;     // degrees of free head turn before the HUD follows
 extern cvar_t   *vr_hudPitchLag;        // 0 pins pitch to the view, 1 lets it lag and ease back
 extern cvar_t   *vr_hudFollowSpeed;     // how fast the HUD catches up once it starts to move
+extern cvar_t   *vr_cinematicStereo;
+extern cvar_t   *vr_cinematicConvergence; // world units to the bigscreen cutscene's zero-parallax plane
 
 extern cvar_t   *r_drawSun;             // controls drawing of sun quad
 										// "0" no sun

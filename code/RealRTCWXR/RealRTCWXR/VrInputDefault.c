@@ -30,6 +30,48 @@ int sector(float sectorCount, float x, float y)  {
     return ((int)((angle + (180.f / sectorCount)) / (360.f / sectorCount))) % (int)sectorCount;
 }
 
+// Keeps a knife swing alive for a short hit that lands while the last swing still cools down
+#define KNIFE_ATTACK_HOLD_MS    120
+// Long enough to span a few usercmds; the server ignores the rest of the press anyway
+#define KICK_PRESS_MS           100
+
+// Presses this file has sent, so any path that leaves gameplay can release them
+static qboolean knifeAttackHeld = qfalse;
+static const char* domPunchHeld = NULL;
+static const char* offPunchHeld = NULL;
+static qboolean kickHeld = qfalse;
+
+static void updatePunch(const char** held, const char* action, qboolean want)
+{
+    if (want && !*held)
+    {
+        sendButtonAction(action, true);
+        *held = action;
+    }
+    else if (!want && *held)
+    {
+        sendButtonAction(*held, false);
+        *held = NULL;
+    }
+}
+
+static void releaseMeleeActions(void)
+{
+    if (knifeAttackHeld)
+    {
+        sendButtonAction("+attack", false);
+        knifeAttackHeld = qfalse;
+    }
+    vr.primaryVelocityTriggeredAttack = qfalse;
+    updatePunch(&domPunchHeld, NULL, qfalse);
+    updatePunch(&offPunchHeld, NULL, qfalse);
+    if (kickHeld)
+    {
+        sendButtonAction("+kick", false);
+        kickHeld = qfalse;
+    }
+}
+
 void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew, ovrInputStateTrackedRemote *pDominantTrackedRemoteOld, ovrTrackedController* pDominantTracking,
                           ovrInputStateTrackedRemote *pOffTrackedRemoteNew, ovrInputStateTrackedRemote *pOffTrackedRemoteOld, ovrTrackedController* pOffTracking,
                           int domButton1, int domButton2, int offButton1, int offButton2 )
@@ -215,6 +257,8 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
                 vr.menu_right_handed = !vr.menu_right_handed;
             }
         }
+
+        releaseMeleeActions();
 
         //Close the journal
         if (secondaryButton2New && !secondaryButton2Old) {
@@ -494,61 +538,44 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
             vr.secondaryswingvelocity = VectorLength(velocity);
 
 
-            if (cl.snap.ps.weapon == WP_KNIFE || cl.snap.ps.weapon == WP_DAGGER)
+            const qboolean holdingKnife = cl.snap.ps.weapon == WP_KNIFE || cl.snap.ps.weapon == WP_DAGGER;
+            // The selector is browsed with a hand held low, and a cutscene owns the controls
+            const qboolean meleeAllowed = !vr.item_selector && !vr.cin_camera;
+
+            // Separate, lower threshold than the punches, with hysteresis so one swing is one press
+            static int knifeAttackTime = 0;
+            qboolean knifeAttack = qfalse;
+            if (holdingKnife && meleeAllowed)
             {
-                static bool fired = false;
-
-                vr.primaryVelocityTriggeredAttack = (vr.primaryswingvelocity >
-                    vr_weapon_velocity_trigger->value);
-
-                if (fired != vr.primaryVelocityTriggeredAttack)
+                const int now = Sys_Milliseconds();
+                if (vr.primaryswingvelocity > vr_knife_velocity_trigger->value)
                 {
-                    ALOGV("**WEAPON EVENT**  veocity triggered %s",
-                        vr.primaryVelocityTriggeredAttack ? "+attack" : "-attack");
+                    knifeAttackTime = now;
+                    knifeAttack = qtrue;
+                }
+                else
+                {
+                    knifeAttack = knifeAttackHeld &&
+                        (vr.primaryswingvelocity > vr_knife_velocity_release->value ||
+                         now - knifeAttackTime < KNIFE_ATTACK_HOLD_MS);
+                }
+            }
 
-                    //normal attack is a punch with the left hand
-                    sendButtonAction("+attack", vr.primaryVelocityTriggeredAttack);
-                    fired = vr.primaryVelocityTriggeredAttack;
-                }                
+            if (knifeAttack != knifeAttackHeld)
+            {
+                ALOGV("**WEAPON EVENT**  velocity triggered %s", knifeAttack ? "+attack" : "-attack");
+                sendButtonAction("+attack", knifeAttack);
+                knifeAttackHeld = knifeAttack;
             }
-            else if (vr.primaryVelocityTriggeredAttack || vr.secondaryVelocityTriggeredAttack) {
-                //send a stop attack as we have an unfinished velocity attack
-                vr.primaryVelocityTriggeredAttack = false;
-                vr.secondaryVelocityTriggeredAttack = false;
-                ALOGV("**WEAPON EVENT**  veocity triggered -attack");
-                sendButtonAction("+attack", vr.primaryVelocityTriggeredAttack);
-            }
+            vr.primaryVelocityTriggeredAttack = knifeAttack;
 
             //Dominant hand punch (or hit with weapon)
-            if (cl.snap.ps.weapon != WP_KNIFE && cl.snap.ps.weapon != WP_DAGGER)
-            {
-                static bool fired = false;
-
-                qboolean primaryVelocityTriggeredAttack = (vr.primaryswingvelocity >
-                    vr_weapon_velocity_trigger->value);
-
-                if (fired != primaryVelocityTriggeredAttack)
-                {
-                    //normal attack is a punch with the left hand
-                    sendButtonAction(vr.right_handed ? "+rpunch" : "+lpunch", primaryVelocityTriggeredAttack);
-                    fired = primaryVelocityTriggeredAttack;
-                }
-            }
+            updatePunch(&domPunchHeld, vr.right_handed ? "+rpunch" : "+lpunch",
+                !holdingKnife && meleeAllowed && vr.primaryswingvelocity > vr_weapon_velocity_trigger->value);
 
             //Off hand punch
-            {
-                static bool fired = false;
-
-                qboolean secondaryVelocityTriggeredAttack = (vr.secondaryswingvelocity >
-                    vr_weapon_velocity_trigger->value);
-
-                if (fired != secondaryVelocityTriggeredAttack)
-                {
-                    //normal attack is a punch with the left hand
-                    sendButtonAction(vr.right_handed ? "+lpunch" : "+rpunch", secondaryVelocityTriggeredAttack);
-                    fired = secondaryVelocityTriggeredAttack;
-                }
-            }
+            updatePunch(&offPunchHeld, vr.right_handed ? "+lpunch" : "+rpunch",
+                meleeAllowed && vr.secondaryswingvelocity > vr_weapon_velocity_trigger->value);
 
 
             //Engage scope / virtual stock if conditions are right
@@ -746,29 +773,66 @@ void HandleInput_Default( ovrInputStateTrackedRemote *pDominantTrackedRemoteNew,
                 }
             }
 
-            //Duck - off hand joystick
-            if ((secondaryButtonsNew & secondaryThumb) !=
-                (secondaryButtonsOld & secondaryThumb)) {
+            // Up and down on the turn stick already mean something here
+            const qboolean stickActionsAllowed = !vr.scopeactive && !vr.binocularsActive && !vr.cgzoommode &&
+                !vr.misc_camera && !vr.item_selector && !vr.cin_camera;
+
+            //Activate - off hand joystick click
+            if ((secondaryButtonsNew & secondaryThumb) != (secondaryButtonsOld & secondaryThumb))
+            {
+                sendButtonAction("+activate", (secondaryButtonsNew & secondaryThumb));
+            }
+
+            //Duck - down on the turn stick
+            {
+                static qboolean stickDown = qfalse;
+                static qboolean stickDuckHeld = qfalse;
+                const qboolean newStickDown = between(-1.0f, pPrimaryJoystick->y, -0.7f) &&
+                    sector(8, pPrimaryJoystick->x, pPrimaryJoystick->y) == 4;
 
                 if (vr_crouch_toggle->integer)
                 {
-                    if (secondaryButtonsOld & secondaryThumb) {
+                    if (newStickDown && !stickDown && stickActionsAllowed)
+                    {
                         vr.crouched = !vr.crouched;
                         sendButtonAction("+movedown", vr.crouched);
+                        vr.maxHeight = 0;
                     }
                 }
                 else
                 {
-                    sendButtonAction("+movedown", (secondaryButtonsNew & secondaryThumb));
+                    const qboolean duck = newStickDown && stickActionsAllowed;
+                    if (duck != stickDuckHeld)
+                    {
+                        sendButtonAction("+movedown", duck);
+                        stickDuckHeld = duck;
+                        vr.maxHeight = 0;
+                    }
                 }
-
-                // Reset max height for IRL crouch
-                vr.maxHeight = 0;
+                stickDown = newStickDown;
             }
 
-            //Kick is now just forward on the right thumbstick
-            sendButtonAction("+kick", !vr.scopeactive && !vr.binocularsActive && 
-                between(0.7f, pPrimaryJoystick->y, 1.0f) && sector(8, pPrimaryJoystick->x, pPrimaryJoystick->y) == 0);
+            //Kick - forward on the turn stick, one kick per push
+            {
+                static qboolean stickForward = qfalse;
+                static int kickReleaseTime = 0;
+                const int now = Sys_Milliseconds();
+                const qboolean newStickForward = between(0.7f, pPrimaryJoystick->y, 1.0f) &&
+                    sector(8, pPrimaryJoystick->x, pPrimaryJoystick->y) == 0;
+
+                if (newStickForward && !stickForward && stickActionsAllowed && !kickHeld)
+                {
+                    sendButtonAction("+kick", true);
+                    kickHeld = qtrue;
+                    kickReleaseTime = now + KICK_PRESS_MS;
+                }
+                else if (kickHeld && (now >= kickReleaseTime || !stickActionsAllowed))
+                {
+                    sendButtonAction("+kick", false);
+                    kickHeld = qfalse;
+                }
+                stickForward = newStickForward;
+            }
 
             //Activate is now just clicking the right thumbstick
             if ((primaryButtonsNew & primaryThumb) != (primaryButtonsOld & primaryThumb))

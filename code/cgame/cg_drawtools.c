@@ -114,9 +114,26 @@ and insets, so a 640x480 fill can leave the edges of the view clear.
 */
 void CG_FillScreen( const float *color ) {
 	trap_R_SetColor( color );
-	trap_R_DrawStretchPic( 0, 0, cgs.glconfig.vidWidth, cgs.glconfig.vidHeight,
-						   0, 0, 0, 1, cgs.media.whiteShader );
+	CG_DrawViewPic( cgs.media.whiteShader );
 	trap_R_SetColor( NULL );
+}
+
+/*
+================
+CG_DrawViewPic
+
+Stretches a shader over the whole view, for flashes and overlays.
+=================
+*/
+void CG_DrawViewPic( qhandle_t hShader ) {
+	// The eye buffer's 2D is shifted per eye for off-centre lenses, so overfill
+	// or one edge of each eye stays clear.
+	const float marginX = cgs.glconfig.vidWidth * 0.25f;
+	const float marginY = cgs.glconfig.vidHeight * 0.25f;
+
+	trap_R_DrawStretchPic( -marginX, -marginY,
+						   cgs.glconfig.vidWidth + 2 * marginX, cgs.glconfig.vidHeight + 2 * marginY,
+						   0, 0, 1, 1, hShader );
 }
 
 /*

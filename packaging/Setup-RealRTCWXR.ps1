@@ -310,7 +310,23 @@ try {
 
     # The @() guards against PowerShell unrolling an empty result to $null.
     $bundled = @(Get-BundledGroups -Root $InstallRoot)
-    $needed  = @($FileGroups | Where-Object { $bundled -notcontains $_.Key })
+
+    # A bundled group still has files the package is not allowed to carry, such as paid
+    # DLC. Those come from the player's own Steam install, and only if they own them.
+    $needed = @()
+    foreach ($g in $FileGroups) {
+        if ($bundled -contains $g.Key) {
+            $fetch = @($g.Files | Where-Object { $_.ContainsKey('Redistribute') -and -not $_.Redistribute })
+            $extrasOnly = $true
+        } else {
+            $fetch = @($g.Files)
+            $extrasOnly = $false
+        }
+
+        if ($fetch.Count -gt 0) {
+            $needed += @{ Group = $g; Files = $fetch; ExtrasOnly = $extrasOnly }
+        }
+    }
 
     if ($bundled.Count -gt 0) {
         Write-Info "This installer already carries the data for: $($bundled -join ', ')"
@@ -319,7 +335,7 @@ try {
     if ($needed.Count -eq 0) {
         Write-Info "No further game data is needed."
     } else {
-        Write-Info "Game data still needed from: $(($needed | ForEach-Object { $_.AppName }) -join ', ')"
+        Write-Info "Game data still needed from: $(($needed | ForEach-Object { $_.Group.AppName }) -join ', ')"
     }
 
     # --- Manual mode ---------------------------------------------------------
@@ -327,7 +343,9 @@ try {
         Write-Step "Check the game data that you provide"
 
         $pending = @()
-        foreach ($g in $needed) {
+        foreach ($entry in $needed) {
+            $g = $entry.Group
+            if ($entry.ExtrasOnly) { continue }
             $absent = Get-AbsentFiles -Group $g -MainDir $mainDir
             if ($absent.Count -gt 0) {
                 $pending += ,@{ Group = $g; Absent = $absent }
@@ -372,15 +390,23 @@ try {
 
         $missing = @()
 
-        foreach ($g in $needed) {
+        foreach ($entry in $needed) {
+            $g = $entry.Group
+
             Write-Step "Find $($g.AppName) (app $($g.AppId))"
             $app = Get-SteamApp -Libraries $libraries -AppId $g.AppId
             if (-not $app) {
+                if ($entry.ExtrasOnly) {
+                    # Only optional extras were wanted here, such as paid DLC that the
+                    # package is not allowed to carry. Not owning it is normal.
+                    Write-Info "$($g.AppName) is not installed through Steam. The optional extras are skipped."
+                    continue
+                }
                 throw "$($g.AppName) is not installed through Steam.`r`n    Install it from $($g.StoreUrl), or run the setup again and choose `"I will provide the game files myself`"."
             }
 
             Write-Info "Path:     $($app.Path)"
-            if ($g.CheckBeta) {
+            if ($g.CheckBeta -and -not $entry.ExtrasOnly) {
                 Write-Info "Branch:   $(if ($app.BetaKey) { $app.BetaKey } else { '(none - default branch)' })"
                 Write-Info "Build id: $($app.BuildId)"
 
@@ -399,13 +425,17 @@ try {
 
             $sourceMain = Join-Path $app.Path 'Main'
             if (-not (Test-Path -LiteralPath $sourceMain)) {
+                if ($entry.ExtrasOnly) {
+                    Write-Info "The $($g.AppName) Main folder is absent. The optional extras are skipped."
+                    continue
+                }
                 throw "The $($g.AppName) Main folder is absent: $sourceMain`r`n    Verify the game files in Steam, then run this setup again."
             }
 
             Write-Step "Copy the $($g.AppName) data"
             $copied = 0; $current = 0; $skipped = 0
 
-            foreach ($f in $g.Files) {
+            foreach ($f in $entry.Files) {
                 switch (Copy-GameFile -SourceDir $sourceMain -DestDir $mainDir -Name $f.Name) {
                     'copied'  { $copied++;  Write-Info ("copied   {0}" -f $f.Name) }
                     'current' { $current++ }
