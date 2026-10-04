@@ -836,7 +836,7 @@ void Use_Shooter( gentity_t *ent, gentity_t *other, gentity_t *activator ) {
 	G_AddEvent( ent, EV_FIRE_WEAPON, 0 );
 }
 
-static void InitShooter_Finish( gentity_t *ent ) {
+void InitShooter_Finish( gentity_t *ent ) {
 	ent->enemy = G_PickTarget( ent->target );
 	ent->think = 0;
 	ent->nextthink = 0;
@@ -1904,7 +1904,7 @@ static float Cvar_VariableFloatValue(char* name)
 static void mg42_get_angles(gentity_t* self, gentity_t* other, vec3_t dang) {
 	vec3_t handle;
 	float worldscale = Cvar_VariableFloatValue("cg_worldScale");
-	float heightAdjust = Cvar_VariableFloatValue("cg_heightAdjust");
+	float heightAdjust = Cvar_VariableFloatValue("cg_heightAdjust") + vr->heightCalibration;
 
 	BG_ConvertFromVR(other->client->ps.viewangles[YAW], worldscale, vr->weaponoffset, other->client->ps.origin, handle);
 	handle[2] += (other->client->ps.viewheight - DEFAULT_PLAYER_HEIGHT);

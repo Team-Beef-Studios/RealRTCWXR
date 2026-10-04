@@ -1700,7 +1700,7 @@ void CalcMuzzlePoint( gentity_t *ent, int weapon, vec3_t forward, vec3_t right, 
 	else if (vr != NULL)
 	{
 		float worldscale = Cvar_VariableFloatValue("cg_worldScale");
-		float heightAdjust = Cvar_VariableFloatValue("cg_heightAdjust");
+		float heightAdjust = Cvar_VariableFloatValue("cg_heightAdjust") + vr->heightCalibration;
 
 		if ((weapon == WP_AKIMBO && BG_AkimboFireSequence(WP_AKIMBO, ent->client->ps.ammoclip[WP_AKIMBO], ent->client->ps.ammoclip[WP_COLT], vr->akimboTriggerState)) ||
 			(weapon == WP_DUAL_TT33 && BG_AkimboFireSequence(WP_DUAL_TT33, ent->client->ps.ammoclip[WP_DUAL_TT33], ent->client->ps.ammoclip[WP_TT33], vr->akimboTriggerState))) {
@@ -1773,7 +1773,7 @@ void CalcMuzzlePointForActivate( gentity_t *ent, vec3_t forward, vec3_t right, v
 	else if (vr != NULL)
 	{
 		float worldscale = Cvar_VariableFloatValue("cg_worldScale");
-		float heightAdjust = Cvar_VariableFloatValue("cg_heightAdjust");
+		float heightAdjust = Cvar_VariableFloatValue("cg_heightAdjust") + vr->heightCalibration;
 
 
 		if ((ent->client->ps.weapon == WP_AKIMBO && BG_AkimboFireSequence(WP_AKIMBO, ent->client->ps.ammoclip[WP_AKIMBO], ent->client->ps.ammoclip[WP_COLT], vr->akimboTriggerState)) ||

@@ -1786,7 +1786,7 @@ int Cmd_WolfPunch_f(gentity_t* ent, qboolean left) {
 	}
 
 	float worldscale = Cvar_VariableFloatValue("cg_worldScale");
-	float heightAdjust = Cvar_VariableFloatValue("cg_heightAdjust");
+	float heightAdjust = Cvar_VariableFloatValue("cg_heightAdjust") + vr->heightCalibration;
 
 	vec3_t angles;
 	if (left)

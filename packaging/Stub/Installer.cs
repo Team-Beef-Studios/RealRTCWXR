@@ -15,6 +15,7 @@ namespace RealRTCWXRSetup
     {
         public const string ProductName = "RealRTCW XR";
         public const string ProductVersion = "@@VERSION@@";
+        public const string DataNeeded = "@@DATA_NEEDED@@";
         public const string SetupScript = "Setup-RealRTCWXR.ps1";
         public const string GameExe = "RealRTCWXR.exe";
 
@@ -315,8 +316,7 @@ namespace RealRTCWXRSetup
             MinimumSize = new Size(em * 38, em * 31);
 
             Label intro = new Label();
-            intro.Text = "This installs " + Program.ProductName + ". It then needs the game data from"
-                       + " Return to Castle Wolfenstein and RealRTCW.";
+            intro.Text = "This installs " + Program.ProductName + ". " + Program.DataNeeded;
             intro.AutoSize = true;
             intro.Dock = DockStyle.Fill;
             intro.Margin = new Padding(0, 0, 0, 10);

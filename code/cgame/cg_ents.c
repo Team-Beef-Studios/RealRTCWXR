@@ -2082,7 +2082,7 @@ static void CG_Prop( centity_t *cent ) {
 		ent.backlerp = 0;
 	} else
 	{
-		BG_CalculateVROffHandPosition(cg.refdefViewAngles[YAW], cg.refdef.vieworg, cg_heightAdjust.value, cg_worldScale.value, ent.origin, angles);
+		BG_CalculateVROffHandPosition(cg.refdefViewAngles[YAW], cg.refdef.vieworg, CG_VRHeightAdjust(), cg_worldScale.value, ent.origin, angles);
 
 		//Adjust to position correctly
 		vec3_t forward, right, up;

@@ -324,7 +324,12 @@ foreach ($variant in $bundles) {
 
         # --- Compile the stub ---------------------------------------------------
         Write-Step "Compile the installer stub"
-        $stubSrc = (Get-Content -LiteralPath (Join-Path $PackagingDir 'Stub\Installer.cs') -Raw).Replace('@@VERSION@@', $Version)
+        $dataNeeded = if ($variant -eq 'Full') {
+            'The RealRTCW data is included. It then needs the game data from Return to Castle Wolfenstein.'
+        } else {
+            'It then needs the game data from Return to Castle Wolfenstein and RealRTCW.'
+        }
+        $stubSrc = (Get-Content -LiteralPath (Join-Path $PackagingDir 'Stub\Installer.cs') -Raw).Replace('@@VERSION@@', $Version).Replace('@@DATA_NEEDED@@', $dataNeeded)
         $stubCs  = Join-Path $stagingRoot 'Installer.cs'
         [System.IO.File]::WriteAllText($stubCs, $stubSrc, (New-Object System.Text.UTF8Encoding($false)))
 

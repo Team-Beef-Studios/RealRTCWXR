@@ -1000,6 +1000,9 @@ void TBXR_WaitForSessionActive()
 	}
 }
 
+// Set by a view reset during play, not by the reset at startup, when the headset may not be on
+static qboolean calibrateHeight = qfalse;
+
 static void TBXR_GetHMDOrientation() {
 
 	if (gAppState.FrameState.predictedDisplayTime == 0)
@@ -1015,6 +1018,17 @@ static void TBXR_GetHMDOrientation() {
 	loc.type = XR_TYPE_SPACE_LOCATION;
 	OXR(xrLocateSpace(gAppState.ViewSpace, gAppState.StageSpace, gAppState.FrameState.predictedDisplayTime, &loc));
 	gAppState.xfStageFromHead = loc.pose;
+
+	if (calibrateHeight && (loc.locationFlags & XR_SPACE_LOCATION_POSITION_TRACKED_BIT))
+	{
+		float worldScale = Cvar_VariableValue("cg_worldScale");
+		if (worldScale <= 0.0f)
+		{
+			worldScale = 37.5f;
+		}
+		vr.heightCalibration = (DEFAULT_PLAYER_HEIGHT / worldScale) - loc.pose.position.y;
+		calibrateHeight = qfalse;
+	}
 
 	const XrQuaternionf quatHmd = gAppState.xfStageFromHead.orientation;
 	const XrVector3f positionHmd = gAppState.xfStageFromHead.position;
@@ -1047,6 +1061,7 @@ void TBXR_FrameSetup()
         if (ovrApp_HandleXrEvents(&gAppState))
         {
 			TBXR_Recenter();
+			calibrateHeight = qtrue;
         }
 
         if (gAppState.SessionActive == GL_FALSE)

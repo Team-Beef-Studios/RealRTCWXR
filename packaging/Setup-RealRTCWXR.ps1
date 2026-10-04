@@ -378,13 +378,23 @@ try {
     }
     # --- Steam mode ----------------------------------------------------------
     elseif ($needed.Count -gt 0) {
+        # Extras are optional files the package may not carry. They never make Steam a requirement.
+        $requiredFrom = @($needed | Where-Object { -not $_.ExtrasOnly } | ForEach-Object { $_.Group.AppName })
+
         Write-Step "Find Steam"
         $steamRoot = Get-SteamRoot
         if (-not $steamRoot) {
-            throw "Steam is not installed, or its registry entry is absent.`r`n    Install Steam, or run the setup again and choose `"I will provide the game files myself`"."
+            if ($requiredFrom.Count -gt 0) {
+                throw "Steam is not installed, or its registry entry is absent. Steam is needed for: $($requiredFrom -join ', ').`r`n    Install Steam, or run the setup again and choose `"I will provide the game files myself`"."
+            }
+            Write-Info "Steam was not found. The optional extras are skipped."
+            $needed = @()
+        } else {
+            Write-Info "Steam: $steamRoot"
         }
-        Write-Info "Steam: $steamRoot"
+    }
 
+    if (-not $ManualData -and $needed.Count -gt 0) {
         $libraries = Get-SteamLibraries -SteamRoot $steamRoot
         foreach ($l in $libraries) { Write-Info "Library: $l" }
 
@@ -393,7 +403,11 @@ try {
         foreach ($entry in $needed) {
             $g = $entry.Group
 
-            Write-Step "Find $($g.AppName) (app $($g.AppId))"
+            if ($entry.ExtrasOnly) {
+                Write-Step "Look for optional $($g.AppName) extras in Steam (the installer already has the main $($g.AppName) data)"
+            } else {
+                Write-Step "Find $($g.AppName) (app $($g.AppId))"
+            }
             $app = Get-SteamApp -Libraries $libraries -AppId $g.AppId
             if (-not $app) {
                 if ($entry.ExtrasOnly) {

@@ -965,7 +965,7 @@ itemDef {
 		group grpOptions
 		type ITEM_TYPE_SLIDER
 		text "Height Adjust"
-		cvarfloat "cg_heightAdjust" 0.0 0.0 1.0
+		cvarfloat "cg_heightAdjust" 0.0 -0.5 1.0
 		rect 82 50 290 12
 		textalign ITEM_ALIGN_RIGHT
 		textfont UI_FONT_BIG

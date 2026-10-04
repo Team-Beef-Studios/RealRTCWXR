@@ -149,12 +149,12 @@ void SV_SetConfigstring( int index, const char *val ) {
 				continue;
 			}
 			// do not always send server info to all clients
-			if ( index == CS_SERVERINFO && client->gentity && ( client->gentity->r.svFlags & SVF_NOSERVERINFO ) ) {
+			if ( index == CS_SERVERINFO && ( SV_ClientSvFlags( client ) & SVF_NOSERVERINFO ) ) {
 				continue;
 			}
 
 			// RF, don't send to bot/AI
-			if ( client->gentity && ( client->gentity->r.svFlags & SVF_CASTAI ) ) {
+			if ( SV_ClientSvFlags( client ) & SVF_CASTAI ) {
 				continue;
 			}
 

@@ -2813,10 +2813,10 @@ static void CG_DrawCrosshair3D( qboolean akimbo ) {
 	vec3_t forward, weaponangles, origin;
 	if (akimbo)
 	{
-		BG_CalculateVROffHandPosition(cg.refdefViewAngles[YAW], cg.refdef.vieworg, cg_heightAdjust.value, cg_worldScale.value, origin, weaponangles);
+		BG_CalculateVROffHandPosition(cg.refdefViewAngles[YAW], cg.refdef.vieworg, CG_VRHeightAdjust(), cg_worldScale.value, origin, weaponangles);
 	}
 	else {
-		BG_CalculateVRWeaponPosition(cg.refdefViewAngles[YAW], cg.refdef.vieworg, cg_heightAdjust.value, cg_worldScale.value, origin, weaponangles);
+		BG_CalculateVRWeaponPosition(cg.refdefViewAngles[YAW], cg.refdef.vieworg, CG_VRHeightAdjust(), cg_worldScale.value, origin, weaponangles);
 	}
 
 	AngleVectors(weaponangles, forward, NULL, NULL);
@@ -4061,7 +4061,7 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 		else
 		{
 			cg.refdef.vieworg[2] -= DEFAULT_PLAYER_HEIGHT;
-			cg.refdef.vieworg[2] += (vr->hmdposition[1] + cg_heightAdjust.value) * cg_worldScale.value;
+			cg.refdef.vieworg[2] += (vr->hmdposition[1] + CG_VRHeightAdjust()) * cg_worldScale.value;
 		}
 	}
 	else

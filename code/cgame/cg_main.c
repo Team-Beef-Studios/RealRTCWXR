@@ -41,6 +41,11 @@ If you have questions concerning this license or the applicable additional terms
 
 vr_client_info_t* vr;
 
+// The player's height offset plus the calibration from the last view reset, in metres
+float CG_VRHeightAdjust( void ) {
+	return cg_heightAdjust.value + vr->heightCalibration;
+}
+
 
 displayContextDef_t cgDC;
 

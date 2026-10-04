@@ -111,6 +111,9 @@ typedef struct {
 
     float   maxHeight;
     float   curHeight;
+    // Metres added to the HMD height. A view reset sets it so that the current head
+    // height becomes the character's eye height, for standing or seated play.
+    float   heightCalibration;
     int     useGestureState;
     int     useHapticFeedbackTime[2];
 

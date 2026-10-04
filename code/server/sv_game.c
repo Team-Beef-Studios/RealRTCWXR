@@ -936,15 +936,16 @@ static void SV_InitGameVM( qboolean restart ) {
 	// start the entity parsing at the beginning
 	sv.entityParsePoint = CM_EntityString();
 
-	// use the current msec count for a random seed
-	// init for this gamestate
-	VM_Call (gvm, GAME_INIT, sv.time, Com_Milliseconds(), restart, (intptr_t)&vr);
-
 	// clear all gentity pointers that might still be set from
-	// a previous level
+	// a previous level. On a restart they point into the unloaded game DLL,
+	// and the game's init sends configstrings that would read them.
 	for ( i = 0 ; i < sv_maxclients->integer ; i++ ) {
 		svs.clients[i].gentity = NULL;
 	}
+
+	// use the current msec count for a random seed
+	// init for this gamestate
+	VM_Call (gvm, GAME_INIT, sv.time, Com_Milliseconds(), restart, (intptr_t)&vr);
 }
 
 
@@ -957,9 +958,19 @@ Called on a map_restart, but not on a normal map change
 ===================
 */
 void SV_RestartGameProgs( void ) {
+	int i;
+
 	if ( !gvm ) {
 		return;
 	}
+
+	// SV_ClientSvFlags needs these to keep skipping AI clients until the new
+	// game links its entities, or their unread commands overflow
+	for ( i = 0 ; i < sv_maxclients->integer ; i++ ) {
+		client_t *cl = &svs.clients[i];
+		cl->restartSvFlags = cl->gentity ? cl->gentity->r.svFlags : 0;
+	}
+
 	VM_Call( gvm, GAME_SHUTDOWN, qtrue );
 
 	// do a restart instead of a free

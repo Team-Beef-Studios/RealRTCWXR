@@ -158,6 +158,20 @@ The given command will be transmitted to the client, and is guaranteed to
 not have future snapshot_t executed before it is executed
 ======================
 */
+/*
+======================
+SV_ClientSvFlags
+
+The client's entity flags, safe to call while the game restarts
+======================
+*/
+int SV_ClientSvFlags( const client_t *client ) {
+	if ( client->gentity ) {
+		return client->gentity->r.svFlags;
+	}
+	return sv.restarting ? client->restartSvFlags : 0;
+}
+
 void SV_AddServerCommand( client_t *client, const char *cmd ) {
 	int index, i;
 
@@ -226,7 +240,7 @@ void QDECL SV_SendServerCommand( client_t *cl, const char *fmt, ... ) {
 	// send the data to all relevent clients
 	for ( j = 0, client = svs.clients; j < sv_maxclients->integer ; j++, client++ ) {
 		// Ridah, don't need to send messages to AI
-		if ( client->gentity && client->gentity->r.svFlags & SVF_CASTAI ) {
+		if ( SV_ClientSvFlags( client ) & SVF_CASTAI ) {
 			continue;
 		}
 		// done.

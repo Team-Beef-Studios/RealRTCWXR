@@ -2325,17 +2325,17 @@ static void CG_CalculateVRWeaponPosition(int weaponNum, vec3_t origin, vec3_t an
 	{
 	case WP_KNIFE:
 	case WP_DAGGER:
-		BG_CalculateVRKnifePosition(cg.refdefViewAngles[YAW], cg.refdef.vieworg, cg_heightAdjust.value, cg_worldScale.value, origin, angles);
+		BG_CalculateVRKnifePosition(cg.refdefViewAngles[YAW], cg.refdef.vieworg, CG_VRHeightAdjust(), cg_worldScale.value, origin, angles);
 		break;
 	default:
-		BG_CalculateVRWeaponPosition(cg.refdefViewAngles[YAW], cg.refdef.vieworg, cg_heightAdjust.value, cg_worldScale.value, origin, angles);
+		BG_CalculateVRWeaponPosition(cg.refdefViewAngles[YAW], cg.refdef.vieworg, CG_VRHeightAdjust(), cg_worldScale.value, origin, angles);
 		break;
 	}
 }
 
 static void CG_CalculateOffhandVRWeaponPosition(vec3_t origin, vec3_t angles) {
 
-	BG_CalculateVROffHandPosition(cg.refdefViewAngles[YAW], cg.refdef.vieworg, cg_heightAdjust.value, cg_worldScale.value, origin, angles);
+	BG_CalculateVROffHandPosition(cg.refdefViewAngles[YAW], cg.refdef.vieworg, CG_VRHeightAdjust(), cg_worldScale.value, origin, angles);
 }
 
 /*
@@ -4090,7 +4090,7 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 		refEntity_t binoc_hand;
 		vec3_t binoc_angles;
 		memset(&binoc_hand, 0, sizeof(binoc_hand));
-		BG_CalculateVROffHandPosition(cg.refdefViewAngles[YAW], cg.refdef.vieworg, cg_heightAdjust.value, cg_worldScale.value, binoc_hand.origin, binoc_angles);
+		BG_CalculateVROffHandPosition(cg.refdefViewAngles[YAW], cg.refdef.vieworg, CG_VRHeightAdjust(), cg_worldScale.value, binoc_hand.origin, binoc_angles);
 		AnglesToAxis(binoc_angles, binoc_hand.axis);
 
 		vec3_t axis[3];
@@ -4277,7 +4277,7 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 			}
 			else
 			{
-				BG_CalculateVRDefaultPosition(cg.refdefViewAngles[YAW], cg.refdef.vieworg, cg_heightAdjust.value, cg_worldScale.value, 1, handEnt.origin, angles);
+				BG_CalculateVRDefaultPosition(cg.refdefViewAngles[YAW], cg.refdef.vieworg, CG_VRHeightAdjust(), cg_worldScale.value, 1, handEnt.origin, angles);
 
 				//Move it back a bit?
 				AngleVectors(angles, forward, NULL, NULL);
@@ -4314,7 +4314,7 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 			if (cg.snap->ps.weapon == WP_NONE ||
 				cg.snap->ps.weapon == WP_MELEE)
 			{
-				BG_CalculateVRDefaultPosition(cg.refdefViewAngles[YAW], cg.refdef.vieworg, cg_heightAdjust.value, cg_worldScale.value, 0, handEnt.origin, angles);
+				BG_CalculateVRDefaultPosition(cg.refdefViewAngles[YAW], cg.refdef.vieworg, CG_VRHeightAdjust(), cg_worldScale.value, 0, handEnt.origin, angles);
 
 				if (cg.snap->ps.weapon == WP_MELEE)
 				{
@@ -5170,12 +5170,12 @@ void CG_DrawItemSelector(void)
 	vec3_t controllerOrigin, controllerAngles, controllerOffset, selectorOrigin;
 	if (cg.itemSelectorType >= ST_GADGET)
 	{
-		BG_CalculateVROffHandPosition(cg.refdefViewAngles[YAW], cg.refdef.vieworg, cg_heightAdjust.value, cg_worldScale.value, controllerOrigin, controllerAngles);
+		BG_CalculateVROffHandPosition(cg.refdefViewAngles[YAW], cg.refdef.vieworg, CG_VRHeightAdjust(), cg_worldScale.value, controllerOrigin, controllerAngles);
 		VectorSubtract(vr->offhandposition[0], cg.itemSelectorOrigin, controllerOffset);
 	}
 	else
 	{
-		BG_CalculateVRWeaponPosition(cg.refdefViewAngles[YAW], cg.refdef.vieworg, cg_heightAdjust.value, cg_worldScale.value, controllerOrigin, controllerAngles);
+		BG_CalculateVRWeaponPosition(cg.refdefViewAngles[YAW], cg.refdef.vieworg, CG_VRHeightAdjust(), cg_worldScale.value, controllerOrigin, controllerAngles);
 		VectorSubtract(vr->weaponposition, cg.itemSelectorOrigin, controllerOffset);
 	}
 
@@ -5183,7 +5183,7 @@ void CG_DrawItemSelector(void)
 	vec3_t angles;
 	VectorClear(angles);
 	angles[YAW] = vr->hmdorientation[YAW];
-	BG_CalculateVRPositionInWorld(cg.refdefViewAngles[YAW], cg.refdef.vieworg, cg_heightAdjust.value, cg_worldScale.value,
+	BG_CalculateVRPositionInWorld(cg.refdefViewAngles[YAW], cg.refdef.vieworg, CG_VRHeightAdjust(), cg_worldScale.value,
 		cg.itemSelectorOrigin, cg.itemSelectorOffset, angles, wheelOrigin, wheelAngles);
 
 	AngleVectors(wheelAngles, wheelForward, wheelRight, wheelUp);
