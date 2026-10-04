@@ -477,6 +477,12 @@ void SCR_DrawScreenField( stereoFrame_t stereoFrame ) {
 
 	re.BeginFrame( stereoFrame );
 
+	// Keeps out of the UI VM, which may be the one that issued "quit"
+	if ( CL_Patrons_Active() ) {
+		CL_Patrons_Draw();
+		return;
+	}
+
 	uiFullscreen = (uivm && VM_Call( uivm, UI_IS_FULLSCREEN ));
 
 	// wide aspect ratio screens need to have the sides cleared
@@ -576,7 +582,7 @@ void SCR_UpdateScreen( void ) {
 
 	// If there is no VM, there are also no rendering commands issued. Stop the renderer in
 	// that case.
-	if( uivm || com_dedicated->integer )
+	if( uivm || com_dedicated->integer || CL_Patrons_Active() )
 	{
 		//Try again here in case we've not done it yet
 		TBXR_FrameSetup();

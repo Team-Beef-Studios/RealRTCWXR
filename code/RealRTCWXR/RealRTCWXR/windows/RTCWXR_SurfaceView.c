@@ -24,6 +24,7 @@ bool VR_UseScreenLayer()
 			(clc.state == CA_CHALLENGING) ||
 			(clc.state == CA_CONNECTING) ||
 			(clc.state == CA_CINEMATIC) ||
+			CL_Patrons_Active() ||
 			(clc.state == CA_LOADING) ||
 			(clc.state == CA_PRIMED) ||
 			( Key_GetCatcher( ) & KEYCATCH_UI ) ||
@@ -416,6 +417,12 @@ void VR_HapticEvent(const char* event, int position, int flags, int intensity, f
 
 void VR_HandleControllerInput() {
 	TBXR_UpdateControllers();
+
+	// The patron screen reads the raw buttons; key events would reach the UI VM mid-quit
+	if (CL_Patrons_Active())
+	{
+		return;
+	}
 
 	//Call additional control schemes here
 	switch (vr_control_scheme->integer)

@@ -4634,6 +4634,19 @@ itemDef {
 		visible 0
 		decoration
 	}
+
+	itemDef {
+		name credits13
+		group credits
+		rect 205 100 440 350	
+		style WINDOW_STYLE_FILLED
+		border 1
+		bordercolor .5 .5 .5 .5
+		forecolor 1 1 1 1
+		backcolor 0 0 0 .8
+		visible 0
+		decoration
+	}
 	
 	itemDef {
 		name credits0
@@ -5435,6 +5448,76 @@ itemDef {
 	group credits
 	rect 395 117.5 500 500 
 	textfile "text/EnglishUSA/creditsp12_2.txt"
+	textscale .20
+	textfont UI_FONT_BIG
+	forecolor 1 1 1 1
+	visible 0
+	decoration
+	autowrapped
+}
+
+	itemDef {
+		name credits12
+		text "@CREDITS_NEXT"
+		type 1
+	    group credits
+		textscale .3
+		style WINDOW_STYLE_FILLED		
+		rect 530 390 100 20
+		textalign 1
+		textalignx 48
+		textfont UI_FONT_BIG
+		textaligny 14
+		backcolor .5 0.5 0.5 .25
+		border 1
+		bordercolor .1 .1 .1 .3
+		visible 0
+		action { hide credits12 ; show credits13 }		
+	}
+
+	itemDef {
+		name credits13
+		text "@CREDITS_BACK"
+		type 1
+	    group credits
+		textscale .3
+		style WINDOW_STYLE_FILLED		
+		rect 530 330 100 20
+		textalign 1
+		textalignx 48
+		textfont UI_FONT_BIG
+		textaligny 14
+		backcolor .5 0.5 0.5 .25
+		border 1
+		bordercolor .1 .1 .1 .3
+		visible 0
+		action { hide credits13 ; show credits12 }		
+	}
+
+	itemDef {
+		name credits13
+		text "Patreon"
+		type 1
+	    group credits
+		textscale .3
+		style WINDOW_STYLE_FILLED		
+		rect 530 360 100 20
+		textalign 1
+		textalignx 48
+		textfont UI_FONT_BIG
+		textaligny 14
+		backcolor .5 0.5 0.5 .25
+		border 1
+		bordercolor .1 .1 .1 .3
+		visible 0
+		action { uiScript validate_openURL "https://www.patreon.com/teambeef" }		
+	}
+
+	itemDef {
+	name credits13
+	group credits
+	rect 225 117.5 400 320 
+	textfile "text/EnglishUSA/creditsp13.txt"
 	textscale .20
 	textfont UI_FONT_BIG
 	forecolor 1 1 1 1

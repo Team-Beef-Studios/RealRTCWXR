@@ -1,0 +1,65 @@
+# RealRTCW XR -- Gold Patrons.
+#
+# Shown for a few seconds when the game exits, as a thank-you to the people
+# funding the port. Edit this file to update the list between releases. It
+# goes into z_zzzRealRTCWXR.pk3; run make_z_vr_assets_pk3.bat after a change.
+#
+# Format:
+#   [title]   - one line, the heading (optional)
+#   [gold]    - one Gold Patron name per line
+#   [other]   - closing thank-you lines, shown small at the bottom (optional)
+#
+# Lines starting with '#' and blank lines are ignored. Use plain ASCII names.
+# How long the screen shows for is the cl_patronsTime cvar (seconds, 0 = off).
+
+[title]
+Thank You To Our Gold Patrons
+
+[gold]
+Ben. Wagner
+Jwill2real2raw
+NilClass
+Kalle Kantola
+Zombuddee
+Ruff Talk VR
+Skill Fur
+XQuader
+Hat
+WarGrey
+cramyzarc
+Dead Romeo
+Joe90
+Rehtse Studio
+4MatC
+Seven Synz
+BOB
+Snackulus
+Stephan Kaufmann
+Mike Hollner
+J.T. Karis
+Ivan Kamakin
+John Carmack
+Jellin
+Chris Scott
+Wicked
+David Gohman
+GD Dragon
+Benjamin Dowswell
+Jamie
+Braxus
+Alex Closs
+Albert Valiev
+Markus Dickmann
+AG4VR
+Russel Jones
+Saeed Al-Ali
+Luc Lowndes
+valedurandal
+Lunar Stain
+friendly neighbor
+Stephen Sayles
+BayesianBroccoli
+
+[other]
+And thank you to all our other patrons
+for your continued support.

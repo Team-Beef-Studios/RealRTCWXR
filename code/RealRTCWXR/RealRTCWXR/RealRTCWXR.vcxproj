@@ -66,6 +66,7 @@
     <ClCompile Include="..\..\client\cl_main.c" />
     <ClCompile Include="..\..\client\cl_net_chan.c" />
     <ClCompile Include="..\..\client\cl_parse.c" />
+    <ClCompile Include="..\..\client\cl_patrons.c" />
     <ClCompile Include="..\..\client\cl_scrn.c" />
     <ClCompile Include="..\..\client\cl_ui.c" />
     <ClCompile Include="..\..\client\qal.c" />

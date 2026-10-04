@@ -646,6 +646,13 @@ void CL_LoadConsoleHistory( void );
 void CL_SaveConsoleHistory( void );
 
 //
+// cl_patrons.c
+//
+void		CL_Patrons_Init( void );
+void		CL_Patrons_Draw( void );
+qboolean	CL_Patrons_Active( void );
+
+//
 // cl_scrn.c
 //
 void    SCR_Init( void );
@@ -664,6 +671,7 @@ void    SCR_DrawNamedPic( float x, float y, float width, float height, const cha
 void	SCR_DrawBigString( int x, int y, const char *s, float alpha, qboolean noColorEscape );			// draws a string with embedded color control characters with fade
 void	SCR_DrawBigStringColor( int x, int y, const char *s, vec4_t color, qboolean noColorEscape );	// ignores embedded color control characters
 void	SCR_DrawSmallStringExt( int x, int y, const char *string, float *setColor, qboolean forceColor, qboolean noColorEscape );
+void	SCR_DrawStringExt( int x, int y, float size, const char *string, float *setColor, qboolean forceColor, qboolean noColorEscape );
 void    SCR_DrawSmallChar( int x, int y, int ch );
 
 

@@ -81,6 +81,9 @@
     <ClCompile Include="..\..\client\cl_parse.c">
       <Filter>Source Files\client</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\client\cl_patrons.c">
+      <Filter>Source Files\client</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\client\cl_scrn.c">
       <Filter>Source Files\client</Filter>
     </ClCompile>

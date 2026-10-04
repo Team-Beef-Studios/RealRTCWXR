@@ -1,0 +1,15 @@
+^1REALRTCW XR^7
+
+A ^3Team Beef^7 VR port
+
+Special thanks to ^3WolfETPlayer^7
+for the exceptional RealRTCW mod
+for Return to Castle Wolfenstein
+
+Special thanks to ^3LennyGuy20^7
+for updating the weapon and hand
+models to work in VR
+
+For early access to other
+Team Beef ports, join our Patreon:
+^3https://www.patreon.com/teambeef^7

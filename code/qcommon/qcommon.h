@@ -1014,6 +1014,8 @@ void CL_InitKeyCommands( void );
 void CL_Init( void );
 void CL_Disconnect( qboolean showMainMenu );
 void CL_Shutdown(char *finalmsg, qboolean disconnect, qboolean quit);
+// Gold Patron credits, shown by Com_Quit_f before anything is shut down
+void CL_Patrons_ShowAndWait( void );
 void CL_Frame( int msec );
 qboolean CL_GameCommand( void );
 void CL_KeyEvent( int key, qboolean down, unsigned time );
