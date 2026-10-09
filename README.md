@@ -8,7 +8,7 @@ Air Link, SteamVR headsets and more).
 ### Requirements
 - Windows PC with a PC VR headset and OpenXR runtime
 - Return to Castle Wolfenstein (the installer copies the game data from Steam,
-  or you can provide the files yourself)
+  or you can provide the files yourself). Steam version: https://store.steampowered.com/app/9010/Return_to_Castle_Wolfenstein/
 - Full installer: includes the RealRTCW data
 - Minimal installer: also needs RealRTCW 5.0 (beta branch) installed in Steam
 
