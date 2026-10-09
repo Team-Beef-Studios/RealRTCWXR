@@ -16,49 +16,50 @@
 Thank You To Our Gold Patrons
 
 [gold]
-Ben. Wagner
-Jwill2real2raw
-NilClass
-Kalle Kantola
-Zombuddee
-Ruff Talk VR
-Skill Fur
-XQuader
-Hat
-WarGrey
-cramyzarc
-Dead Romeo
-Joe90
-Rehtse Studio
-4MatC
-Seven Synz
-BOB
-Snackulus
-Stephan Kaufmann
-Mike Hollner
-J.T. Karis
-Ivan Kamakin
-John Carmack
-Jellin
-Chris Scott
-Wicked
-David Gohman
-GD Dragon
-Benjamin Dowswell
-Jamie
-Braxus
-Alex Closs
-Albert Valiev
-Markus Dickmann
-AG4VR
-Russel Jones
-Saeed Al-Ali
-Luc Lowndes
-valedurandal
-Lunar Stain
-friendly neighbor
-Stephen Sayles
 BayesianBroccoli
+Stephen Sayles
+friendly neighbor
+Lunar Stain
+valedurandal
+Luc Lowndes
+Saeed Al-Ali
+Russel Jones
+AG4VR
+Markus Dickmann
+Albert Valiev
+Alex Closs
+Rehtse Studio
+Braxus
+Jamie
+Benjamin Dowswell
+GD Dragon
+David Gohman
+Wicked
+Chris Scott
+Jellin
+John Carmack
+Ivan Kamakin
+J.T. Karis
+Mike Hoellner
+Stephan Kaufmann
+Snackulus
+BOB
+Seven Synz
+Slayer0074N7117
+4MatC
+Anthon Max
+Joe90
+Dead Romeo
+cramyzarc
+WarGrey
+Hat
+XQuader
+Skill Fur
+Ruff Talk VR
+NilClass
+Zombuddee
+Kalle Kantola
+Jwill2real2raw
 
 [other]
 And thank you to all our other patrons
