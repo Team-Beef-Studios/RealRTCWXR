@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="misc/realrtcwxr-logo.png" alt="RealRTCW XR" width="300">
+</p>
+
 # RealRTCW XR
 
 RealRTCW XR is a Team Beef VR port of RealRTCW 5.0, the acclaimed realism and
