@@ -1,3 +1,19 @@
+# RealRTCW XR
+
+RealRTCW XR is a Team Beef VR port of RealRTCW 5.0, the acclaimed realism and
+overhaul mod by WolfETPlayer for Return to Castle Wolfenstein. Play the full
+single-player campaign in PC VR on any OpenXR headset (Meta Quest via Link or
+Air Link, SteamVR headsets and more).
+
+### Requirements
+- Windows PC with a PC VR headset and OpenXR runtime
+- Return to Castle Wolfenstein (the installer copies the game data from Steam,
+  or you can provide the files yourself)
+- Full installer: includes the RealRTCW data
+- Minimal installer: also needs RealRTCW 5.0 (beta branch) installed in Steam
+
+
+
 # RealRTCW
 
 RealRTCW is a community single-player overhaul project for Return to Castle Wolfenstein based on the iortcw and rtcw-sp source code.
