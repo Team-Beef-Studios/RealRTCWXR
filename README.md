@@ -12,6 +12,10 @@ Air Link, SteamVR headsets and more).
 - Full installer: includes the RealRTCW data
 - Minimal installer: also needs RealRTCW 5.0 (beta branch) installed in Steam
 
+### Credits
+Special thanks to WolfETPlayer for RealRTCW, and to LennyGuy20 for updating the
+weapon and hand models for VR. Thank you to our Gold Patrons; for early access
+to other Team Beef ports, join us at https://www.patreon.com/teambeef
 
 
 # RealRTCW
