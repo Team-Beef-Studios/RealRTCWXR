@@ -291,8 +291,11 @@ foreach ($variant in $bundles) {
 
         # --- Installer support files ------------------------------------------
         Write-Step "Stage the setup files"
-        Copy-Required (Join-Path $PackagingDir 'Setup-RealRTCWXR.ps1') $stage 'the game data setup step'
-        Copy-Required (Join-Path $PackagingDir 'FileGroups.ps1')       $stage 'the shared game data lists'
+        # The stub unpacks _setup to a temporary folder, so these never reach the install.
+        $stageSetup = Join-Path $stage '_setup'
+        New-Item -ItemType Directory -Path $stageSetup -Force | Out-Null
+        Copy-Required (Join-Path $PackagingDir 'Setup-RealRTCWXR.ps1') $stageSetup 'the game data setup step'
+        Copy-Required (Join-Path $PackagingDir 'FileGroups.ps1')       $stageSetup 'the shared game data lists'
         Copy-Required (Join-Path $PackagingDir 'README-FIRST.txt')     $stage 'the user instructions'
         Copy-Required (Join-Path $RepoRoot 'COPYING.txt')              $stage 'the licence'
 
@@ -303,7 +306,7 @@ foreach ($variant in $bundles) {
             Bundle        = $variant
             BundledGroups = $bundledGroups
         }
-        $manifestPath = Join-Path $stage 'package-manifest.json'
+        $manifestPath = Join-Path $stageSetup 'package-manifest.json'
         [System.IO.File]::WriteAllText($manifestPath, ($manifest | ConvertTo-Json), (New-Object System.Text.UTF8Encoding($false)))
         Write-Info "staged   package-manifest.json"
 

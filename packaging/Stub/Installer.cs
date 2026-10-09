@@ -17,6 +17,8 @@ namespace RealRTCWXRSetup
         public const string ProductVersion = "@@VERSION@@";
         public const string DataNeeded = "@@DATA_NEEDED@@";
         public const string SetupScript = "Setup-RealRTCWXR.ps1";
+        // Payload folder for the setup files. They go to a temporary folder, not the install.
+        public const string SetupFolder = "_setup/";
         public const string GameExe = "RealRTCWXR.exe";
 
         // Setup-RealRTCWXR.ps1 returns this when it needs the user to supply game files.
@@ -77,8 +79,7 @@ namespace RealRTCWXRSetup
         {
             try
             {
-                Installer.Extract(target, null);
-                return Installer.RunSetup(target, force, manual, shortcut, Console.WriteLine);
+                return Installer.Install(target, force, manual, shortcut, Console.WriteLine, null);
             }
             catch (Exception ex)
             {
@@ -195,9 +196,43 @@ namespace RealRTCWXRSetup
             }
         }
 
-        public static void Extract(string target, Action<int, int, string> progress)
+        public static int Install(string target, bool force, bool manual, bool shortcut,
+                                  Action<string> log, Action<int, int, string> progress)
+        {
+            string setupDir = Path.Combine(Path.GetTempPath(), "RealRTCWXR-setup-" + Guid.NewGuid().ToString("N"));
+            try
+            {
+                Extract(target, setupDir, progress);
+                return RunSetup(setupDir, target, force, manual, shortcut, log);
+            }
+            finally
+            {
+                try
+                {
+                    if (Directory.Exists(setupDir))
+                        Directory.Delete(setupDir, true);
+                }
+                catch
+                {
+                    // A leftover temporary folder is harmless.
+                }
+            }
+        }
+
+        // Earlier installers put the setup files into the install folder.
+        private static readonly string[] StaleSetupFiles = { "Setup-RealRTCWXR.ps1", "FileGroups.ps1", "package-manifest.json" };
+
+        private static void Extract(string target, string setupDir, Action<int, int, string> progress)
         {
             Directory.CreateDirectory(target);
+            Directory.CreateDirectory(setupDir);
+
+            foreach (string stale in StaleSetupFiles)
+            {
+                string path = Path.Combine(target, stale);
+                if (File.Exists(path))
+                    File.Delete(path);
+            }
 
             using (SubStream payload = OpenPayload())
             using (ZipArchive zip = new ZipArchive(payload, ZipArchiveMode.Read))
@@ -212,7 +247,10 @@ namespace RealRTCWXRSetup
                 for (int i = 0; i < files.Count; i++)
                 {
                     ZipArchiveEntry entry = files[i];
-                    string full = SafeCombine(target, entry.FullName);
+                    string name = entry.FullName.Replace('\\', '/');
+                    string full = name.StartsWith(Program.SetupFolder, StringComparison.OrdinalIgnoreCase)
+                        ? SafeCombine(setupDir, name.Substring(Program.SetupFolder.Length))
+                        : SafeCombine(target, name);
                     Directory.CreateDirectory(Path.GetDirectoryName(full));
 
                     if (progress != null)
@@ -241,9 +279,9 @@ namespace RealRTCWXRSetup
             return combined;
         }
 
-        public static int RunSetup(string target, bool force, bool manual, bool shortcut, Action<string> log)
+        private static int RunSetup(string setupDir, string target, bool force, bool manual, bool shortcut, Action<string> log)
         {
-            string script = Path.Combine(target, Program.SetupScript);
+            string script = Path.Combine(setupDir, Program.SetupScript);
             if (!File.Exists(script))
                 throw new FileNotFoundException("The setup script is missing: " + script);
 
@@ -533,20 +571,18 @@ namespace RealRTCWXRSetup
             try
             {
                 Log("Unpacking to " + target);
-                Installer.Extract(target, delegate(int done, int total, string name)
+                int code = Installer.Install(target, _force, manual, shortcut, Log, delegate(int done, int total, string name)
                 {
                     Invoke((MethodInvoker)delegate
                     {
                         _bar.Maximum = total;
                         _bar.Value = done;
+                        // The last file is unpacked; the setup step runs next.
+                        if (done == total)
+                            _bar.Style = ProgressBarStyle.Marquee;
                     });
                     Log("  " + name);
                 });
-
-                Log("");
-                Invoke((MethodInvoker)delegate { _bar.Style = ProgressBarStyle.Marquee; });
-
-                int code = Installer.RunSetup(target, _force, manual, shortcut, Log);
 
                 Invoke((MethodInvoker)delegate
                 {

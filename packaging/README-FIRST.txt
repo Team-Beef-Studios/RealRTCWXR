@@ -62,19 +62,7 @@ The Steam route checks this. The Full installer does not need it.
 
 IF SOMETHING GOES WRONG
 -----------------------
-Run the setup again. It only copies files that changed.
-
-To repair an install without unpacking again, open PowerShell in the install
-folder and run:
-
-    powershell -ExecutionPolicy Bypass -File Setup-RealRTCWXR.ps1
-
-The setup script accepts these switches:
-
-    -InstallRoot <path>   Use a different install folder.
-    -ManualData           Do not use Steam. List the files you must copy in.
-    -SkipVersionCheck     Continue even if RealRTCW is not on a 5.0 beta branch.
-    -CreateShortcut       Put a shortcut on the desktop.
+Run the setup exe again, into the same folder. It repairs the install.
 
 The setup exe accepts these switches:
 

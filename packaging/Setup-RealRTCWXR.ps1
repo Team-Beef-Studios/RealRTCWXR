@@ -4,7 +4,8 @@
     install folder.
 
 .DESCRIPTION
-    The installer stub unpacks the RealRTCW XR binaries, then runs this script.
+    The installer stub unpacks the RealRTCW XR binaries, then runs this script from a
+    temporary folder with -InstallRoot. The script is not left in the install.
 
     In the default mode the script finds the Steam libraries, checks that RealRTCW sits on
     a 5.0 beta branch, and copies the .pk3 and .cfg files that the VR build needs into
@@ -17,13 +18,13 @@
     The full installer already carries the RealRTCW data. package-manifest.json records
     that, and this script then asks only for the Return to Castle Wolfenstein files.
 
-    You can run this script by hand at any time to repair an install.
+    To repair an install, run the installer again.
 
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File Setup-RealRTCWXR.ps1
+    powershell -ExecutionPolicy Bypass -File Setup-RealRTCWXR.ps1 -InstallRoot "C:\Games\RealRTCW XR"
 
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File Setup-RealRTCWXR.ps1 -ManualData
+    powershell -ExecutionPolicy Bypass -File Setup-RealRTCWXR.ps1 -InstallRoot "C:\Games\RealRTCW XR" -ManualData
 #>
 [CmdletBinding()]
 param(
@@ -295,7 +296,7 @@ function Get-AbsentFiles {
 
 try {
     if (-not $InstallRoot) {
-        $InstallRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+        throw "-InstallRoot is required. Run the installer, not this script."
     }
     $InstallRoot = $InstallRoot.TrimEnd('\')
     $mainDir = Join-Path $InstallRoot 'Main'
@@ -309,7 +310,8 @@ try {
     }
 
     # The @() guards against PowerShell unrolling an empty result to $null.
-    $bundled = @(Get-BundledGroups -Root $InstallRoot)
+    # The manifest travels with this script, in the installer's temporary folder.
+    $bundled = @(Get-BundledGroups -Root $scriptDir)
 
     # A bundled group still has files the package is not allowed to carry, such as paid
     # DLC. Those come from the player's own Steam install, and only if they own them.
