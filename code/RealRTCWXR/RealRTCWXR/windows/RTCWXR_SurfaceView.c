@@ -222,6 +222,7 @@ void VR_Init()
 	vr_knife_velocity_trigger = Cvar_Get( "vr_knife_velocity_trigger", "1.7", CVAR_ARCHIVE);
 	vr_knife_velocity_release = Cvar_Get( "vr_knife_velocity_release", "1.0", CVAR_ARCHIVE);
 	vr_cinematic_stereo = Cvar_Get( "vr_cinematic_stereo", "1", CVAR_ARCHIVE);
+	vr_mirror_eye = Cvar_Get( "vr_mirror_eye", "1", CVAR_ARCHIVE);
 	vr_force_distance_trigger = Cvar_Get( "vr_force_distance_trigger", "0.15", CVAR_ARCHIVE);
     vr_two_handed_weapons = Cvar_Get ("vr_two_handed_weapons", "1", CVAR_ARCHIVE);
 	vr_crouch_toggle = Cvar_Get ("vr_crouch_toggle", "1", CVAR_ARCHIVE);

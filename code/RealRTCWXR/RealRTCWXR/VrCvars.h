@@ -14,6 +14,7 @@ extern cvar_t   *vr_force_velocity_trigger;
 extern cvar_t   *vr_knife_velocity_trigger;
 extern cvar_t   *vr_knife_velocity_release;
 extern cvar_t   *vr_cinematic_stereo;
+extern cvar_t   *vr_mirror_eye;
 extern cvar_t   *vr_force_distance_trigger;
 extern cvar_t   *vr_two_handed_weapons;
 extern cvar_t   *vr_crouch_toggle;

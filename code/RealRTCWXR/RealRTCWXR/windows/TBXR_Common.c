@@ -84,224 +84,133 @@ void TBXR_exit(int exitCode)
 /*
 ================================================================================
 
-ovrFramebuffer
+ovrSwapChain
 
 ================================================================================
 */
 
-static void ovrFramebuffer_Clear(ovrFramebuffer* frameBuffer) {
-    frameBuffer->Width = 0;
-    frameBuffer->Height = 0;
-    frameBuffer->TextureSwapChainLength = 0;
-    frameBuffer->TextureSwapChainIndex = 0;
-    frameBuffer->ColorSwapChain.Handle = XR_NULL_HANDLE;
-    frameBuffer->ColorSwapChain.Width = 0;
-    frameBuffer->ColorSwapChain.Height = 0;
-    frameBuffer->ColorSwapChainImage = NULL;
-    frameBuffer->DepthBuffers = NULL;
-    frameBuffer->FrameBuffers = NULL;
-}
+static bool ovrSwapChain_Create(
+		XrSession session,
+		ovrSwapChain* swapChain,
+		const GLenum colorFormat,
+		const int width,
+		const int height) {
 
-void TBXR_ClearFrameBuffer(int width, int height);
-
-
-static bool ovrFramebuffer_Create(
-        XrSession session,
-        ovrFramebuffer* frameBuffer,
-        const GLenum colorFormat,
-        const int width,
-        const int height) {
-
-    frameBuffer->Width = width;
-    frameBuffer->Height = height;
-
-    XrSwapchainCreateInfo swapChainCreateInfo;
-    memset(&swapChainCreateInfo, 0, sizeof(swapChainCreateInfo));
-    swapChainCreateInfo.type = XR_TYPE_SWAPCHAIN_CREATE_INFO;
-    swapChainCreateInfo.usageFlags = XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT;
+	XrSwapchainCreateInfo swapChainCreateInfo;
+	memset(&swapChainCreateInfo, 0, sizeof(swapChainCreateInfo));
+	swapChainCreateInfo.type = XR_TYPE_SWAPCHAIN_CREATE_INFO;
+	swapChainCreateInfo.usageFlags = XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT;
 	swapChainCreateInfo.mipCount = 1;
 	swapChainCreateInfo.format = colorFormat;
-    swapChainCreateInfo.sampleCount = 1;
-    swapChainCreateInfo.width = width;
-    swapChainCreateInfo.height = height;
-    swapChainCreateInfo.faceCount = 1;
-    swapChainCreateInfo.arraySize = 3; // Use 3 layers, skip layer 0 for VDXR compatibility
+	swapChainCreateInfo.sampleCount = 1;
+	swapChainCreateInfo.width = width;
+	swapChainCreateInfo.height = height;
+	swapChainCreateInfo.faceCount = 1;
+	swapChainCreateInfo.arraySize = 1;
 
-    frameBuffer->ColorSwapChain.Width = swapChainCreateInfo.width;
-    frameBuffer->ColorSwapChain.Height = swapChainCreateInfo.height;
+	swapChain->Width = width;
+	swapChain->Height = height;
 
+	OXR(xrCreateSwapchain(session, &swapChainCreateInfo, &swapChain->Handle));
+	OXR(xrEnumerateSwapchainImages(swapChain->Handle, 0, &swapChain->ImageCount, NULL));
 
-    // Create the swapchain.
-    OXR(xrCreateSwapchain(session, &swapChainCreateInfo, &frameBuffer->ColorSwapChain.Handle));
-    // Get the number of swapchain images.
-    OXR(xrEnumerateSwapchainImages(
-            frameBuffer->ColorSwapChain.Handle, 0, &frameBuffer->TextureSwapChainLength, NULL));
-    // Allocate the swapchain images array.
-    frameBuffer->ColorSwapChainImage = (XrSwapchainImageOpenGLKHR*)malloc(
-            frameBuffer->TextureSwapChainLength * sizeof(XrSwapchainImageOpenGLKHR));
+	swapChain->Images = (XrSwapchainImageOpenGLKHR*)malloc(swapChain->ImageCount * sizeof(XrSwapchainImageOpenGLKHR));
+	for (uint32_t i = 0; i < swapChain->ImageCount; i++) {
+		swapChain->Images[i].type = XR_TYPE_SWAPCHAIN_IMAGE_OPENGL_KHR;
+		swapChain->Images[i].next = NULL;
+	}
+	OXR(xrEnumerateSwapchainImages(
+			swapChain->Handle,
+			swapChain->ImageCount,
+			&swapChain->ImageCount,
+			(XrSwapchainImageBaseHeader*)swapChain->Images));
 
-    // Populate the swapchain image array.
-    for (uint32_t i = 0; i < frameBuffer->TextureSwapChainLength; i++) {
-        frameBuffer->ColorSwapChainImage[i].type = XR_TYPE_SWAPCHAIN_IMAGE_OPENGL_KHR;
-        frameBuffer->ColorSwapChainImage[i].next = NULL;
-    }
-    OXR(xrEnumerateSwapchainImages(
-            frameBuffer->ColorSwapChain.Handle,
-            frameBuffer->TextureSwapChainLength,
-            &frameBuffer->TextureSwapChainLength,
-            (XrSwapchainImageBaseHeader*)frameBuffer->ColorSwapChainImage));
+	return swapChain->Handle != XR_NULL_HANDLE;
+}
 
-    frameBuffer->DepthBuffers =
-            (GLuint*)malloc(frameBuffer->TextureSwapChainLength * sizeof(GLuint));
-    frameBuffer->FrameBuffers =
-            (GLuint*)malloc(frameBuffer->TextureSwapChainLength * sizeof(GLuint));
+static void ovrSwapChain_Destroy(ovrSwapChain* swapChain) {
+	if (swapChain->Handle != XR_NULL_HANDLE) {
+		OXR(xrDestroySwapchain(swapChain->Handle));
+	}
+	free(swapChain->Images);
+	memset(swapChain, 0, sizeof(ovrSwapChain));
+}
 
-		for (int i = 0; i < frameBuffer->TextureSwapChainLength; i++) {
-		frameBuffer->FrameBuffers[i] = 0;
-		// Create the color buffer texture.
-		const GLuint colorTexture = frameBuffer->ColorSwapChainImage[i].image;
-		GLenum colorTextureTarget = GL_TEXTURE_2D_ARRAY;
-		GL(glBindTexture(colorTextureTarget, colorTexture));
-		GL(glTexParameteri(colorTextureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER));
-		GL(glTexParameteri(colorTextureTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER));
-		GLfloat borderColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
-		GL(glTexParameterfv(colorTextureTarget, GL_TEXTURE_BORDER_COLOR, borderColor));
-		GL(glTexParameteri(colorTextureTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
-		GL(glTexParameteri(colorTextureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-		GL(glBindTexture(colorTextureTarget, 0));
+static GLuint ovrSwapChain_Acquire(ovrSwapChain* swapChain) {
+	uint32_t index = 0;
+	XrSwapchainImageAcquireInfo acquireInfo = {XR_TYPE_SWAPCHAIN_IMAGE_ACQUIRE_INFO, NULL};
+	OXR(xrAcquireSwapchainImage(swapChain->Handle, &acquireInfo, &index));
 
-		// Create the depth buffer texture.
-		GL(glGenTextures(1, &frameBuffer->DepthBuffers[i]));
-		GL(glBindTexture(GL_TEXTURE_2D_ARRAY, frameBuffer->DepthBuffers[i]));
-		GL(glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_DEPTH24_STENCIL8, width, height, 3)); // 3 layers to skip layer 0
-		GL(glBindTexture(GL_TEXTURE_2D_ARRAY, 0));
-
-		// Create the frame buffer.
-		GL(glGenFramebuffers(1, &frameBuffer->FrameBuffers[i]));
-		GL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frameBuffer->FrameBuffers[i]));
-		
-		{
-			// Use baseViewIndex=1 to render to layers 1 and 2, skipping layer 0 for VDXR compatibility
-			GL(glFramebufferTextureMultiviewOVR(
-				GL_DRAW_FRAMEBUFFER,
-				GL_DEPTH_ATTACHMENT,
-				frameBuffer->DepthBuffers[i],
-				0 /* level */,
-				1 /* baseViewIndex */,
-				2 /* numViews */));
-			GL(glFramebufferTextureMultiviewOVR(
-				GL_DRAW_FRAMEBUFFER,
-				GL_STENCIL_ATTACHMENT,
-				frameBuffer->DepthBuffers[i],
-				0 /* level */,
-				1 /* baseViewIndex */,
-				2 /* numViews */));
-			GL(glFramebufferTextureMultiviewOVR(
-				GL_DRAW_FRAMEBUFFER,
-				GL_COLOR_ATTACHMENT0,
-				colorTexture,
-				0 /* level */,
-				1 /* baseViewIndex */,
-				2 /* numViews */));
-		}
-
-		GL(GLenum renderFramebufferStatus = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER));
-		GL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0));
-		if (renderFramebufferStatus != GL_FRAMEBUFFER_COMPLETE) {
-			ALOGE(
-				"Incomplete frame buffer object");
-			return false;
-		}
+	XrSwapchainImageWaitInfo waitInfo;
+	waitInfo.type = XR_TYPE_SWAPCHAIN_IMAGE_WAIT_INFO;
+	waitInfo.next = NULL;
+	waitInfo.timeout = 1000000000; /* timeout in nanoseconds */
+	XrResult res = xrWaitSwapchainImage(swapChain->Handle, &waitInfo);
+	int i = 0;
+	while (res == XR_TIMEOUT_EXPIRED) {
+		res = xrWaitSwapchainImage(swapChain->Handle, &waitInfo);
+		i++;
+		ALOGV(
+				" Retry xrWaitSwapchainImage %d times due to XR_TIMEOUT_EXPIRED (duration %f seconds)",
+				i,
+				waitInfo.timeout * (1E-9));
 	}
 
-    return true;
+	return swapChain->Images[index].image;
 }
 
-static GLuint fb = -1;
-
-void ovrFramebuffer_Destroy(ovrFramebuffer* frameBuffer) {
-    GL(glDeleteFramebuffers(frameBuffer->TextureSwapChainLength, frameBuffer->FrameBuffers));
-    GL(glDeleteTextures(frameBuffer->TextureSwapChainLength, frameBuffer->DepthBuffers));
-    OXR(xrDestroySwapchain(frameBuffer->ColorSwapChain.Handle));
-    free(frameBuffer->ColorSwapChainImage);
-
-    free(frameBuffer->DepthBuffers);
-    free(frameBuffer->FrameBuffers);
-
-	if (fb != -1)
-	{
-		glDeleteFramebuffers(1, &fb);
-	}
-	fb = -1;
+static void ovrSwapChain_Release(ovrSwapChain* swapChain) {
+	XrSwapchainImageReleaseInfo releaseInfo = {XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO, NULL};
+	OXR(xrReleaseSwapchainImage(swapChain->Handle, &releaseInfo));
 }
 
-void ovrFramebuffer_SetCurrent(ovrFramebuffer* frameBuffer) {
-	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer->FrameBuffers[frameBuffer->TextureSwapChainIndex]);
+/*
+================================================================================
 
-	const GLuint colorTexture = frameBuffer->ColorSwapChainImage[frameBuffer->TextureSwapChainIndex].image;
-	const uint32_t depthTexture = frameBuffer->DepthBuffers[frameBuffer->TextureSwapChainIndex];
+ovrEyeTarget
 
-	// Re-apply multiview attachments with baseViewIndex=1 to skip layer 0 for VDXR compatibility
-	glFramebufferTextureMultiviewOVR(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, colorTexture, 0, 1, 2);
-	glFramebufferTextureMultiviewOVR(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthTexture, 0, 1, 2);
-}
+================================================================================
+*/
 
-void ovrFramebuffer_SetNone() {
-    GL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
-}
+static bool ovrEyeTarget_Create(ovrEyeTarget* target, const int width, const int height) {
+	target->Width = width;
+	target->Height = height;
 
-qboolean R_GetModeInfo(int* width, int* height, int mode);
+	// Plain RGBA8, not sRGB: the engine writes gamma-space values with GL_FRAMEBUFFER_SRGB
+	// off, and the copy into the sRGB swapchain must move the bytes unchanged.
+	GL(glGenTextures(1, &target->ColorTexture));
+	GL(glBindTexture(GL_TEXTURE_2D_ARRAY, target->ColorTexture));
+	GL(glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RGBA8, width, height, ovrMaxNumEyes));
+	GL(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+	GL(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
 
-void ovrFramebuffer_Resolve(ovrFramebuffer* frameBuffer) {
+	GL(glGenTextures(1, &target->DepthTexture));
+	GL(glBindTexture(GL_TEXTURE_2D_ARRAY, target->DepthTexture));
+	GL(glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_DEPTH24_STENCIL8, width, height, ovrMaxNumEyes));
+	GL(glBindTexture(GL_TEXTURE_2D_ARRAY, 0));
 
-	const GLuint colorTexture = frameBuffer->ColorSwapChainImage[frameBuffer->TextureSwapChainIndex].image;
+	GL(glGenFramebuffers(1, &target->FrameBuffer));
+	GL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, target->FrameBuffer));
+	GL(glFramebufferTextureMultiviewOVR(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, target->DepthTexture, 0, 0, ovrMaxNumEyes));
+	GL(glFramebufferTextureMultiviewOVR(GL_DRAW_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, target->DepthTexture, 0, 0, ovrMaxNumEyes));
+	GL(glFramebufferTextureMultiviewOVR(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target->ColorTexture, 0, 0, ovrMaxNumEyes));
 
-	int width, height, aspect;
-	cvar_t* r_mode = Cvar_Get("r_mode", "20", CVAR_ARCHIVE | CVAR_LATCH);
-	re.GetModeInfo(&width, &height, &aspect, r_mode->integer);
-
-	//Create a framebuffer solely for the purpose of binding the color texture to as a single texture layer in order to blit from
-	//as we can't blit direct from the eye FBO as that doesn't work (no idea why.. no sensible explanation anywhere I can find)
-	if (fb == -1)
-	{
-		glGenFramebuffers(1, &fb);
+	GL(GLenum status = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER));
+	GL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0));
+	if (status != GL_FRAMEBUFFER_COMPLETE) {
+		ALOGE("Incomplete eye frame buffer object: 0x%x\n", status);
+		return false;
 	}
 
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, fb);
-	glFramebufferTextureLayer(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, colorTexture, 0, 2); // Use layer 2 (skip layer 0) for VDXR compatibility
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-	glBlitFramebuffer(0, 0, gAppState.Width, gAppState.Height,
-		0, 0, width, height,
-		GL_COLOR_BUFFER_BIT, GL_NEAREST);
+	return true;
 }
 
-void ovrFramebuffer_Acquire(ovrFramebuffer* frameBuffer) {
-    // Acquire the swapchain image
-    XrSwapchainImageAcquireInfo acquireInfo = {XR_TYPE_SWAPCHAIN_IMAGE_ACQUIRE_INFO, NULL};
-    OXR(xrAcquireSwapchainImage(
-            frameBuffer->ColorSwapChain.Handle, &acquireInfo, &frameBuffer->TextureSwapChainIndex));
-
-    XrSwapchainImageWaitInfo waitInfo;
-    waitInfo.type = XR_TYPE_SWAPCHAIN_IMAGE_WAIT_INFO;
-    waitInfo.next = NULL;
-    waitInfo.timeout = 1000000000; /* timeout in nanoseconds */
-    XrResult res = xrWaitSwapchainImage(frameBuffer->ColorSwapChain.Handle, &waitInfo);
-    int i = 0;
-    while (res == XR_TIMEOUT_EXPIRED) {
-        res = xrWaitSwapchainImage(frameBuffer->ColorSwapChain.Handle, &waitInfo);
-        i++;
-        ALOGV(
-                " Retry xrWaitSwapchainImage %d times due to XR_TIMEOUT_EXPIRED (duration %f seconds)",
-                i,
-                waitInfo.timeout * (1E-9));
-    }
+static void ovrEyeTarget_Destroy(ovrEyeTarget* target) {
+	GL(glDeleteFramebuffers(1, &target->FrameBuffer));
+	GL(glDeleteTextures(1, &target->ColorTexture));
+	GL(glDeleteTextures(1, &target->DepthTexture));
+	memset(target, 0, sizeof(ovrEyeTarget));
 }
-
-void ovrFramebuffer_Release(ovrFramebuffer* frameBuffer) {
-    XrSwapchainImageReleaseInfo releaseInfo = {XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO, NULL};
-    OXR(xrReleaseSwapchainImage(frameBuffer->ColorSwapChain.Handle, &releaseInfo));
-}
-
 
 /*
 ================================================================================
@@ -311,30 +220,83 @@ ovrRenderer
 ================================================================================
 */
 
-
 void ovrRenderer_Create(
 		XrSession session,
 		ovrRenderer* renderer,
 		int suggestedEyeTextureWidth,
 		int suggestedEyeTextureHeight) {
-	// Create the frame buffers.
-	ovrFramebuffer_Create(
+	ovrEyeTarget_Create(&renderer->EyeTarget, suggestedEyeTextureWidth, suggestedEyeTextureHeight);
+
+	for (int eye = 0; eye < ovrMaxNumEyes; eye++) {
+		ovrSwapChain_Create(
+				session,
+				&renderer->EyeSwapChain[eye],
+				GL_SRGB8_ALPHA8,
+				suggestedEyeTextureWidth,
+				suggestedEyeTextureHeight);
+	}
+
+	ovrSwapChain_Create(
 			session,
-			&renderer->FrameBuffer,
+			&renderer->NullSwapChain,
 			GL_SRGB8_ALPHA8,
 			suggestedEyeTextureWidth,
 			suggestedEyeTextureHeight);
 
-	ovrFramebuffer_Create(
-		session,
-		&renderer->NullFrameBuffer,
-		GL_SRGB8_ALPHA8,
-		suggestedEyeTextureWidth,
-		suggestedEyeTextureHeight);
+	GL(glGenFramebuffers(2, renderer->CopyFrameBuffers));
 }
 
 void ovrRenderer_Destroy(ovrRenderer* renderer) {
-	ovrFramebuffer_Destroy(&renderer->FrameBuffer);
+	GL(glDeleteFramebuffers(2, renderer->CopyFrameBuffers));
+	renderer->CopyFrameBuffers[0] = renderer->CopyFrameBuffers[1] = 0;
+
+	for (int eye = 0; eye < ovrMaxNumEyes; eye++) {
+		ovrSwapChain_Destroy(&renderer->EyeSwapChain[eye]);
+	}
+	ovrSwapChain_Destroy(&renderer->NullSwapChain);
+	ovrEyeTarget_Destroy(&renderer->EyeTarget);
+}
+
+static void ovrRenderer_CopyEyeToSwapChain(ovrRenderer* renderer, int eye, ovrSwapChain* swapChain) {
+	const GLuint image = ovrSwapChain_Acquire(swapChain);
+
+	GL(glBindFramebuffer(GL_READ_FRAMEBUFFER, renderer->CopyFrameBuffers[0]));
+	GL(glFramebufferTextureLayer(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, renderer->EyeTarget.ColorTexture, 0, eye));
+	GL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, renderer->CopyFrameBuffers[1]));
+	GL(glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, image, 0));
+	GL(glBlitFramebuffer(0, 0, renderer->EyeTarget.Width, renderer->EyeTarget.Height,
+			0, 0, swapChain->Width, swapChain->Height,
+			GL_COLOR_BUFFER_BIT, GL_NEAREST));
+
+	ovrSwapChain_Release(swapChain);
+}
+
+static void ovrRenderer_ClearSwapChain(ovrRenderer* renderer, ovrSwapChain* swapChain) {
+	const GLuint image = ovrSwapChain_Acquire(swapChain);
+
+	GL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, renderer->CopyFrameBuffers[1]));
+	GL(glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, image, 0));
+	GL(glClearColor(0.0f, 0.0f, 0.0f, 1.0f));
+	GL(glClear(GL_COLOR_BUFFER_BIT));
+
+	ovrSwapChain_Release(swapChain);
+}
+
+// Copies one eye to the desktop window
+static void ovrRenderer_Mirror(ovrRenderer* renderer) {
+	int width, height;
+	float aspect;
+	cvar_t* r_mode = Cvar_Get("r_mode", "20", CVAR_ARCHIVE | CVAR_LATCH);
+	re.GetModeInfo(&width, &height, &aspect, r_mode->integer);
+
+	const int eye = (vr_mirror_eye && vr_mirror_eye->integer == 0) ? 0 : 1;
+
+	GL(glBindFramebuffer(GL_READ_FRAMEBUFFER, renderer->CopyFrameBuffers[0]));
+	GL(glFramebufferTextureLayer(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, renderer->EyeTarget.ColorTexture, 0, eye));
+	GL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0));
+	GL(glBlitFramebuffer(0, 0, renderer->EyeTarget.Width, renderer->EyeTarget.Height,
+			0, 0, width, height,
+			GL_COLOR_BUFFER_BIT, GL_NEAREST));
 }
 
 
@@ -1143,12 +1105,9 @@ void TBXR_ClearFrameBuffer(int width, int height)
 
 void TBXR_prepareEyeBuffer()
 {
-	ovrFramebuffer* frameBuffer = &(gAppState.Renderer.FrameBuffer);
-	ovrFramebuffer_Acquire(frameBuffer);
-	ovrFramebuffer_SetCurrent(frameBuffer);
-	TBXR_ClearFrameBuffer(frameBuffer->ColorSwapChain.Width, frameBuffer->ColorSwapChain.Height);
-
-	ovrFramebuffer_Acquire(&gAppState.Renderer.NullFrameBuffer);
+	ovrEyeTarget* target = &gAppState.Renderer.EyeTarget;
+	glBindFramebuffer(GL_FRAMEBUFFER, target->FrameBuffer);
+	TBXR_ClearFrameBuffer(target->Width, target->Height);
 
 	//Seems odd, but used to move the HUD elements to be central on the player's view
 	//HMDs with a symmetric fov (like the PICO) will have 0 in this value, but the Meta Quest
@@ -1163,19 +1122,26 @@ void TBXR_prepareEyeBuffer()
 void TBXR_finishEyeBuffer()
 {
 	ovrRenderer *renderer = &gAppState.Renderer;
-	ovrFramebuffer *frameBuffer = &(renderer->FrameBuffer);
 
 	// Clear the alpha channel, other way OpenXR would not transfer the framebuffer fully
+	glBindFramebuffer(GL_FRAMEBUFFER, renderer->EyeTarget.FrameBuffer);
 	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_TRUE);
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
-	ovrFramebuffer_Release(&gAppState.Renderer.NullFrameBuffer);
+	// Blits obey the scissor, and the sRGB swapchains must receive the bytes unconverted
+	glDisable(GL_SCISSOR_TEST);
+	glDisable(GL_FRAMEBUFFER_SRGB);
 
-	ovrFramebuffer_SetNone();
+	for (int eye = 0; eye < ovrMaxNumEyes; eye++)
+	{
+		ovrRenderer_CopyEyeToSwapChain(renderer, eye, &renderer->EyeSwapChain[eye]);
+	}
 
-	ovrFramebuffer_Release(frameBuffer);
+	ovrRenderer_ClearSwapChain(renderer, &renderer->NullSwapChain);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void TBXR_updateProjections()
@@ -1249,11 +1215,9 @@ void TBXR_submitFrame()
 			projection_layer_elements[eye].type = XR_TYPE_COMPOSITION_LAYER_PROJECTION_VIEW;
 			projection_layer_elements[eye].pose = gAppState.Views[eye].pose;
 			projection_layer_elements[eye].fov = fov;
-			// Use imageArrayIndex 1 and 2 (skip layer 0) for VDXR compatibility
-			projection_layer_elements[eye].subImage.imageArrayIndex = eye + 1;
-			projection_layer_elements[eye].subImage.swapchain = gAppState.Renderer.FrameBuffer.ColorSwapChain.Handle;
-			projection_layer_elements[eye].subImage.imageRect.extent.width = gAppState.Renderer.FrameBuffer.ColorSwapChain.Width;
-			projection_layer_elements[eye].subImage.imageRect.extent.height = gAppState.Renderer.FrameBuffer.ColorSwapChain.Height;
+			projection_layer_elements[eye].subImage.swapchain = gAppState.Renderer.EyeSwapChain[eye].Handle;
+			projection_layer_elements[eye].subImage.imageRect.extent.width = gAppState.Renderer.EyeSwapChain[eye].Width;
+			projection_layer_elements[eye].subImage.imageRect.extent.height = gAppState.Renderer.EyeSwapChain[eye].Height;
 		}
 
 		// Compose the layers for this frame.
@@ -1275,18 +1239,16 @@ void TBXR_submitFrame()
 			projection_layer_elements[eye].type = XR_TYPE_COMPOSITION_LAYER_PROJECTION_VIEW;
 			projection_layer_elements[eye].pose = gAppState.Views[eye].pose;
 			projection_layer_elements[eye].fov = gAppState.Views[eye].fov;
-			// Use imageArrayIndex 1 and 2 (skip layer 0) for VDXR compatibility
-			projection_layer_elements[eye].subImage.imageArrayIndex = eye + 1;
-			projection_layer_elements[eye].subImage.swapchain = gAppState.Renderer.NullFrameBuffer.ColorSwapChain.Handle;
-			projection_layer_elements[eye].subImage.imageRect.extent.width = gAppState.Renderer.NullFrameBuffer.ColorSwapChain.Width;
-			projection_layer_elements[eye].subImage.imageRect.extent.height = gAppState.Renderer.NullFrameBuffer.ColorSwapChain.Height;
+			projection_layer_elements[eye].subImage.swapchain = gAppState.Renderer.NullSwapChain.Handle;
+			projection_layer_elements[eye].subImage.imageRect.extent.width = gAppState.Renderer.NullSwapChain.Width;
+			projection_layer_elements[eye].subImage.imageRect.extent.height = gAppState.Renderer.NullSwapChain.Height;
 		}
 
 		// Compose the layers for this frame.
 		layers[layerCount++] = (const XrCompositionLayerBaseHeader*)&projection_layer;
 
-		const int swapWidth = gAppState.Renderer.FrameBuffer.ColorSwapChain.Width;
-		const int swapHeight = gAppState.Renderer.FrameBuffer.ColorSwapChain.Height;
+		const int swapWidth = gAppState.Renderer.EyeSwapChain[0].Width;
+		const int swapHeight = gAppState.Renderer.EyeSwapChain[0].Height;
 		const qboolean bigscreenCutscene = vr.cin_camera && !vr.immersive_cinematics;
 		const qboolean stereo = bigscreenCutscene && vr_cinematic_stereo->integer;
 
@@ -1310,9 +1272,7 @@ void TBXR_submitFrame()
 			quad->layerFlags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT;
 			quad->space = gAppState.StageSpace;
 			quad->eyeVisibility = stereo ? (eye == 0 ? XR_EYE_VISIBILITY_LEFT : XR_EYE_VISIBILITY_RIGHT) : XR_EYE_VISIBILITY_BOTH;
-			// Layers 1 and 2 hold the eyes (layer 0 is skipped for VDXR compatibility)
-			quad->subImage.imageArrayIndex = stereo ? eye + 1 : 2;
-			quad->subImage.swapchain = gAppState.Renderer.FrameBuffer.ColorSwapChain.Handle;
+			quad->subImage.swapchain = gAppState.Renderer.EyeSwapChain[stereo ? eye : 1].Handle;
 			quad->subImage.imageRect.extent.width = swapWidth;
 			quad->subImage.imageRect.extent.height = swapHeight;
 			quad->pose.orientation = XrQuaternionf_CreateFromVectorAngle(axis, DEG2RAD(vr.hmdorientation_snap[YAW]));
@@ -1323,8 +1283,7 @@ void TBXR_submitFrame()
 		}
 	}
 
-	ovrFramebuffer* frameBuffer = &(gAppState.Renderer.FrameBuffer);
-	ovrFramebuffer_Resolve(frameBuffer);
+	ovrRenderer_Mirror(&gAppState.Renderer);
 	re.WIN_SwapWindow();
 
 

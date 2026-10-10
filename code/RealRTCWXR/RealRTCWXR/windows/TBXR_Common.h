@@ -113,19 +113,20 @@ typedef struct {
     XrSwapchain Handle;
     uint32_t Width;
     uint32_t Height;
+    uint32_t ImageCount;
+    XrSwapchainImageOpenGLKHR* Images;
 } ovrSwapChain;
 
+// The game renders both eyes into this multiview target, which the runtime never sees.
+// Some drivers and runtimes (AMD, VDXR) mishandle texture array swapchains, so each eye
+// is copied into its own plain 2D swapchain instead.
 typedef struct {
     int Width;
     int Height;
-
-    uint32_t TextureSwapChainLength;
-    uint32_t TextureSwapChainIndex;
-    ovrSwapChain ColorSwapChain;
-    XrSwapchainImageOpenGLKHR* ColorSwapChainImage;
-    GLuint* DepthBuffers;
-    GLuint* FrameBuffers;
-} ovrFramebuffer;
+    GLuint ColorTexture;
+    GLuint DepthTexture;
+    GLuint FrameBuffer;
+} ovrEyeTarget;
 
 /*
 ================================================================================
@@ -137,8 +138,10 @@ ovrRenderer
 
 typedef struct
 {
-    ovrFramebuffer	FrameBuffer;
-    ovrFramebuffer	NullFrameBuffer; // Used to draw black projection view when showing quad layer
+    ovrEyeTarget	EyeTarget;
+    ovrSwapChain	EyeSwapChain[ovrMaxNumEyes];
+    ovrSwapChain	NullSwapChain; // Used to draw black projection view when showing quad layer
+    GLuint			CopyFrameBuffers[2]; // read, draw
 } ovrRenderer;
 
 

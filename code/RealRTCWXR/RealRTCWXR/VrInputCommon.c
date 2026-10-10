@@ -27,6 +27,7 @@ cvar_t	*vr_force_velocity_trigger;
 cvar_t	*vr_knife_velocity_trigger;
 cvar_t	*vr_knife_velocity_release;
 cvar_t	*vr_cinematic_stereo;
+cvar_t	*vr_mirror_eye;
 cvar_t	*vr_force_distance_trigger;
 cvar_t	*vr_two_handed_weapons;
 cvar_t	*vr_crouch_toggle;
