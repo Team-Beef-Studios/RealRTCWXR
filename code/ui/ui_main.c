@@ -4321,7 +4321,6 @@ static void UI_Update( const char *name ) {
 		switch ( val ) {
 		case 0:     // Ultra quality
 
-			trap_Cvar_Set( "cl_renderer", "opengl1" ); 
 
 			trap_Cvar_SetValue( "cg_coronafardist", 4096 );
 			trap_Cvar_SetValue("cg_markTime", 30000 );
@@ -4382,7 +4381,6 @@ static void UI_Update( const char *name ) {
 			break;
 		case 1:     // High Quality with vanilla renderer
 
-			trap_Cvar_Set( "cl_renderer", "opengl1" ); // renderer
 
 			trap_Cvar_SetValue( "cg_coronafardist", 4096 );
 			trap_Cvar_SetValue("cg_markTime", 20000 );
@@ -4440,7 +4438,6 @@ static void UI_Update( const char *name ) {
 #endif
 			break;
 		case 2:     // Normal Quality
-			trap_Cvar_Set( "cl_renderer", "opengl1" ); // renderer
 
 			trap_Cvar_SetValue( "cg_coronafardist", 2048 );
 			trap_Cvar_SetValue("cg_markTime", 10000 );
@@ -4499,7 +4496,6 @@ static void UI_Update( const char *name ) {
 			break;
 		case 3:     // low quality
 
-			trap_Cvar_Set( "cl_renderer", "opengl1" ); // renderer
 
 			trap_Cvar_SetValue( "cg_coronafardist", 1024 );
 			trap_Cvar_SetValue("cg_markTime", 5000 );

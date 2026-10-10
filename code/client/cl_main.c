@@ -3362,7 +3362,9 @@ void CL_InitRef( void ) {
 	refexport_t *ret;
 #ifdef USE_RENDERER_DLOPEN
 	GetRefAPI_t		GetRefAPI;
+#ifndef RTCWXR_CLIENT
 	char			dllName[MAX_OSPATH];
+#endif
 #endif
 
 	Com_Printf( "----- Initializing Renderer ----\n" );
@@ -3370,6 +3372,16 @@ void CL_InitRef( void ) {
 #ifdef USE_RENDERER_DLOPEN
 	cl_renderer = Cvar_Get("cl_renderer", "rend2", CVAR_ARCHIVE | CVAR_LATCH); // removed cvar protected
 
+#ifdef RTCWXR_CLIENT
+	// VR ships only rend2; a stale config or upstream menu preset must not pick another renderer
+	if (Q_stricmp(cl_renderer->string, "rend2"))
+	{
+		Com_Printf("cl_renderer \"%s\" is not supported in VR, using rend2\n", cl_renderer->string);
+		Cvar_ForceReset("cl_renderer");
+	}
+
+	rendererLib = Sys_LoadDll("renderer_sp_rend2_" ARCH_STRING DLL_EXT, qfalse);
+#else
 	Com_sprintf(dllName, sizeof(dllName), "renderer_sp_%s_" ARCH_STRING DLL_EXT, cl_renderer->string);
 
 	if(!(rendererLib = Sys_LoadDll(dllName, qfalse)) && strcmp(cl_renderer->string, cl_renderer->resetString))
@@ -3377,9 +3389,10 @@ void CL_InitRef( void ) {
 		Com_Printf("failed:\n\"%s\"\n", Sys_LibraryError());
 		Cvar_ForceReset("cl_renderer");
 
-		Com_sprintf(dllName, sizeof(dllName), "renderer_sp_opengl1_" ARCH_STRING DLL_EXT);
+		Com_sprintf(dllName, sizeof(dllName), "renderer_sp_%s_" ARCH_STRING DLL_EXT, cl_renderer->string);
 		rendererLib = Sys_LoadDll(dllName, qfalse);
 	}
+#endif
 
 	if(!rendererLib)
 	{
