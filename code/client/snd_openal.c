@@ -3168,7 +3168,10 @@ qboolean S_AL_Init( soundInterface_t *si )
   // Load QAL
   if( !QAL_Init( s_alDriver->string ) )
   {
-#if defined( _WIN32 )
+#if defined( _WIN64 )
+    // The system-wide OpenAL installer names its 64-bit DLL OpenAL32.dll
+    if( !Q_stricmp( s_alDriver->string, ALDRIVER_DEFAULT ) && !QAL_Init( "OpenAL32.dll" ) ) {
+#elif defined( _WIN32 )
     if( !Q_stricmp( s_alDriver->string, ALDRIVER_DEFAULT ) && !QAL_Init( "OpenAL64.dll" ) ) {
 #elif defined ( __APPLE__ )
       if( !Q_stricmp( s_alDriver->string, ALDRIVER_DEFAULT ) && !QAL_Init( "/System/Library/Frameworks/OpenAL.framework/OpenAL" ) ) {

@@ -4328,8 +4328,9 @@ static void UI_Update( const char *name ) {
 			trap_Cvar_SetValue("cg_particleDist", 4096 );
 			trap_Cvar_SetValue( "cg_brassTime", 2500 );
 
-			trap_Cvar_SetValue("r_ext_multisample", 4);
-			trap_Cvar_SetValue("r_ext_framebuffer_multisample", 16);
+			// VR: MSAA blacks out the multiview eye buffer, and window MSAA breaks the mirror
+			trap_Cvar_SetValue("r_ext_multisample", 0);
+			trap_Cvar_SetValue("r_ext_framebuffer_multisample", 0);
 			trap_Cvar_SetValue("r_ext_texture_filter_anisotropic", 1);
 			trap_Cvar_SetValue("r_ext_max_anisotropy", 16);
 

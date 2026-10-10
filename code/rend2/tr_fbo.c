@@ -348,7 +348,6 @@ FBO_Init
 void FBO_Init(void)
 {
 	int             i;
-	int             hdrFormat, multisample = 0;
 
 	ri.Printf(PRINT_ALL, "------- FBO_Init -------\n");
 
@@ -361,42 +360,14 @@ void FBO_Init(void)
 
 	R_IssuePendingRenderCommands();
 
-	hdrFormat = GL_RGBA8;
-	if (r_hdr->integer && glRefConfig.textureFloat)
-		hdrFormat = GL_RGBA16F_ARB;
-
-	if (glRefConfig.framebufferMultisample)
-		qglGetIntegerv(GL_MAX_SAMPLES, &multisample);
-
-	if (r_ext_framebuffer_multisample->integer < multisample)
-		multisample = r_ext_framebuffer_multisample->integer;
-
-	if (multisample < 2 || !glRefConfig.framebufferBlit)
-		multisample = 0;
-
-	if (multisample != r_ext_framebuffer_multisample->integer)
-		ri.Cvar_SetValue("r_ext_framebuffer_multisample", (float)multisample);
-	
-	// only create a render FBO if we need to resolve MSAA or do HDR
-	// otherwise just render straight to the screen (tr.renderFbo = NULL)
-	if (multisample && glRefConfig.framebufferMultisample)
+	// VR renders straight into the multiview eye buffer (tr.renderFbo = NULL). Every shader is
+	// built for two views, so it cannot draw into the single-layer render FBO that MSAA or HDR
+	// would create, and that FBO cannot be blitted into the eye buffer: the headset goes black.
+	// r_hdr is read-only for the same reason (see R_Register).
+	if (r_ext_framebuffer_multisample->integer)
 	{
-		tr.renderFbo = FBO_Create("_render", tr.renderDepthImage->width, tr.renderDepthImage->height);
-		FBO_CreateBuffer(tr.renderFbo, hdrFormat, 0, multisample);
-		FBO_CreateBuffer(tr.renderFbo, GL_DEPTH_COMPONENT24, 0, multisample);
-		R_CheckFBO(tr.renderFbo);
-
-		tr.msaaResolveFbo = FBO_Create("_msaaResolve", tr.renderDepthImage->width, tr.renderDepthImage->height);
-		FBO_AttachImage(tr.msaaResolveFbo, tr.renderImage, GL_COLOR_ATTACHMENT0, 0);
-		FBO_AttachImage(tr.msaaResolveFbo, tr.renderDepthImage, GL_DEPTH_ATTACHMENT, 0);
-		R_CheckFBO(tr.msaaResolveFbo);
-	}
-	else if (r_hdr->integer)
-	{
-		tr.renderFbo = FBO_Create("_render", tr.renderDepthImage->width, tr.renderDepthImage->height);
-		FBO_AttachImage(tr.renderFbo, tr.renderImage, GL_COLOR_ATTACHMENT0, 0);
-		FBO_AttachImage(tr.renderFbo, tr.renderDepthImage, GL_DEPTH_ATTACHMENT, 0);
-		R_CheckFBO(tr.renderFbo);
+		ri.Printf(PRINT_WARNING, "r_ext_framebuffer_multisample is not supported in VR, turning it off\n");
+		ri.Cvar_SetValue("r_ext_framebuffer_multisample", 0);
 	}
 
 	// clear render buffer
